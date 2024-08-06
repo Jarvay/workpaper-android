@@ -24,7 +24,7 @@ interface RuleDao {
     fun findByIdFlow(id: Long): Flow<Rule>
 
     @Query("SELECT * FROM rules WHERE id= :id ")
-    fun findWithAlbumById(id: Long): RuleWithAlbum
+    fun findWithAlbumById(id: Long): RuleWithAlbum?
 
     @Query("SELECT * FROM rules WHERE albumId= :albumId ")
     fun findByAlbumId(albumId: Long): Rule?

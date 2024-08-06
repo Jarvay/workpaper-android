@@ -2,6 +2,7 @@
     <string name="app_name">Workpaper</string>
 
     <string name="permission_request_alarm">需要获取闹钟权限</string>
+    <string name="permission_request_notification">需要获取通知权限</string>
 
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
@@ -9,6 +10,7 @@
     <string name="edit">编辑</string>
     <string name="delete">删除</string>
     <string name="symbol_colon">：</string>
+    <string name="select_all">全选</string>
 
     <string name="tab_title_days">日期</string>
     <string name="tab_title_rules">规则</string>
@@ -29,10 +31,13 @@
     <string name="rule_execute_time">执行时间</string>
     <string name="rule_album">相册</string>
     <string name="rule_interval">间隔</string>
+    <string name="rule_random">随机切换</string>
+    <string name="rule_conflicts_tips">时间和已有规则冲突</string>
 
     <string name="album_name">相册名</string>
     <string name="album_delete_tips">确定要删除该相册吗？</string>
     <string name="album_is_using_tips">该相册已被使用</string>
+    <string name="album_name_exists">相册名已存在</string>
     <string name="album_wallpaper_delete_tips">确定要删除所选壁纸吗？</string>
 
     <string name="rule_list_item_time">时间</string>
@@ -40,7 +45,11 @@
     <string name="rule_list_item_interval">间隔</string>
     <string name="rule_list_item_days">日期</string>
     <string name="rule_list_item_delete_tips">确定要删除该项吗？</string>
+    <string name="rule_current_rule">当前规则</string>
+    <string name="rule_next_rule">下一规则</string>
 
     <string name="settings_item_interval">壁纸更换间隔</string>
-    <string name="settings_item_use_prev_rule_after_start">启动后应用上一条规则</string>
+    <string name="settings_item_start_with_prev_rule">启动后应用上一条规则</string>
+    <string name="settings_item_enable_notification">启用通知</string>
+    <string name="settings_item_also_set_lock_wallpaper">同时设为锁屏壁纸</string>
 </resources>

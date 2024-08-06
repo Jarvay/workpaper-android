@@ -1,11 +1,11 @@
 package jarvay.workpaper.compose.album
 
 import android.annotation.SuppressLint
-import android.widget.Toast
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -16,18 +16,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -43,8 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Screen
 import jarvay.workpaper.compose.components.SimpleDialog
@@ -53,7 +46,7 @@ import jarvay.workpaper.others.showToast
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel = hiltViewModel()) {
@@ -61,7 +54,7 @@ fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel 
 
     val albums by viewModel.allAlbums.observeAsState(initial = emptyList())
 
-    var createDialogShow by rememberSaveable {
+    var updateDialogShow by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -69,24 +62,12 @@ fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel 
         mutableStateOf(false)
     }
 
-    var currentAlbum: Album? = null
+    var currentAlbum: Album? by remember {
+        mutableStateOf(null)
+    }
     val context = LocalContext.current
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    createDialogShow = true
-                },
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add),
-                )
-            }
-        }
-    ) { padding ->
+    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
         LazyVerticalGrid(
             state = lazyListState,
             modifier = Modifier
@@ -95,6 +76,7 @@ fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel 
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
             columns = GridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(albums, key = { it.albumId }) {
                 val cover = it.coverUri
@@ -103,46 +85,57 @@ fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel 
                     mutableStateOf(false)
                 }
 
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    Card(modifier = Modifier
-                        .combinedClickable(onLongClick = {
-                            currentAlbum = it
-                            itemMenuExpanded = true
-                        }) {
-                            navController.navigate(Screen.AlbumDetail.createRoute(it.albumId))
+                Box {
+                    Column {
+                        Card(modifier = Modifier
+                            .combinedClickable(onLongClick = {
+                                currentAlbum = it
+                                itemMenuExpanded = true
+                            }) {
+                                navController.navigate(Screen.AlbumDetail.createRoute(it.albumId))
+                            }
+                            .aspectRatio(1f)) {
+                            if (cover != null) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context).data(cover).size(256, 256)
+                                        .build(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.aspectRatio(1f)
+                                )
+                            }
                         }
-                        .aspectRatio(1f)) {
-                        if (cover != null) {
-                            GlideImage(
-                                model = cover, contentDescription = it.name,
-                                contentScale = ContentScale.Crop
-                            )
+
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(text = it.name)
                         }
                     }
 
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = it.name)
+                    DropdownMenu(
+                        expanded = itemMenuExpanded,
+                        onDismissRequest = { itemMenuExpanded = false }) {
+                        DropdownMenuItem(text = {
+                            Text(text = stringResource(id = R.string.edit))
+                        }, onClick = {
+                            Log.d("111111", "111111")
+                            updateDialogShow = true
+                            itemMenuExpanded = false
+                        })
+                        DropdownMenuItem(text = {
+                            Text(text = stringResource(id = R.string.delete))
+                        }, onClick = {
+                            if (viewModel.isUsing(it.albumId)) {
+                                showToast(context, R.string.album_is_using_tips)
+                            } else {
+                                deleteDialogShow = true
+                            }
+                            itemMenuExpanded = false
+                        })
                     }
-                }
-
-                DropdownMenu(
-                    expanded = itemMenuExpanded,
-                    onDismissRequest = { itemMenuExpanded = false }) {
-                    DropdownMenuItem(text = {
-                        Text(text = stringResource(id = R.string.delete))
-                    }, onClick = {
-                        if (viewModel.isUsing(it.albumId)) {
-                            showToast(context, R.string.album_is_using_tips)
-                            itemMenuExpanded = false
-                        } else {
-                            deleteDialogShow = true
-                            itemMenuExpanded = false
-                        }
-                    })
                 }
             }
         }
@@ -157,35 +150,8 @@ fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel 
         }
     }
 
-    if (createDialogShow) {
-        AlbumFormDialog(onDismissRequest = {
-            createDialogShow = false
-        }, onConfirm = {
-            viewModel.insert(Album(name = it))
-            createDialogShow = false
-        })
+    AlbumUpdateDialog(show = updateDialogShow, album = currentAlbum) {
+        updateDialogShow = false
     }
 }
 
-@Composable
-private fun AlbumFormDialog(onDismissRequest: () -> Unit, onConfirm: (String) -> Unit) {
-    var albumName by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    AlertDialog(title = {
-        Text(text = stringResource(id = R.string.album_name))
-    }, onDismissRequest = onDismissRequest, confirmButton = {
-        TextButton(onClick = { onConfirm(albumName) }, enabled = albumName.isNotEmpty()) {
-            Text(text = stringResource(id = R.string.ok))
-        }
-    }, dismissButton = {
-        TextButton(onClick = { onDismissRequest() }) {
-            Text(text = stringResource(id = R.string.cancel))
-        }
-    }, text = {
-        OutlinedTextField(value = albumName, onValueChange = { albumName = it }, label = {
-            Text(text = stringResource(id = R.string.album_name))
-        })
-    })
-}

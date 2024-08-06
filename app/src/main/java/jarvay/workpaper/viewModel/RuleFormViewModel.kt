@@ -35,6 +35,10 @@ class RuleFormViewModel @Inject constructor(
         }
     }
 
+    fun exists(startHour: Int, startMinute: Int, days: List<Int>, ruleId: Long? = null): Boolean {
+        return repository.exists(startHour, startMinute, days, ruleId)
+    }
+
     companion object {
         private const val RULE_ID_SAVED_STATE_KEY = "ruleId"
     }

@@ -8,12 +8,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -38,18 +39,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.SimpleDialog
+import jarvay.workpaper.others.getSize
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
 )
 @Composable
 fun AlbumDetailScreen(
@@ -70,6 +72,8 @@ fun AlbumDetailScreen(
     if (album == null) return
 
     val context = LocalContext.current
+
+    val listState = rememberLazyStaggeredGridState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -127,8 +131,6 @@ fun AlbumDetailScreen(
                         IconButton(onClick = { deleteDialogShow = true }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "")
                         }
-                    } else {
-
                     }
                 }
             )
@@ -141,16 +143,17 @@ fun AlbumDetailScreen(
             }
         },
     ) { padding ->
-        LazyVerticalGrid(
+        LazyVerticalStaggeredGrid(
+            state = listState,
             modifier = Modifier
                 .padding(padding)
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
-            columns = GridCells.Fixed(2),
+            columns = StaggeredGridCells.Fixed(2),
         ) {
-            itemsIndexed(items = album!!.wallpaperUris, key = { _, item ->
+            items(items = album!!.wallpaperUris, key = { item ->
                 item
-            }) { _, it ->
-                Box(modifier = Modifier.combinedClickable(onLongClick = {
+            }) { it ->
+                Box(modifier = Modifier.animateItemPlacement().combinedClickable(onLongClick = {
                     selecting = !selecting
                 }) {
                     if (selecting) {
@@ -159,7 +162,15 @@ fun AlbumDetailScreen(
                     }
                 }) {
                     Card(modifier = Modifier.padding(8.dp)) {
-                        GlideImage(model = it, contentDescription = it)
+                        val size = getSize(context, it)
+                        val floatWidth = size.width.toFloat()
+                        val floatHeight = size.height.toFloat()
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(context).data(it.toUri()).size(320, 320).build(),
+                            contentDescription = null,
+                            modifier = Modifier.aspectRatio(floatWidth / floatHeight)
+                        )
                     }
 
                     if (selecting) {

@@ -14,5 +14,5 @@ data class Rule(
     val startMinute: Int,
     val albumId: Long,
     val random: Boolean = false,
-    val interval: Int = 15
+    val interval: Int = 15,
 )

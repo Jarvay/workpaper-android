@@ -2,6 +2,7 @@
     <string name="app_name">Workpaper</string>
 
     <string name="permission_request_alarm">Request permission of alarm</string>
+    <string name="permission_request_notification">Request permission of notification</string>
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -9,6 +10,7 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="symbol_colon">:</string>
+    <string name="select_all">Select all</string>
 
     <string name="tab_title_days">Days</string>
     <string name="tab_title_rules">Rule</string>
@@ -29,10 +31,13 @@
     <string name="rule_execute_time">Execute time</string>
     <string name="rule_album">Album</string>
     <string name="rule_interval">Interval</string>
+    <string name="rule_random">Random</string>
+    <string name="rule_conflicts_tips">Rules conflicts</string>
 
     <string name="album_name">Album name</string>
     <string name="album_delete_tips">Are you sure to delete this album?</string>
     <string name="album_is_using_tips">This album is using</string>
+    <string name="album_name_exists">Album name exists</string>
     <string name="album_wallpaper_delete_tips">Are you sure to delete selected wallpaper?</string>
 
     <string name="rule_list_item_time">Time</string>
@@ -40,7 +45,11 @@
     <string name="rule_list_item_interval">Interval</string>
     <string name="rule_list_item_days">Days</string>
     <string name="rule_list_item_delete_tips">Are you sure to delete deleted this rule?</string>
+    <string name="rule_current_rule">Current</string>
+    <string name="rule_next_rule">Next</string>
 
     <string name="settings_item_interval">Wallpaper Change Interval</string>
-    <string name="settings_item_use_prev_rule_after_start">Use prev rule after start</string>
+    <string name="settings_item_start_with_prev_rule">Use prev rule after start</string>
+    <string name="settings_item_enable_notification">Enable notification</string>
+    <string name="settings_item_also_set_lock_wallpaper">Also set lock wallpaper</string>
 </resources>

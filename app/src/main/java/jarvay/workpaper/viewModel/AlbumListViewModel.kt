@@ -25,6 +25,12 @@ class AlbumListViewModel @Inject constructor(
         }
     }
 
+    fun update(item: Album) {
+        viewModelScope.launch {
+            repository.update(item)
+        }
+    }
+
     fun delete(item: Album) {
         viewModelScope.launch {
             repository.delete(item)
@@ -33,5 +39,9 @@ class AlbumListViewModel @Inject constructor(
 
     fun isUsing(albumId: Long): Boolean {
         return ruleRepository.getRuleByAlbumId(albumId) != null
+    }
+
+    fun existsByName(name: String): Boolean {
+        return repository.existsByName(name)
     }
 }

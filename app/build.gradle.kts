@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.glide)
+    implementation(libs.coil.compose)
     implementation(libs.gson)
+    implementation(libs.datastore.preferences)
 }

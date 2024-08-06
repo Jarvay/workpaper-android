@@ -34,6 +34,16 @@ class RuleRepository @Inject constructor(private val ruleDao: RuleDao) {
         ruleDao.delete(item)
     }
 
+    fun exists(startHour: Int, startMinute: Int, days: List<Int>, ruleId: Long? = null): Boolean {
+        return ruleDao.findAll()
+            .find {
+                it.rule.days.any { d -> days.contains(d) }
+                        && it.rule.startHour == startHour
+                        && it.rule.startMinute == startMinute
+                        && (ruleId == null || (it.rule.ruleId != ruleId))
+            } != null
+    }
+
     companion object {
         @Volatile
         private var instance: RuleRepository? = null

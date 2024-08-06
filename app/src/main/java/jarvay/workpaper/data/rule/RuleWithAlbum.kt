@@ -11,3 +11,10 @@ data class RuleWithAlbum(
         entityColumn = "id",
     ) val album: Album
 )
+
+data class RuleWithAlbumToSort(
+    var ruleWithAlbum
+    : RuleWithAlbum,
+    var sortValue: Long,
+    var day: Int,
+)

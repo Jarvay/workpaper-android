@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".MainApplication"
@@ -26,23 +29,19 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.ScheduleService" />
-        <service android:name=".service.AlbumService" />
-        <service android:name=".service.TimerService" />
+        <service android:name=".service.ScheduleService" android:foregroundServiceType="mediaPlayback" />
 
-        <receiver android:name=".receiver.WallpaperReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="jarvay.workpaper.updateWallpaper" />
-            </intent-filter>
-        </receiver>
+        <receiver
+            android:name=".receiver.WallpaperReceiver"
+            android:exported="false" />
 
-        <receiver android:name=".receiver.RuleReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="jarvay.workpaper.changeAlbum" />
-            </intent-filter>
-        </receiver>
+        <receiver
+            android:name=".receiver.RuleReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.NextRuleReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

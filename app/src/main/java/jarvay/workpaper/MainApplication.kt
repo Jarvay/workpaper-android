@@ -20,8 +20,6 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
-import jarvay.workpaper.others.SharePreferenceKey
-import jarvay.workpaper.others.defaultSharedPreferences
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -34,12 +32,4 @@ class MainApplication : Application(), Configuration.Provider {
       .setWorkerFactory(workerFactory)
       .setMinimumLoggingLevel(if (BuildConfig.DEBUG) android.util.Log.DEBUG else android.util.Log.ERROR)
       .build()
-
-  override fun onCreate() {
-    super.onCreate()
-    val isRunning = defaultSharedPreferences(this).getBoolean(SharePreferenceKey.IS_RUNNING_KEY, false)
-    if (isRunning) {
-      start(this)
-    }
-  }
 }

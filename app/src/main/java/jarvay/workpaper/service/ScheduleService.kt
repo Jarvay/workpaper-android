@@ -1,17 +1,26 @@
 package jarvay.workpaper.service
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.lifecycle.asLiveData
 import dagger.hilt.android.AndroidEntryPoint
+import jarvay.workpaper.R
+import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.day.RuleDao
-import jarvay.workpaper.others.SharePreferenceKey
-import jarvay.workpaper.others.defaultSharedPreferences
-import jarvay.workpaper.others.getSettings
+import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
+import jarvay.workpaper.data.preferences.SettingsPreferences
+import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.others.prevRule
 import jarvay.workpaper.receiver.NextRuleReceiver
-import jarvay.workpaper.receiver.WallpaperReceiver
+import jarvay.workpaper.receiver.RuleReceiver
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -19,35 +28,73 @@ class ScheduleService @Inject constructor() : Service() {
     @Inject
     lateinit var ruleDao: RuleDao
 
+    @Inject
+    lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
+
+    lateinit var settings: SettingsPreferences
+
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val settings = getSettings(this)
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.app_name),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
 
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        settings = settingsPreferencesRepository.settingsPreferencesFlow.asLiveData().value
+            ?: DEFAULT_SETTINGS
+        if (settings.enableNotification) {
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle(getString(R.string.app_name))
+                .build()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                createNotificationChannel()
+                startForeground(ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK, notification)
+            }
+
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val rules = ruleDao.findAll()
 
         val prevRule = prevRule(rules)
 
-        Log.d(javaClass.simpleName, prevRule.toString())
-
+        Log.d("prev rule", prevRule.toString())
 
         if (prevRule != null && settings.startWithPrevRule) {
-            defaultSharedPreferences(this).edit().apply {
-                putLong(SharePreferenceKey.CURRENT_ALBUM_ID_KEY, prevRule.rule.albumId)
-                putInt(SharePreferenceKey.LAST_INDEX_KEY, 0)
-            }.apply()
-            val wallpaperIntent = Intent(this, WallpaperReceiver::class.java)
-            sendBroadcast(wallpaperIntent)
+            val prevRuleIntent = Intent(this, RuleReceiver::class.java)
+            prevRuleIntent.putExtra(RuleReceiver.ADD_NEXT_RULE_TO_ALARM_FLAG, false)
+            prevRuleIntent.putExtra(RuleReceiver.RULE_ID_KEY, prevRule.ruleWithAlbum.rule.ruleId)
+            sendBroadcast(prevRuleIntent)
         }
 
         val nextRuleIntent = Intent(this, NextRuleReceiver::class.java)
         sendBroadcast(nextRuleIntent)
 
-        val timerServiceIntent = Intent(this, TimerService::class.java)
-        startService(timerServiceIntent)
-
         return super.onStartCommand(intent, flags, startId)
     }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Workpaper.cancelAllAlarm(this)
+    }
+
+    companion object {
+        const val CHANNEL_ID = "workpaper_channel"
+    }
+
 }

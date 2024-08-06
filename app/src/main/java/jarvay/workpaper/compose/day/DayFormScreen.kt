@@ -1,7 +1,6 @@
 package jarvay.workpaper.compose.day
 
 import android.annotation.SuppressLint
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -27,11 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import jarvay.workpaper.data.day.Day
 import jarvay.workpaper.data.day.DayValue
+import jarvay.workpaper.others.DayOption
 import jarvay.workpaper.others.FormMode
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.DayListViewModel
-
-data class DayOption(@StringRes val labelId: Int, val value: Int)
 
 @SuppressLint("MutableCollectionMutableState")
 @OptIn(ExperimentalMaterial3Api::class)

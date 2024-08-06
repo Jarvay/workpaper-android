@@ -17,10 +17,7 @@ class WallpaperReceiver : BroadcastReceiver() {
             val wallpaperWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
                 .build()
             WorkManager.getInstance(p0).enqueue(wallpaperWorkRequest)
+            Log.d("WallpaperWork enqueue", wallpaperWorkRequest.toString())
         }
-    }
-
-    companion object {
-        const val ACTION_UPDATE_WALLPAPER = "actionUpdateWallpaper"
     }
 }
