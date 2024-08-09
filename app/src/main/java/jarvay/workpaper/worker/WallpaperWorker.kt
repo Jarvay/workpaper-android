@@ -12,11 +12,12 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import jarvay.workpaper.data.day.RuleDao
-import jarvay.workpaper.data.preferences.DefaultPreferences
-import jarvay.workpaper.data.preferences.DefaultPreferencesKeys
-import jarvay.workpaper.data.preferences.DefaultPreferencesRepository
+import jarvay.workpaper.data.preferences.RunningPreferences
+import jarvay.workpaper.data.preferences.RunningPreferencesKeys
+import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
+import jarvay.workpaper.data.rule.RuleDao
+import jarvay.workpaper.data.rule.RuleRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
@@ -29,7 +30,8 @@ class WallpaperWorker @AssistedInject constructor(
     @Assisted val appContext: Context,
     @Assisted params: WorkerParameters,
     private val ruleDao: RuleDao,
-    private val defaultPreferencesRepository: DefaultPreferencesRepository,
+    private val ruleRepository: RuleRepository,
+    private val runningPreferencesRepository: RunningPreferencesRepository,
     private val settingPreferencesRepository: SettingsPreferencesRepository
 ) : Worker(appContext, params) {
 
@@ -84,42 +86,46 @@ class WallpaperWorker @AssistedInject constructor(
     @OptIn(DelicateCoroutinesApi::class)
     override fun doWork(): Result {
         Log.d(javaClass.simpleName, "start")
-        val defaultPreferences: DefaultPreferences = runBlocking {
-            defaultPreferencesRepository.defaultPreferencesFlow.first()
+        val runningPreferences: RunningPreferences = runBlocking {
+            runningPreferencesRepository.runningPreferencesFlow.first()
         }
 
-        Log.d(javaClass.simpleName, defaultPreferences.toString())
-        val index = defaultPreferences.lastIndex ?: 0
-        val ruleId = defaultPreferences.currentRuleId ?: -1
-        val lastWallpaper = defaultPreferences.lastWallpaper
+        Log.d(javaClass.simpleName, runningPreferences.toString())
+        val index = runningPreferences.lastIndex ?: 0
+        val ruleId = runningPreferences.currentRuleId ?: -1
+        val lastWallpaper = runningPreferences.lastWallpaper
 
         if (ruleId < 0) return Result.failure()
 
-        val ruleWithAlbum = ruleDao.findWithAlbumById(ruleId)
+        val ruleWithAlbums = ruleRepository.getRuleWithAlbums(ruleId)
 
-        ruleWithAlbum?.let {
-            val album = ruleWithAlbum.album
+        ruleWithAlbums?.let {
+            val albums = ruleWithAlbums.albums
+            val wallpaperUris: MutableList<String> = mutableListOf()
+            albums.forEach {
+                wallpaperUris.addAll(it.wallpaperUris)
+            }
 
-            Log.d(javaClass.simpleName, album.toString())
+            Log.d(javaClass.simpleName, albums.toString())
 
-            if (album.wallpaperUris.isEmpty()) return Result.failure()
+            if (wallpaperUris.isEmpty()) return Result.failure()
 
-            var nextIndex = nextIndex(album.wallpaperUris, index)
-            if (ruleWithAlbum.rule.random) {
+            var nextIndex = nextIndex(wallpaperUris, index)
+            if (ruleWithAlbums.rule.random) {
                 do {
-                    nextIndex = Random.nextInt(0, album.wallpaperUris.size - 1)
+                    nextIndex = Random.nextInt(0, wallpaperUris.size - 1)
                 } while (nextIndex == index)
             }
 
-            val wallpaper = album.wallpaperUris[nextIndex]
-            if (!lastWallpaper.equals(wallpaper)) {
+            val wallpaper = wallpaperUris[nextIndex]
+            if (lastWallpaper != wallpaper) {
                 setWallpaper(wallpaper = wallpaper)
             }
 
-            defaultPreferencesRepository.apply {
+            runningPreferencesRepository.apply {
                 GlobalScope.launch {
-                    update(DefaultPreferencesKeys.LAST_INDEX, nextIndex)
-                    update(DefaultPreferencesKeys.LAST_WALLPAPER, wallpaper)
+                    update(RunningPreferencesKeys.LAST_INDEX, nextIndex)
+                    update(RunningPreferencesKeys.LAST_WALLPAPER, wallpaper)
                 }
             }
         }

@@ -10,10 +10,10 @@ import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
-import jarvay.workpaper.data.day.RuleDao
-import jarvay.workpaper.data.preferences.DefaultPreferencesKeys
-import jarvay.workpaper.data.preferences.DefaultPreferencesRepository
+import jarvay.workpaper.data.preferences.RunningPreferencesKeys
+import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
+import jarvay.workpaper.data.rule.RuleRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -22,41 +22,34 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class RuleReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var ruleDao: RuleDao
+    lateinit var ruleRepository: RuleRepository
 
     @Inject
-    lateinit var defaultPreferencesRepository: DefaultPreferencesRepository
+    lateinit var runningPreferencesRepository: RunningPreferencesRepository
+
+    @Inject
+    lateinit var workpaper: Workpaper
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         val ruleId = intent?.getLongExtra(RULE_ID_KEY, -1) ?: -1
         Log.d(javaClass.simpleName, ruleId.toString())
-        val r = ruleDao.findWithAlbumById(ruleId)
+        val r = ruleRepository.getRuleWithAlbums(ruleId)
 
         if (ruleId > -1 && r != null) {
             context?.let {
-                Workpaper.cancelAlarm(type = AlarmType.REPEAT, context = context)
+                workpaper.cancelAlarm(type = AlarmType.REPEAT)
 
-//                val sp = defaultSharedPreferences(context)
-//                sp.edit().apply {
-//                    putInt(SharedPreferencesKey.LAST_INDEX_KEY, -1)
-//                    putLong(SharedPreferencesKey.CURRENT_RULE_ID_KEY, ruleId)
-//                }.apply()
+                if (r.rule.changeByTiming) {
+                    startRepeatAlarm(context, r.rule)
+                }
 
-                startRepeatAlarm(context, r.rule)
-
-                Log.d("defaultPreferencesRepository", defaultPreferencesRepository.toString())
-                defaultPreferencesRepository.let {
+                Log.d("defaultPreferencesRepository", runningPreferencesRepository.toString())
+                runningPreferencesRepository.let {
                     it.apply {
                         GlobalScope.launch {
-                            update(
-                                DefaultPreferencesKeys.CURRENT_RULE_ID,
-                                ruleId
-                            )
-                            update(
-                                DefaultPreferencesKeys.LAST_INDEX,
-                                -1
-                            )
+                            update(RunningPreferencesKeys.CURRENT_RULE_ID, ruleId)
+                            update(RunningPreferencesKeys.LAST_INDEX, -1)
                         }
                     }
                 }
@@ -74,7 +67,7 @@ class RuleReceiver : BroadcastReceiver() {
     private fun startRepeatAlarm(context: Context, rule: Rule) {
         val i = Intent(context, WallpaperReceiver::class.java)
         context.sendBroadcast(i)
-        val pendingIntent = Workpaper.getPendingIntent(AlarmType.REPEAT, context)
+        val pendingIntent = workpaper.getPendingIntent(AlarmType.REPEAT)
 
         val interval = rule.interval * 60 * 1000
         val alarmManager: AlarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager

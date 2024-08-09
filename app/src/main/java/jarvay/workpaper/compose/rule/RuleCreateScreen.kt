@@ -17,7 +17,6 @@ fun RuleCreateScreen(navController: NavController, viewModel: RuleFormViewModel 
 
     RuleForm(
         navController = navController,
-        albums = albums
     ) { rule ->
         val exists = viewModel.exists(rule.startHour, rule.startMinute, rule.days)
         if (exists) {

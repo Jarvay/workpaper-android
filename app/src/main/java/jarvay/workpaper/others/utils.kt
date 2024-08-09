@@ -1,7 +1,6 @@
 package jarvay.workpaper.others
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.icu.util.Calendar
 import android.util.Log
@@ -9,9 +8,15 @@ import android.util.Size
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.core.net.toUri
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import jarvay.workpaper.data.preferences.RunningPreferences
+import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
-import jarvay.workpaper.data.rule.RuleWithAlbum
-import jarvay.workpaper.data.rule.RuleWithAlbumToSort
+import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleAlbumsToSort
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.FileNotFoundException
 import java.io.IOException
 
@@ -42,20 +47,20 @@ fun getCalendarWithRule(rule: Rule, dayOfWeek: Int): Calendar {
 }
 
 fun findRule(
-    ruleWithAlbums: List<RuleWithAlbum>,
-    finder: (List<RuleWithAlbumToSort>) -> RuleWithAlbumToSort?,
+    ruleWithAlbums: List<RuleAlbums>,
+    finder: (List<RuleAlbumsToSort>) -> RuleAlbumsToSort?,
     dayOfWeekUpdater: (Int) -> Int
-): RuleWithAlbumToSort? {
+): RuleAlbumsToSort? {
     val calendar = Calendar.getInstance()
     val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
 
-    val rules = ArrayList<RuleWithAlbumToSort>()
+    val rules = ArrayList<RuleAlbumsToSort>()
     ruleWithAlbums.forEach {
         it.rule.days.forEach { day ->
             val sortValue = day * 24 * 60 + it.rule.startHour * 60 + it.rule.startMinute
             rules.add(
-                RuleWithAlbumToSort(
-                    ruleWithAlbum = it.copy(),
+                RuleAlbumsToSort(
+                    ruleAlbums = it.copy(),
                     sortValue = sortValue.toLong(),
                     day = day
                 )
@@ -63,7 +68,7 @@ fun findRule(
         }
     }
 
-    var result: RuleWithAlbumToSort?
+    var result: RuleAlbumsToSort?
     var currentDayOfWeek = dayOfWeek;
     do {
         val list = rules.apply {
@@ -84,8 +89,8 @@ fun currentMinute(): Int {
     )
 }
 
-fun prevRule(ruleWithAlbums: List<RuleWithAlbum>): RuleWithAlbumToSort? {
-    return findRule(ruleWithAlbums = ruleWithAlbums, finder = { list ->
+fun prevRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
+    return findRule(ruleWithAlbums = list, finder = { list ->
         list.sortedByDescending { it.sortValue }.find {
             it.sortValue < currentMinute()
         }
@@ -94,7 +99,7 @@ fun prevRule(ruleWithAlbums: List<RuleWithAlbum>): RuleWithAlbumToSort? {
     })
 }
 
-fun nextRule(ruleWithAlbums: List<RuleWithAlbum>): RuleWithAlbumToSort? {
+fun nextRule(ruleWithAlbums: List<RuleAlbums>): RuleAlbumsToSort? {
     return findRule(ruleWithAlbums = ruleWithAlbums, finder = { list ->
         list.sortedBy { it.sortValue }.find {
             it.sortValue > currentMinute()
@@ -102,13 +107,6 @@ fun nextRule(ruleWithAlbums: List<RuleWithAlbum>): RuleWithAlbumToSort? {
     }, dayOfWeekUpdater = { currentDayOfWeek ->
         nextDayOfWeek(currentDayOfWeek)
     })
-}
-
-fun defaultSharedPreferences(context: Context): SharedPreferences {
-    return context.getSharedPreferences(
-        SharedPreferencesKey.SHARED_PREFERENCE_NAME,
-        Context.MODE_PRIVATE
-    )
 }
 
 fun showToast(context: Context, text: String) {
@@ -135,4 +133,22 @@ fun getSize(context: Context, fileStrUri: String): Size {
     }
 
     return size
+}
+
+fun runningPreferencesFlow(dataStore: DataStore<Preferences>): Flow<RunningPreferences> {
+    return dataStore.data.map { preferences ->
+        val currentRuleId = preferences[RunningPreferencesKeys.CURRENT_RULE_ID] ?: -1
+        val lastIndex = preferences[RunningPreferencesKeys.LAST_INDEX] ?: -1
+        val lastWallpaper = preferences[RunningPreferencesKeys.LAST_WALLPAPER] ?: ""
+        val nextRuleId = preferences[RunningPreferencesKeys.NEXT_RULE_ID] ?: -1
+        val running = preferences[RunningPreferencesKeys.RUNNING] ?: false
+
+        RunningPreferences(
+            currentRuleId = currentRuleId,
+            lastIndex = lastIndex,
+            lastWallpaper = lastWallpaper,
+            nextRuleId = nextRuleId,
+            running = running
+        )
+    }
 }

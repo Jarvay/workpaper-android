@@ -17,4 +17,10 @@ class Converters {
 
     @TypeConverter
     fun stringToIntList(data: String) = gson.fromJson(data, Array<Int>::class.java).toList()
+
+    @TypeConverter
+    fun longListToString(data: List<Long>?): String = gson.toJson(data)
+
+    @TypeConverter
+    fun stringToLongList(data: String) = gson.fromJson(data, Array<Long>::class.java).toList()
 }

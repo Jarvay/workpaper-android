@@ -22,17 +22,20 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +50,7 @@ import coil.request.ImageRequest
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.others.getSize
+import jarvay.workpaper.others.showToast
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 
@@ -59,14 +63,18 @@ fun AlbumDetailScreen(
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val album by viewModel.album.observeAsState()
-    var selecting by rememberSaveable {
+    var selecting by remember {
         mutableStateOf(false)
     }
-    var checkedState by rememberSaveable {
+    var checkedState by remember {
         mutableStateOf(setOf<String>())
     }
-    var deleteDialogShow by rememberSaveable {
+    var deleteDialogShow by remember {
         mutableStateOf(false)
+    }
+
+    var currentWallpaper by remember {
+        mutableStateOf("")
     }
 
     if (album == null) return
@@ -131,6 +139,10 @@ fun AlbumDetailScreen(
                         IconButton(onClick = { deleteDialogShow = true }) {
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "")
                         }
+                    } else {
+                        TextButton(onClick = { selecting = true }) {
+                            Text(text = stringResource(id = R.string.edit))
+                        }
                     }
                 }
             )
@@ -152,24 +164,40 @@ fun AlbumDetailScreen(
         ) {
             items(items = album!!.wallpaperUris, key = { item ->
                 item
-            }) { it ->
-                Box(modifier = Modifier.animateItemPlacement().combinedClickable(onLongClick = {
-                    selecting = !selecting
-                }) {
-                    if (selecting) {
-                        val checked = !checkedState.contains(it)
-                        checkedState = updateCheckedState(checked, it, checkedState)
-                    }
-                }) {
+            }) {
+                Box(modifier = Modifier
+                    .animateItemPlacement()
+                    .combinedClickable(onLongClick = {
+                        currentWallpaper = it
+                    }) {
+                        if (selecting) {
+                            val checked = !checkedState.contains(it)
+                            checkedState = updateCheckedState(checked, it, checkedState)
+                        }
+                    }) {
                     Card(modifier = Modifier.padding(8.dp)) {
                         val size = getSize(context, it)
                         val floatWidth = size.width.toFloat()
                         val floatHeight = size.height.toFloat()
 
                         AsyncImage(
-                            model = ImageRequest.Builder(context).data(it.toUri()).size(320, 320).build(),
+                            model = ImageRequest.Builder(context).data(it.toUri()).size(320, 320)
+                                .build(),
                             contentDescription = null,
                             modifier = Modifier.aspectRatio(floatWidth / floatHeight)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = currentWallpaper == it,
+                        onDismissRequest = { currentWallpaper = "" }) {
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
+                            onClick = {
+                                viewModel.update(album!!.copy(coverUri = it))
+                                currentWallpaper = ""
+                                showToast(context, R.string.tips_operation_success)
+                            }
                         )
                     }
 

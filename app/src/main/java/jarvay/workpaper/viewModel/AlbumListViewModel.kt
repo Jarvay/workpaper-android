@@ -38,7 +38,7 @@ class AlbumListViewModel @Inject constructor(
     }
 
     fun isUsing(albumId: Long): Boolean {
-        return ruleRepository.getRuleByAlbumId(albumId) != null
+        return ruleRepository.isAlbumUsing(albumId)
     }
 
     fun existsByName(name: String): Boolean {

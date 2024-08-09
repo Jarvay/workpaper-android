@@ -78,27 +78,19 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_enable_notification) {
-                Switch(
-                    checked = settings.enableNotification,
-                    onCheckedChange = { c ->
-                        val hasPermission =
-                            checkNotifyPermission(context = context, onRequestPermission = {
-                                notificationDialogShow = true
-                            })
-                        if (!hasPermission) {
-                            viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, false)
-                        } else {
-                            viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, true)
-                        }
-                    })
-            }
-
             SettingSItem(labelId = R.string.settings_item_also_set_lock_wallpaper) {
                 Switch(
                     checked = settings.alsoSetLockWallpaper,
                     onCheckedChange = { c ->
                         viewModel.update(SettingsPreferencesKeys.ALSO_SET_LOCK_WALLPAPER, c)
+                    })
+            }
+
+            SettingSItem(labelId = R.string.settings_item_hide_in_rencent_task) {
+                Switch(
+                    checked = settings.hideInRecentTask,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.HIDE_IN_RECENT_TASK, c)
                     })
             }
         }

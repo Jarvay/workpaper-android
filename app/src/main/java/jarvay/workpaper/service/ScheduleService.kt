@@ -14,13 +14,18 @@ import androidx.lifecycle.asLiveData
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.R
 import jarvay.workpaper.Workpaper
-import jarvay.workpaper.data.day.RuleDao
 import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
+import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
+import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleDao
+import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.prevRule
 import jarvay.workpaper.receiver.NextRuleReceiver
 import jarvay.workpaper.receiver.RuleReceiver
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,9 +34,18 @@ class ScheduleService @Inject constructor() : Service() {
     lateinit var ruleDao: RuleDao
 
     @Inject
+    lateinit var ruleRepository: RuleRepository
+
+    @Inject
     lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
 
+    @Inject
+    lateinit var runningPreferencesRepository: RunningPreferencesRepository
+
     lateinit var settings: SettingsPreferences
+
+    @Inject
+    lateinit var workpaper: Workpaper
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -69,7 +83,12 @@ class ScheduleService @Inject constructor() : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val rules = ruleDao.findAll()
+        val rules = ruleDao.findAll().map {
+            RuleAlbums(
+                rule = it.key,
+                albums = it.value
+            )
+        }
 
         val prevRule = prevRule(rules)
 
@@ -78,7 +97,7 @@ class ScheduleService @Inject constructor() : Service() {
         if (prevRule != null && settings.startWithPrevRule) {
             val prevRuleIntent = Intent(this, RuleReceiver::class.java)
             prevRuleIntent.putExtra(RuleReceiver.ADD_NEXT_RULE_TO_ALARM_FLAG, false)
-            prevRuleIntent.putExtra(RuleReceiver.RULE_ID_KEY, prevRule.ruleWithAlbum.rule.ruleId)
+            prevRuleIntent.putExtra(RuleReceiver.RULE_ID_KEY, prevRule.ruleAlbums.rule.ruleId)
             sendBroadcast(prevRuleIntent)
         }
 
@@ -90,7 +109,6 @@ class ScheduleService @Inject constructor() : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        Workpaper.cancelAllAlarm(this)
     }
 
     companion object {

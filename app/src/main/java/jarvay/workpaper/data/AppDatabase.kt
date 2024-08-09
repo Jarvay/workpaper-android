@@ -7,19 +7,19 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumDao
-import jarvay.workpaper.data.day.Day
-import jarvay.workpaper.data.day.DayDao
-import jarvay.workpaper.data.day.RuleDao
 import jarvay.workpaper.data.rule.Rule
+import jarvay.workpaper.data.rule.RuleAlbumRelation
+import jarvay.workpaper.data.rule.RuleAlbumRelationDao
+import jarvay.workpaper.data.rule.RuleDao
 
-@Database(entities = [Day::class, Rule::class, Album::class], version = 1)
+@Database(entities = [Rule::class, Album::class, RuleAlbumRelation::class], version = 1)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun dayDao(): DayDao
-
     abstract fun ruleDao(): RuleDao
 
     abstract fun albumDao(): AlbumDao
+
+    abstract fun ruleAlbumRelationDao(): RuleAlbumRelationDao
 
     companion object {
         @Volatile

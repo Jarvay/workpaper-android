@@ -8,9 +8,10 @@ import android.content.Intent
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
-import jarvay.workpaper.data.day.RuleDao
-import jarvay.workpaper.data.preferences.DefaultPreferencesKeys
-import jarvay.workpaper.data.preferences.DefaultPreferencesRepository
+import jarvay.workpaper.data.preferences.RunningPreferencesKeys
+import jarvay.workpaper.data.preferences.RunningPreferencesRepository
+import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleDao
 import jarvay.workpaper.others.getCalendarWithRule
 import jarvay.workpaper.others.nextRule
 import jarvay.workpaper.receiver.RuleReceiver.Companion.RULE_ID_KEY
@@ -26,18 +27,24 @@ class NextRuleReceiver : BroadcastReceiver() {
     lateinit var ruleDao: RuleDao
 
     @Inject
-    lateinit var defaultPreferencesRepository: DefaultPreferencesRepository
+    lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
-        val nextRule = nextRule(ruleDao.findAll())
-        if (intent == null || context == null || nextRule == null) return
-
+        val list = ruleDao.findAll().map {
+            RuleAlbums(
+                rule = it.key,
+                albums = it.value
+            )
+        }
+        val nextRule = nextRule(ruleWithAlbums = list)
         Log.d("nextRule", nextRule.toString())
 
-        val calendar = getCalendarWithRule(nextRule.ruleWithAlbum.rule, nextRule.day)
+        if (intent == null || context == null || nextRule == null) return
+
+        val calendar = getCalendarWithRule(nextRule.ruleAlbums.rule, nextRule.day)
         val i = Intent(context, RuleReceiver::class.java)
-        i.putExtra(RULE_ID_KEY, nextRule.ruleWithAlbum.rule.ruleId)
+        i.putExtra(RULE_ID_KEY, nextRule.ruleAlbums.rule.ruleId)
         val pendingIntent: PendingIntent = PendingIntent.getBroadcast(
             context,
             AlarmType.RULE.value,
@@ -62,9 +69,9 @@ class NextRuleReceiver : BroadcastReceiver() {
 
         // update preferences
         GlobalScope.launch {
-            defaultPreferencesRepository.update(
-                DefaultPreferencesKeys.NEXT_RULE_ID,
-                nextRule.ruleWithAlbum.rule.ruleId
+            runningPreferencesRepository.update(
+                RunningPreferencesKeys.NEXT_RULE_ID,
+                nextRule.ruleAlbums.rule.ruleId
             )
         }
     }

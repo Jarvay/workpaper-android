@@ -17,8 +17,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PhotoAlbum
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -40,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,36 +51,37 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import jarvay.workpaper.AlarmType
 import jarvay.workpaper.R
-import jarvay.workpaper.Workpaper
 import jarvay.workpaper.compose.Screen
 import jarvay.workpaper.compose.album.AlbumCreateDialog
 import jarvay.workpaper.compose.album.AlbumListScreen
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.compose.rule.RuleListScreen
 import jarvay.workpaper.others.requestAlarmPermission
+import jarvay.workpaper.viewModel.HomeScreenViewModel
 import kotlinx.coroutines.launch
 
-
-enum class WorkpaperPage(@StringRes val titleResId: Int) {
-    RULES(R.string.tab_title_rules),
-    ALBUMS(R.string.tab_title_albums)
+enum class WorkpaperPage(
+    @StringRes val titleResId: Int,
+    val iconImageVector: ImageVector
+) {
+    RULES(R.string.tab_title_rules, Icons.AutoMirrored.Default.FormatListBulleted),
+    ALBUMS(R.string.tab_title_albums, Icons.Default.PhotoAlbum)
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier,
     navController: NavController,
-    pages: Array<WorkpaperPage> = WorkpaperPage.entries.toTypedArray()
+    pages: Array<WorkpaperPage> = WorkpaperPage.entries.toTypedArray(),
 ) {
     val pagerState = rememberPagerState(pageCount = { pages.size })
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     val scope = rememberCoroutineScope()
@@ -106,6 +111,14 @@ fun HomeScreen(
                     ) {
                         NavigationDrawerItem(
                             label = { Text(text = stringResource(id = R.string.drawer_menu_settings)) },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(
+                                        id = R.string.drawer_menu_settings
+                                    )
+                                )
+                            },
                             selected = false,
                             onClick = {
                                 navController.navigate(Screen.Settings.route)
@@ -118,7 +131,7 @@ fun HomeScreen(
                 }
             }
         }) {
-        Scaffold( topBar = {
+        Scaffold(topBar = {
             TopBar(drawerState = drawerState)
         }, floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -169,6 +182,9 @@ fun HomePagerScreen(
                     selected = pagerState.currentPage == index,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
                     text = { Text(text = title) },
+                    icon = {
+                        Icon(imageVector = page.iconImageVector, contentDescription = title)
+                    },
                     unselectedContentColor = MaterialTheme.colorScheme.secondary
                 )
             }
@@ -210,18 +226,19 @@ private fun checkPermissions(context: Context, onRequestPermission: () -> Unit):
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopBar(drawerState: DrawerState) {
+private fun TopBar(
+    drawerState: DrawerState,
+    homeScreenViewModel: HomeScreenViewModel = hiltViewModel(),
+) {
     val context = LocalContext.current
 
     var alarmPermissionDialogShow by remember {
         mutableStateOf(false)
     }
 
-    var isOpen by rememberSaveable {
-        mutableStateOf(Workpaper.isAlarmExist(AlarmType.REPEAT, context))
-    }
-
     val scope = rememberCoroutineScope()
+
+    val runningPreferences by homeScreenViewModel.runningPreferences.observeAsState()
 
     CenterAlignedTopAppBar(title = {
         Row(
@@ -245,16 +262,14 @@ private fun TopBar(drawerState: DrawerState) {
                 )
             }
 
-            Switch(checked = isOpen, onCheckedChange = {
+            Switch(checked = runningPreferences?.running ?: false, onCheckedChange = {
                 if (it && checkPermissions(context, onRequestPermission = {
                         alarmPermissionDialogShow = true
                     })) {
-                    Workpaper.start(context)
+                    homeScreenViewModel.start(scope)
 
-                    isOpen = true
                 } else if (!it) {
-                    isOpen = false
-                    Workpaper.cancelAllAlarm(context)
+                    homeScreenViewModel.stop(scope)
                 }
             })
         }

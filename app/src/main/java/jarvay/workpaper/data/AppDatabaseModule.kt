@@ -7,8 +7,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jarvay.workpaper.data.album.AlbumDao
-import jarvay.workpaper.data.day.DayDao
-import jarvay.workpaper.data.day.RuleDao
+import jarvay.workpaper.data.rule.RuleAlbumRelationDao
+import jarvay.workpaper.data.rule.RuleDao
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
@@ -22,11 +22,6 @@ class AppDatabaseModule {
     }
 
     @Provides
-    fun provideDayDao(appDatabase: AppDatabase): DayDao {
-        return appDatabase.dayDao()
-    }
-
-    @Provides
     fun provideRuleDao(appDatabase: AppDatabase): RuleDao {
         return appDatabase.ruleDao()
     }
@@ -36,4 +31,8 @@ class AppDatabaseModule {
         return appDatabase.albumDao()
     }
 
+    @Provides
+    fun provideRuleAlbumRelationDao(appDatabase: AppDatabase): RuleAlbumRelationDao {
+        return appDatabase.ruleAlbumRelationDao()
+    }
 }

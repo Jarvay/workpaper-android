@@ -43,14 +43,25 @@ import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.RuleListViewModel
+import jarvay.workpaper.viewModel.WorkpaperViewModel
 
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class
+    ExperimentalFoundationApi::class
 )
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun RuleListScreen(navController: NavController, viewModel: RuleListViewModel = hiltViewModel()) {
+fun RuleListScreen(
+    navController: NavController,
+    viewModel: RuleListViewModel = hiltViewModel(),
+    workpaperViewModel: WorkpaperViewModel = hiltViewModel(),
+) {
     val rules by viewModel.allRules.observeAsState(initial = emptyList())
+
+    val rp by workpaperViewModel.runningPreferences.observeAsState()
+
+    Log.d("rules", rules.toString())
+    Log.d("rp", rp.toString())
+    Log.d("running", rp?.running.toString())
 
     val defaultPreferences by viewModel.defaultPreferences.observeAsState()
 
@@ -76,7 +87,7 @@ fun RuleListScreen(navController: NavController, viewModel: RuleListViewModel = 
         ) {
             items(items = rules, key = { item -> item.rule.ruleId }) {
                 val rule = it.rule
-                val album = it.album
+                val albums = it.albums
 
                 Box {
                     Card(
@@ -111,13 +122,30 @@ fun RuleListScreen(navController: NavController, viewModel: RuleListViewModel = 
 
                             RuleInfoItem(
                                 labelId = R.string.rule_list_item_album,
-                                value = album.name
+                                value = albums.joinToString(separator = ", ") { album -> album.name }
                             )
 
-                            RuleInfoItem(
-                                labelId = R.string.rule_list_item_interval,
-                                value = rule.interval.toString()
-                            )
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (rule.changeByTiming) {
+                                    Text(
+                                        text = stringResource(
+                                            id = R.string.rule_list_item_interval,
+                                            rule.interval
+                                        )
+                                    )
+                                }
+
+                                if (rule.changeWhileUnlock) {
+                                    Text(
+                                        text = stringResource(
+                                            id = R.string.rule_list_item_change_when_unlock
+                                        )
+                                    )
+                                }
+                            }
                         }
 
                         DropdownMenu(
@@ -132,34 +160,38 @@ fun RuleListScreen(navController: NavController, viewModel: RuleListViewModel = 
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.padding(end = 8.dp, bottom = 16.dp).align(Alignment.BottomEnd),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            4.dp,
-                            Alignment.CenterHorizontally
-                        )
-                    ) {
-                        val textModifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    if (rp?.running == true) {
+                        Row(
+                            modifier = Modifier
+                                .padding(end = 8.dp, bottom = 16.dp)
+                                .align(Alignment.BottomEnd),
+                            horizontalArrangement = Arrangement.spacedBy(
+                                4.dp,
+                                Alignment.CenterHorizontally
+                            )
+                        ) {
+                            val textModifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
 
-                        val textColor = Color(0xFFFFFFFF)
+                            val textColor = Color(0xFFFFFFFF)
 
-                        if (defaultPreferences?.currentRuleId == it.rule.ruleId) {
-                            Badge( containerColor = Color(0xFF81C784)) {
-                                Text(
-                                    text = stringResource(id = R.string.rule_current_rule),
-                                    modifier = textModifier,
-                                    color = textColor
-                                )
+                            if (defaultPreferences?.currentRuleId == it.rule.ruleId) {
+                                Badge(containerColor = Color(0xFF81C784)) {
+                                    Text(
+                                        text = stringResource(id = R.string.rule_current_rule),
+                                        modifier = textModifier,
+                                        color = textColor
+                                    )
+                                }
                             }
-                        }
 
-                        if (defaultPreferences?.nextRuleId == it.rule.ruleId) {
-                            Badge(containerColor = Color(0xFFFFB74D)) {
-                                Text(
-                                    text = stringResource(id = R.string.rule_next_rule),
-                                    modifier = textModifier,
-                                    color = textColor
-                                )
+                            if (defaultPreferences?.nextRuleId == it.rule.ruleId) {
+                                Badge(containerColor = Color(0xFFFFB74D)) {
+                                    Text(
+                                        text = stringResource(id = R.string.rule_next_rule),
+                                        modifier = textModifier,
+                                        color = textColor
+                                    )
+                                }
                             }
                         }
                     }

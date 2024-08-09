@@ -17,10 +17,13 @@ class SettingsPreferencesRepository @Inject constructor(
             ?: DEFAULT_SETTINGS.enableNotification
         val alsoSetLockWallpaper = preferences[SettingsPreferencesKeys.ALSO_SET_LOCK_WALLPAPER]
             ?: DEFAULT_SETTINGS.alsoSetLockWallpaper
+        val hideInRecentTask = preferences[SettingsPreferencesKeys.HIDE_IN_RECENT_TASK]
+            ?: DEFAULT_SETTINGS.hideInRecentTask
         SettingsPreferences(
             startWithPrevRule = startWithPrevRule,
             enableNotification = enableNotification,
-            alsoSetLockWallpaper = alsoSetLockWallpaper
+            alsoSetLockWallpaper = alsoSetLockWallpaper,
+            hideInRecentTask = hideInRecentTask,
         )
     }
 

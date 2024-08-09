@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import jarvay.workpaper.compose.album.AlbumDetailScreen
-import jarvay.workpaper.compose.day.DayFormScreen
 import jarvay.workpaper.compose.home.HomeScreen
 import jarvay.workpaper.compose.rule.RuleCreateScreen
 import jarvay.workpaper.compose.rule.RuleListScreen
@@ -36,10 +35,6 @@ fun WorkpaperNavHost(
         }
         composable(route = Screen.Settings.route) {
             SettingsScreen(navController = navController)
-        }
-
-        composable(route = Screen.DayCreate.route) {
-            DayFormScreen(navController = navController)
         }
 
         composable(route = Screen.DayDetail.route) {

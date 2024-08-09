@@ -88,6 +88,14 @@ fun NumberField(
             value = content,
             onValueChange = {
                 content = it
+                if (it.isNotBlank() && it.isNotEmpty()) {
+                    try {
+                        onChange(content.toInt())
+                        lastValidValue = content
+                    } catch (_: Exception) {
+                        content = lastValidValue
+                    }
+                }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
             textStyle = TextStyle(textAlign = TextAlign.Center),
