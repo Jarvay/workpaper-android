@@ -18,6 +18,9 @@ interface AlbumDao {
     @Query("SELECT * FROM albums WHERE id= :id ")
     fun findById(id: Long): Album?
 
+    @Query("SELECT EXISTS (SELECT * FROM albums WHERE name= :name )")
+    fun existsByName(name: String): Boolean
+
     @Insert
     suspend fun insert(item: Album)
 

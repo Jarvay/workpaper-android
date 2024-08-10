@@ -19,7 +19,7 @@ class RuleFormViewModel @Inject constructor(
 ) : ViewModel() {
     private val ruleId: String? = savedStateHandle.get<String>(RULE_ID_SAVED_STATE_KEY)
 
-    val rule = if (ruleId != null) repository.getRuleWithAlbum(ruleId.toLong()) else null
+    val ruleAlbums = if (ruleId != null) repository.getRuleWithAlbums(ruleId.toLong()) else null
 
     val allAlbums = albumRepository.allAlbums.asLiveData()
 
@@ -33,6 +33,10 @@ class RuleFormViewModel @Inject constructor(
         viewModelScope.launch {
             repository.update(item)
         }
+    }
+
+    fun exists(startHour: Int, startMinute: Int, days: List<Int>, ruleId: Long? = null): Boolean {
+        return repository.exists(startHour, startMinute, days, ruleId)
     }
 
     companion object {

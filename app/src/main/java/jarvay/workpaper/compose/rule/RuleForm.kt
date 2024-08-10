@@ -1,90 +1,126 @@
 package jarvay.workpaper.compose.rule
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.components.AlbumItem
+import jarvay.workpaper.compose.components.AlbumModalSheet
+import jarvay.workpaper.compose.components.CustomIconButton
+import jarvay.workpaper.compose.components.NumberField
 import jarvay.workpaper.compose.components.TimePickerDialog
-import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.rule.Rule
-import jarvay.workpaper.data.rule.RuleWithAlbum
-import jarvay.workpaper.others.FormMode
+import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.others.DEFAULT_WALLPAPER_CHANGE_INTERVAL
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
+import jarvay.workpaper.others.showToast
 import jarvay.workpaper.ui.theme.FORM_ITEM_SPACE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
+import jarvay.workpaper.viewModel.WorkpaperViewModel
 
 @SuppressLint("MutableCollectionMutableState")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun RuleForm(
     navController: NavController,
-    albums: List<Album>,
-    values: RuleWithAlbum? = null,
+    values: RuleAlbums? = null,
+    workpaperViewModel: WorkpaperViewModel = hiltViewModel(),
     onSave: (Rule) -> Unit,
 ) {
-    var startTimePickerState = rememberTimePickerState(
-        is24Hour = true,
-        initialHour = values?.rule?.startHour ?: 0,
-        initialMinute = values?.rule?.startMinute ?: 0
-    )
+    val context = LocalContext.current
+    val currentRule = values?.rule
+
+    val scrollState = rememberScrollState()
+
+    val runningPreferences by workpaperViewModel.runningPreferences.observeAsState()
+
+    var rule by remember {
+        mutableStateOf(
+            Rule(
+                days = currentRule?.days ?: dayOptions.map { it.value },
+                random = currentRule?.random ?: false,
+                interval = currentRule?.interval ?: DEFAULT_WALLPAPER_CHANGE_INTERVAL,
+                startHour = currentRule?.startHour ?: 0,
+                startMinute = currentRule?.startMinute ?: 0,
+                albumIds = currentRule?.albumIds ?: emptyList(),
+                changeByTiming = currentRule?.changeByTiming ?: true,
+                changeWhileUnlock = currentRule?.changeWhileUnlock ?: false
+            )
+        )
+    }
 
     var startPickerShow by remember {
         mutableStateOf(false)
     }
-    var albumMenuExpanded by remember {
+    var albumModalSheetShow by remember {
         mutableStateOf(false)
     }
-    var album by remember {
-        mutableStateOf(value = values?.album)
+
+    var selectedAlbums by remember {
+        mutableStateOf(
+            value = values?.albums ?: emptyList()
+        )
     }
 
-    var checkedState by remember {
-        mutableStateOf(values?.rule?.days?.toSet() ?: dayOptions.map { it.value }.toSet())
+    val parentState = when {
+        rule.days.size == dayOptions.size -> ToggleableState.On
+        rule.days.isEmpty() -> ToggleableState.Off
+        else -> ToggleableState.Indeterminate
     }
 
     if (startPickerShow) {
         TimePickerDialog(
-            timePickerState = startTimePickerState,
-            onDismiss = { startPickerShow = false }) { timePickerState ->
-            startTimePickerState = timePickerState
+            hour = rule.startHour,
+            minute = rule.startMinute,
+            onDismiss = { startPickerShow = false }
+        ) { timePickerState ->
+            rule = rule.copy(
+                startHour = timePickerState.hour,
+                startMinute = timePickerState.minute
+            )
             startPickerShow = false
         }
     }
@@ -101,16 +137,20 @@ fun RuleForm(
                 }
             },
             actions = {
+                val saveEnable = selectedAlbums.isNotEmpty()
+                        && rule.days.isNotEmpty()
+                        && (rule.changeByTiming || rule.changeWhileUnlock)
+
                 IconButton(onClick = {
+                    if (runningPreferences?.running == true) {
+                        showToast(context, R.string.rule_can_not_edit_while_running)
+                        return@IconButton
+                    }
+
                     onSave(
-                        Rule(
-                            startHour = startTimePickerState.hour,
-                            startMinute = startTimePickerState.minute,
-                            albumId = album!!.albumId,
-                            days = checkedState.toList()
-                        )
+                        rule.copy()
                     )
-                }, enabled = album != null) {
+                }, enabled = saveEnable) {
                     Icon(Icons.Default.Save, "")
                 }
             }
@@ -122,64 +162,195 @@ fun RuleForm(
             verticalArrangement = Arrangement.spacedBy(FORM_ITEM_SPACE),
             modifier = Modifier
                 .padding(padding)
+                .padding(bottom = 16.dp)
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING)
+                .verticalScroll(scrollState)
         ) {
-            LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 96.dp)) {
-                items(items = dayOptions) { option ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = checkedState.contains(option.value),
-                            onCheckedChange = { checked ->
-                                val checkedSet = checkedState.toMutableSet()
-                                if (checked) {
-                                    checkedSet.add(option.value)
-                                } else {
-                                    checkedSet.remove(option.value)
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TriStateCheckbox(
+                        state = parentState,
+                        onClick = {
+                            val newState = parentState != ToggleableState.On
+                            val checkedDays = if (newState) {
+                                dayOptions.map { it.value }
+                            } else {
+                                emptyList()
+                            }
+                            rule = rule.copy(days = checkedDays)
+                        }
+                    )
+                    Text(stringResource(id = R.string.select_all))
+                }
+
+                fun updateCheckedDays(checked: Boolean, dayValue: Int) {
+                    val checkedDays = rule.days.toMutableList()
+                    if (checked) {
+                        checkedDays.add(dayValue)
+                    } else {
+                        checkedDays.remove(dayValue)
+                    }
+                    rule = rule.copy(days = checkedDays)
+                }
+
+                FlowRow(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxItemsInEachRow = 3
+                ) {
+                    dayOptions.forEach { option ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(0.3f)
+                                .clickable {
+                                    updateCheckedDays(
+                                        !rule.days.contains(option.value),
+                                        option.value
+                                    )
                                 }
-                                checkedState = checkedSet.toMutableSet()
-                            })
-                        Text(stringResource(id = option.labelId))
+                        ) {
+                            Checkbox(
+                                checked = rule.days.contains(option.value),
+                                onCheckedChange = { checked ->
+                                    updateCheckedDays(checked, option.value)
+                                })
+                            Text(stringResource(id = option.labelId))
+                        }
                     }
                 }
             }
 
 
-            OutlinedTextField(
-                label = {
-                    Text(text = stringResource(id = R.string.rule_start_time))
-                },
-                value = formatTime(startTimePickerState.hour, startTimePickerState.minute),
-                onValueChange = {},
-                readOnly = true,
-                enabled = false,
-                modifier = defaultModifier.clickable {
-                    startPickerShow = true
-                })
-
-            Box(modifier = Modifier) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = defaultModifier,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 OutlinedTextField(
                     label = {
-                        Text(text = stringResource(id = R.string.rule_album))
+                        Text(text = stringResource(id = R.string.rule_start_time))
                     },
-                    value = album?.name ?: "", onValueChange = {},
-                    modifier = defaultModifier.clickable {
-                        albumMenuExpanded = true
-                    },
-                    enabled = false,
+                    value = formatTime(rule.startHour, rule.startMinute),
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.weight(0.8F, true)
                 )
-                DropdownMenu(
-                    expanded = albumMenuExpanded,
-                    onDismissRequest = { albumMenuExpanded = false }) {
-                    albums.forEach {
-                        DropdownMenuItem(text = {
-                            Text(text = it.name)
-                        }, onClick = {
-                            album = it
-                            albumMenuExpanded = false
-                        })
+
+                CustomIconButton(
+                    onClick = { startPickerShow = true },
+                    modifier = Modifier.weight(0.2F, false)
+                ) {
+                    Icon(imageVector = Icons.Default.Timer, contentDescription = null)
+                }
+            }
+
+            Box(modifier = Modifier) {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    modifier = defaultModifier,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FlowRow(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        maxItemsInEachRow = 3
+                    ) {
+                        selectedAlbums.forEach {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(0.3f)
+                            ) {
+                                AlbumItem(album = it, modifier = Modifier.fillMaxSize())
+                            }
+                        }
+
+                        Card(
+                            modifier = Modifier
+                                .weight(0.3f)
+                                .aspectRatio(1F),
+                            onClick = {
+                                albumModalSheetShow = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AddPhotoAlternate,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxSize(),
+                                tint = Color.White
+                            )
+                        }
+
+                        val placeholderCount = 3 - (selectedAlbums.size % 3)
+                        repeat(placeholderCount) {
+                            Column(modifier = Modifier.weight(0.3f)) {
+
+                            }
+                        }
                     }
                 }
             }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = defaultModifier,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = stringResource(id = R.string.rule_random))
+
+                Switch(checked = rule.random, onCheckedChange = { rule = rule.copy(random = it) })
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = defaultModifier,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = stringResource(id = R.string.rule_change_by_timing))
+
+                Checkbox(
+                    checked = rule.changeByTiming,
+                    onCheckedChange = { rule = rule.copy(changeByTiming = it) })
+            }
+
+            if (rule.changeByTiming) {
+                NumberField(
+                    label = {
+                        Text(
+                            text = stringResource(id = R.string.settings_item_interval)
+                        )
+                    },
+                    value = rule.interval,
+                    onValueChange = { interval -> rule = rule.copy(interval = interval) },
+                    min = 1,
+                    max = 24 * 60
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = defaultModifier,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = stringResource(id = R.string.rule_change_while_unlock))
+
+                Checkbox(
+                    checked = rule.changeWhileUnlock,
+                    onCheckedChange = { rule = rule.copy(changeWhileUnlock = it) })
+            }
+        }
+
+        AlbumModalSheet(
+            show = albumModalSheetShow,
+            defaultValues = rule.albumIds,
+            onDismissRequest = { albumModalSheetShow = false }
+        ) {
+            selectedAlbums = it.toList()
+            rule = rule.copy(
+                albumIds = it.map { album -> album.albumId }
+            )
         }
     }
 }

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 
 fun requestAlarmPermission(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -14,4 +13,14 @@ fun requestAlarmPermission(context: Context) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent)
     }
+}
+
+fun requestNotificationPermission(context: Context) {
+    val intent = Intent().apply {
+        action = "android.settings.APP_NOTIFICATION_SETTINGS"
+        putExtra("app_package", context.packageName)
+        putExtra("app_uid", context.applicationInfo.uid)
+        putExtra("android.provider.extra.APP_PACKAGE", context.packageName);
+    }
+    context.startActivity(intent)
 }

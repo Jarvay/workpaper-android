@@ -21,9 +21,10 @@ runtimeLivedata = "1.6.8"
 ksp = "2.0.0-1.0.21"
 room = "2.6.1"
 gson = "2.10.1"
-glide = "1.0.0-beta01"
+coil = "2.7.0"
 hiltCommon = "1.2.0"
-hiltWork= "1.2.0"
+hiltWork = "1.2.0"
+datastorePreferences = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -43,7 +44,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-androidx-material-icons-extended = {  group = "androidx.compose.material", name = "material-icons-extended"}
+androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
@@ -56,8 +57,9 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
-glide = { module = "com.github.bumptech.glide:compose", version.ref = "glide" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
 
 [plugins]
@@ -66,4 +68,5 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+androidx-room = { id = "androidx.room", version.ref = "room" }
 

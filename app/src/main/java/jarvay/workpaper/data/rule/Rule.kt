@@ -9,10 +9,12 @@ data class Rule(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     val ruleId: Long = 0,
-    val days: List<Int>,
-    val startHour: Int,
-    val startMinute: Int,
-    val albumId: Long,
-    val random: Boolean = false,
-    val interval: Int = 15
+    var days: List<Int>,
+    var startHour: Int,
+    var startMinute: Int,
+    var albumIds: List<Long>,
+    var changeByTiming: Boolean,
+    var changeWhileUnlock: Boolean,
+    var random: Boolean = false,
+    var interval: Int = 15,
 )
