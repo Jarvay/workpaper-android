@@ -2,9 +2,9 @@ package jarvay.workpaper.compose.rule
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
 import jarvay.workpaper.others.showToast
@@ -12,7 +12,7 @@ import jarvay.workpaper.viewModel.RuleFormViewModel
 
 @Composable
 fun RuleCreateScreen(navController: NavController, viewModel: RuleFormViewModel = hiltViewModel()) {
-    val albums by viewModel.allAlbums.observeAsState(initial = emptyList())
+    val albums by viewModel.allAlbums.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     RuleForm(

@@ -16,14 +16,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Screen
@@ -55,15 +55,10 @@ fun RuleListScreen(
     viewModel: RuleListViewModel = hiltViewModel(),
     workpaperViewModel: WorkpaperViewModel = hiltViewModel(),
 ) {
-    val rules by viewModel.allRules.observeAsState(initial = emptyList())
+    val rules by viewModel.allRules.collectAsStateWithLifecycle()
 
-    val rp by workpaperViewModel.runningPreferences.observeAsState()
-
-    Log.d("rules", rules.toString())
-    Log.d("rp", rp.toString())
-    Log.d("running", rp?.running.toString())
-
-    val defaultPreferences by viewModel.defaultPreferences.observeAsState()
+    val rp by workpaperViewModel.runningPreferences.collectAsStateWithLifecycle()
+    val defaultPreferences by viewModel.defaultPreferences.collectAsStateWithLifecycle()
 
     var expandedMenuRuleId by remember {
         mutableLongStateOf(-1L)
@@ -89,7 +84,16 @@ fun RuleListScreen(
                 val rule = it.rule
                 val albums = it.albums
 
-                Box {
+                var elevation = CardDefaults.cardElevation()
+                if (rp?.running == true) {
+                    if (defaultPreferences?.currentRuleId == rule.ruleId || defaultPreferences?.nextRuleId == rule.ruleId) {
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 4.dp
+                        )
+                    }
+                }
+
+                Box(modifier = Modifier.padding(bottom = 8.dp)) {
                     Card(
                         modifier = Modifier
                             .combinedClickable(onLongClick = {
@@ -98,7 +102,8 @@ fun RuleListScreen(
                             }) {
                                 navController.navigate(Screen.RuleUpdate.createRoute(it.rule.ruleId))
                             }
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        elevation = elevation
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),

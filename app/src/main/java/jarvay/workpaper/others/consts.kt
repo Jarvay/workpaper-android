@@ -2,6 +2,7 @@ package jarvay.workpaper.others
 
 import androidx.annotation.StringRes
 import jarvay.workpaper.data.day.DayValue
+import kotlinx.coroutines.flow.SharingStarted
 
 data class DayOption(@StringRes val labelId: Int, val value: Int)
 
@@ -17,14 +18,6 @@ val dayOptions = listOf(
 
 const val DEFAULT_WALLPAPER_CHANGE_INTERVAL = 15
 
-sealed class SharedPreferencesKey {
-    companion object {
-        const val SHARED_PREFERENCE_NAME = "workpaper"
-        const val CURRENT_ALBUM_ID_KEY = "currentAlbumId"
-        const val CURRENT_RULE_ID_KEY = "currentRuleId"
-        const val LAST_INDEX_KEY = "lastIndex"
-        const val LAST_WALLPAPER = "lastWallpaper"
-        const val SETTINGS_KEY = "settings"
-        const val IS_RUNNING_KEY = "isRunning"
-    }
-}
+const val DOWNLOAD_DIRECTORY = "workpaper"
+
+val STATE_IN_STATED = SharingStarted.WhileSubscribed(5000)

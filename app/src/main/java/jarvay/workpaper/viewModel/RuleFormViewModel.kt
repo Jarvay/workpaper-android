@@ -2,12 +2,13 @@ package jarvay.workpaper.viewModel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.others.STATE_IN_STATED
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,7 +22,11 @@ class RuleFormViewModel @Inject constructor(
 
     val ruleAlbums = if (ruleId != null) repository.getRuleWithAlbums(ruleId.toLong()) else null
 
-    val allAlbums = albumRepository.allAlbums.asLiveData()
+    val allAlbums = albumRepository.allAlbums.stateIn(
+        viewModelScope,
+        STATE_IN_STATED,
+        emptyList()
+    )
 
     fun insert(item: Rule) {
         viewModelScope.launch {

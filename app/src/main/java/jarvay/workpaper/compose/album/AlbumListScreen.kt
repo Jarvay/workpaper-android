@@ -18,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Screen
@@ -44,7 +44,7 @@ import jarvay.workpaper.viewModel.AlbumListViewModel
 fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel = hiltViewModel()) {
     val lazyListState = rememberLazyGridState()
 
-    val albums by viewModel.allAlbums.observeAsState(initial = emptyList())
+    val albums by viewModel.allAlbums.collectAsStateWithLifecycle()
 
     var updateDialogShow by rememberSaveable {
         mutableStateOf(false)

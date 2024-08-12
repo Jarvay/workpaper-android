@@ -25,7 +25,7 @@ fun AlbumUpdateDialog(
                 if (viewModel.existsByName(newName)) {
                     showToast(context, R.string.album_name_exists)
                 } else {
-                    viewModel.update(Album(name = newName, albumId = it.albumId))
+                    viewModel.update(album.copy(name = newName))
                     onDismissRequest()
                 }
             }

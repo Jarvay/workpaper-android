@@ -24,6 +24,7 @@ enum class AlarmType(val value: Int) {
 
 class Workpaper(private val context: Context) {
     fun start(scope: CoroutineScope) {
+        Log.d(javaClass.simpleName, "start")
         scope.launch {
             val i = Intent(context, ScheduleService::class.java)
             context.startService(i)

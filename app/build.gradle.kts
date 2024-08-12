@@ -16,7 +16,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -59,6 +59,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.work.compiler)
@@ -94,4 +95,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.gson)
     implementation(libs.datastore.preferences)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
 }

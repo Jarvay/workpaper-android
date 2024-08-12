@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -62,7 +62,7 @@ fun AlbumDetailScreen(
     navController: NavController,
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
-    val album by viewModel.album.observeAsState()
+    val album by viewModel.album.collectAsStateWithLifecycle()
     var selecting by remember {
         mutableStateOf(false)
     }
@@ -165,17 +165,13 @@ fun AlbumDetailScreen(
             items(items = album!!.wallpaperUris, key = { item ->
                 item
             }) {
-                Box(modifier = Modifier
-                    .animateItemPlacement()
-                    .combinedClickable(onLongClick = {
-                        currentWallpaper = it
-                    }) {
-                        if (selecting) {
-                            val checked = !checkedState.contains(it)
-                            checkedState = updateCheckedState(checked, it, checkedState)
-                        }
-                    }) {
-                    Card(modifier = Modifier.padding(8.dp)) {
+                Box(
+                    modifier = Modifier.animateItemPlacement()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .padding(8.dp)
+                    ) {
                         val size = getSize(context, it)
                         val floatWidth = size.width.toFloat()
                         val floatHeight = size.height.toFloat()
@@ -184,7 +180,16 @@ fun AlbumDetailScreen(
                             model = ImageRequest.Builder(context).data(it.toUri()).size(320, 320)
                                 .build(),
                             contentDescription = null,
-                            modifier = Modifier.aspectRatio(floatWidth / floatHeight)
+                            modifier = Modifier
+                                .aspectRatio(floatWidth / floatHeight)
+                                .combinedClickable(onLongClick = {
+                                    currentWallpaper = it
+                                }) {
+                                    if (selecting) {
+                                        val checked = !checkedState.contains(it)
+                                        checkedState = updateCheckedState(checked, it, checkedState)
+                                    }
+                                }
                         )
                     }
 

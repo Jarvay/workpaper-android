@@ -1,8 +1,6 @@
 package jarvay.workpaper.compose
 
-import android.app.Activity
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -13,24 +11,27 @@ import jarvay.workpaper.compose.rule.RuleCreateScreen
 import jarvay.workpaper.compose.rule.RuleListScreen
 import jarvay.workpaper.compose.rule.RuleUpdateScreen
 import jarvay.workpaper.compose.settings.SettingsScreen
+import jarvay.workpaper.viewModel.MainActivityViewModel
 
 @Composable
-fun WorkpaperApp() {
+fun WorkpaperApp(mainActivityViewModel: MainActivityViewModel) {
     val navController = rememberNavController()
     WorkpaperNavHost(
-        navController = navController
+        navController = navController,
+        mainActivityViewModel = mainActivityViewModel
     )
 }
 
 @Composable
 fun WorkpaperNavHost(
-    navController: NavHostController
+    navController: NavHostController,
+    mainActivityViewModel: MainActivityViewModel
 ) {
-    val activity = (LocalContext.current as Activity)
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(route = Screen.Home.route) {
             HomeScreen(
-                navController = navController
+                navController = navController,
+                mainActivityViewModel = mainActivityViewModel
             )
         }
         composable(route = Screen.Settings.route) {

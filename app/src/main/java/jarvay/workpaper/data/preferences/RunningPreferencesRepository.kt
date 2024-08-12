@@ -11,7 +11,8 @@ class RunningPreferencesRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
 
-    val runningPreferencesFlow: Flow<RunningPreferences> = runningPreferencesFlow(dataStore = dataStore)
+    val runningPreferencesFlow: Flow<RunningPreferences> =
+        runningPreferencesFlow(dataStore = dataStore)
 
     suspend fun <T> update(key: Preferences.Key<T>, value: T) {
         dataStore.edit {

@@ -13,6 +13,7 @@ navigationCompose = "2.7.7"
 
 hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
+retrofit = "2.11.0"
 roomCommon = "2.6.1"
 roomKtx = "2.6.1"
 work = "2.9.0"
@@ -25,6 +26,7 @@ coil = "2.7.0"
 hiltCommon = "1.2.0"
 hiltWork = "1.2.0"
 datastorePreferences = "1.1.1"
+lifecycleRuntimeComposeAndroid = "2.8.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +63,9 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

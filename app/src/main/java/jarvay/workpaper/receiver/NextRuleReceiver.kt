@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.icu.util.Calendar
 import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
@@ -43,6 +44,12 @@ class NextRuleReceiver : BroadcastReceiver() {
         if (intent == null || context == null || nextRule == null) return
 
         val calendar = getCalendarWithRule(nextRule.ruleAlbums.rule, nextRule.day)
+        if (calendar.before(Calendar.getInstance())) {
+            calendar.add(Calendar.DATE, 7);
+        }
+        Log.d("nextRule time", Date(calendar.timeInMillis).toString())
+
+
         val i = Intent(context, RuleReceiver::class.java)
         i.putExtra(RULE_ID_KEY, nextRule.ruleAlbums.rule.ruleId)
         val pendingIntent: PendingIntent = PendingIntent.getBroadcast(

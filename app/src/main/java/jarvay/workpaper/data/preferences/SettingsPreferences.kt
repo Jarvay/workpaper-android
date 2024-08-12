@@ -7,6 +7,7 @@ data class SettingsPreferences(
     var enableNotification: Boolean,
     var alsoSetLockWallpaper: Boolean,
     var hideInRecentTask: Boolean,
+    var autoCheckUpdate: Boolean,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -22,10 +23,11 @@ data class SettingsPreferences(
 }
 
 data object SettingsPreferencesKeys {
-     val START_WITH_PREV_RULE = booleanPreferencesKey("startWithPrevRule")
-     val ENABLE_NOTIFICATION = booleanPreferencesKey("enableNotification")
-     val ALSO_SET_LOCK_WALLPAPER = booleanPreferencesKey("alsoSetLockWallpaper")
-     val HIDE_IN_RECENT_TASK = booleanPreferencesKey("hideInRecentTask")
+    val START_WITH_PREV_RULE = booleanPreferencesKey("startWithPrevRule")
+    val ENABLE_NOTIFICATION = booleanPreferencesKey("enableNotification")
+    val ALSO_SET_LOCK_WALLPAPER = booleanPreferencesKey("alsoSetLockWallpaper")
+    val HIDE_IN_RECENT_TASK = booleanPreferencesKey("hideInRecentTask")
+    val AUTO_CHECK_UPDATE = booleanPreferencesKey("autoCheckUpdate")
 }
 
 val DEFAULT_SETTINGS =
@@ -34,4 +36,5 @@ val DEFAULT_SETTINGS =
         enableNotification = false,
         alsoSetLockWallpaper = false,
         hideInRecentTask = false,
+        autoCheckUpdate = false,
     )

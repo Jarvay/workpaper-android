@@ -1,13 +1,13 @@
 package jarvay.workpaper.viewModel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.others.STATE_IN_STATED
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,9 +15,12 @@ import javax.inject.Inject
 class AlbumListViewModel @Inject constructor(
     private val repository: AlbumRepository,
     private val ruleRepository: RuleRepository
-) :
-    ViewModel() {
-    val allAlbums: LiveData<List<Album>> = repository.allAlbums.asLiveData()
+) : ViewModel() {
+    val allAlbums = repository.allAlbums.stateIn(
+        viewModelScope,
+        STATE_IN_STATED,
+        emptyList()
+    )
 
     fun insert(item: Album) {
         viewModelScope.launch {

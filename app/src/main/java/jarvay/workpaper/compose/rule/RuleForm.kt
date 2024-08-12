@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.AlbumItem
@@ -75,7 +75,7 @@ fun RuleForm(
 
     val scrollState = rememberScrollState()
 
-    val runningPreferences by workpaperViewModel.runningPreferences.observeAsState()
+    val runningPreferences by workpaperViewModel.runningPreferences.collectAsStateWithLifecycle()
 
     var rule by remember {
         mutableStateOf(

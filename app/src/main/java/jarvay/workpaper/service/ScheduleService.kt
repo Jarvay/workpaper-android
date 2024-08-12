@@ -24,8 +24,6 @@ import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.prevRule
 import jarvay.workpaper.receiver.NextRuleReceiver
 import jarvay.workpaper.receiver.RuleReceiver
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import javax.inject.Inject
 
 @AndroidEntryPoint

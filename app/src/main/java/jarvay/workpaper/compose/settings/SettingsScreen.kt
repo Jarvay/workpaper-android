@@ -19,7 +19,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,10 +28,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.SimpleDialog
-import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.requestNotificationPermission
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
@@ -43,7 +42,7 @@ import jarvay.workpaper.viewModel.SettingsViewModel
 fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = hiltViewModel()) {
     val context = LocalContext.current
 
-    val settings by viewModel.settings.observeAsState(initial = DEFAULT_SETTINGS)
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
     var notificationDialogShow by remember {
         mutableStateOf(false)
     }
@@ -86,11 +85,19 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_hide_in_rencent_task) {
+            SettingSItem(labelId = R.string.settings_item_hide_in_recent_task) {
                 Switch(
                     checked = settings.hideInRecentTask,
                     onCheckedChange = { c ->
                         viewModel.update(SettingsPreferencesKeys.HIDE_IN_RECENT_TASK, c)
+                    })
+            }
+
+            SettingSItem(labelId = R.string.settings_item_auto_check_update) {
+                Switch(
+                    checked = settings.autoCheckUpdate,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.AUTO_CHECK_UPDATE, c)
                     })
             }
         }

@@ -11,14 +11,21 @@
     <string name="delete">删除</string>
     <string name="symbol_colon">：</string>
     <string name="select_all">全选</string>
+    <string name="download">下载</string>
 
     <string name="tips_operation_success">操作成功</string>
+    <string name="tips_network_not_available">网络连接不可用</string>
+    <string name="tips_check_update_failed">检查更新失败</string>
+    <string name="tips_no_new_version">已经是最新版本</string>
+    <string name="tips_start_downloading">开始下载</string>
 
     <string name="tab_title_days">日期</string>
     <string name="tab_title_rules">规则</string>
     <string name="tab_title_albums">相册</string>
 
     <string name="drawer_menu_settings">设置</string>
+    <string name="drawer_menu_check_update">检查更新</string>
+    <string name="tips_new_app_version">检测到新版本，是否下载？</string>
 
     <string name="monday">周一</string>
     <string name="tuesday">周二</string>
@@ -60,5 +67,6 @@
     <string name="settings_item_start_with_prev_rule">启动后应用上一条规则</string>
     <string name="settings_item_enable_notification">启用通知</string>
     <string name="settings_item_also_set_lock_wallpaper">同时设置锁屏壁纸</string>
-    <string name="settings_item_hide_in_rencent_task">在最近任务中隐藏</string>
+    <string name="settings_item_hide_in_recent_task">在最近任务中隐藏</string>
+    <string name="settings_item_auto_check_update">自动检查更新</string>
 </resources>

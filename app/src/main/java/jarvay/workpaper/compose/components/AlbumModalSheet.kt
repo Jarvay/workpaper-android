@@ -17,7 +17,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
@@ -38,7 +38,7 @@ fun AlbumModalSheet(
     onCheckedChange: (List<Album>) -> Unit
 ) {
     val albumItemSize = 96.dp
-    val albumList by viewModal.allAlbums.observeAsState(initial = emptyList())
+    val albumList by viewModal.allAlbums.collectAsStateWithLifecycle()
     Log.d("albumList", albumList.toString())
     var checkedAlbumIds by remember {
         mutableStateOf(defaultValues)

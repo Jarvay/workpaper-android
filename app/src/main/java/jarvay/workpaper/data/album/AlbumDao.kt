@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AlbumDao {
-    @Query("SELECT * FROM albums")
+    @Query("SELECT * FROM albums ORDER BY id ASC")
     fun findAll(): Flow<List<Album>>
 
     @Query("SELECT * FROM albums WHERE id= :id ")

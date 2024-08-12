@@ -1,8 +1,13 @@
 package jarvay.workpaper.others
 
+import android.app.DownloadManager
+import android.app.DownloadManager.Request
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.icu.util.Calendar
+import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
@@ -10,6 +15,7 @@ import androidx.annotation.StringRes
 import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import jarvay.workpaper.R
 import jarvay.workpaper.data.preferences.RunningPreferences
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
@@ -26,14 +32,6 @@ fun formatTime(hour: Int, minute: Int): String {
     var minuteString = minute.toString()
     minuteString = if (minuteString.length == 1) "0${minuteString}" else minuteString
     return "${hourString}:${minuteString}"
-}
-
-fun nextDayOfWeek(current: Int): Int {
-    return if (current + 1 == 8) 1 else current + 1
-}
-
-fun prevDayOfWeek(current: Int): Int {
-    return if (current - 1 == 0) 7 else current - 1
 }
 
 fun getCalendarWithRule(rule: Rule, dayOfWeek: Int): Calendar {
@@ -83,7 +81,7 @@ fun prevRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
         val result = sortedList.find {
             it.sortValue <= currentMinute()
         }
-        result ?: if (sortedList.isNotEmpty()) sortedList[0] else null
+        result ?: if (sortedList.isNotEmpty()) sortedList.first() else null
     })
 }
 
@@ -93,7 +91,7 @@ fun nextRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
         val result = sortedList.find {
             it.sortValue >= currentMinute()
         }
-        result ?: if (sortedList.isNotEmpty()) sortedList[0] else null
+        result ?: if (sortedList.isNotEmpty()) sortedList.last() else null
     })
 }
 
@@ -138,5 +136,49 @@ fun runningPreferencesFlow(dataStore: DataStore<Preferences>): Flow<RunningPrefe
             nextRuleId = nextRuleId,
             running = running
         )
+    }
+}
+
+fun download(url: String, context: Context): Long {
+    val request = Request(Uri.parse(url)).apply {
+        setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        setTitle(context.getString(R.string.download))
+        setAllowedOverRoaming(false)
+        setMimeType("application/vnd.android.package-archive")
+
+        setDestinationInExternalFilesDir(
+            context,
+            Environment.DIRECTORY_DOWNLOADS,
+            "workpaper.apk"
+        )
+    }
+
+    Log.d("request", request.toString())
+
+    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    val id = downloadManager.enqueue(request)
+    Log.d("download id", id.toString())
+    return id
+}
+
+fun getUriByDownloadId(context: Context, id: Long): Uri? {
+    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    return downloadManager.getUriForDownloadedFile(id)
+}
+
+fun installApk(uri: Uri?, context: Context) {
+    uri.let {
+        val intent = Intent()
+
+        intent.action = Intent.ACTION_VIEW
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.setDataAndType(uri, "application/vnd.android.package-archive")
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("install apk failed", e.toString())
+        }
     }
 }

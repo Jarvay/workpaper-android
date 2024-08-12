@@ -11,14 +11,21 @@
     <string name="delete">Delete</string>
     <string name="symbol_colon">:</string>
     <string name="select_all">Select all</string>
+    <string name="download">Download</string>
 
     <string name="tips_operation_success">Operation success</string>
+    <string name="tips_network_not_available">Network not available</string>
+    <string name="tips_new_app_version">Detect new app version, download it?</string>
+    <string name="tips_check_update_failed">Check updating failed</string>
+    <string name="tips_no_new_version">No new version</string>
+    <string name="tips_start_downloading">Start downloading</string>
 
     <string name="tab_title_days">Days</string>
     <string name="tab_title_rules">Rule</string>
     <string name="tab_title_albums">Albums</string>
 
     <string name="drawer_menu_settings">Settings</string>
+    <string name="drawer_menu_check_update">Check update</string>
 
     <string name="monday">Mon</string>
     <string name="tuesday">Tue</string>
@@ -60,5 +67,6 @@
     <string name="settings_item_start_with_prev_rule">Use prev rule after start</string>
     <string name="settings_item_enable_notification">Enable notification</string>
     <string name="settings_item_also_set_lock_wallpaper">Also set lock wallpaper</string>
-    <string name="settings_item_hide_in_rencent_task">Hide in recent task</string>
+    <string name="settings_item_hide_in_recent_task">Hide in recent task</string>
+    <string name="settings_item_auto_check_update">Auto check update</string>
 </resources>

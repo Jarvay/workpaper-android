@@ -13,14 +13,16 @@ interface RuleDao {
     @Query(
         "SELECT * FROM rules " +
                 "JOIN rule_album_relations ON rules.id = rule_album_relations.ruleId " +
-                "JOIN albums ON rule_album_relations.albumId = albums.id"
+                "JOIN albums ON rule_album_relations.albumId = albums.id " +
+                "ORDER BY rules.id ASC"
     )
     fun findAll(): Map<Rule, List<Album>>
 
     @Query(
         "SELECT * FROM rules " +
                 "JOIN rule_album_relations ON rules.id = rule_album_relations.ruleId " +
-                "JOIN albums ON rule_album_relations.albumId = albums.id"
+                "JOIN albums ON rule_album_relations.albumId = albums.id " +
+                "ORDER BY rules.id ASC"
     )
     fun findAllFlow(): Flow<Map<Rule, List<Album>>>
 
