@@ -14,6 +14,13 @@ class AlbumRepository @Inject constructor(
 
     fun getAlbum(albumId: Long) = albumDao.findFlowById(albumId)
 
+    fun existsByName(name: String): Boolean {
+        return albumDao.existsByName(name)
+    }
+
+    fun exists(name: String, albumId: Long): Boolean {
+        return albumDao.exists(name, albumId)
+    }
 
     @WorkerThread
     suspend fun insert(item: Album) {

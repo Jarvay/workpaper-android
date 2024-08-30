@@ -1,22 +1,24 @@
 package jarvay.workpaper.compose.rule
 
-import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import jarvay.workpaper.others.FormMode
+import jarvay.workpaper.R
+import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.viewModel.RuleFormViewModel
 
 @Composable
 fun RuleCreateScreen(navController: NavController, viewModel: RuleFormViewModel = hiltViewModel()) {
-    val albums by viewModel.allAlbums.observeAsState(initial = emptyList())
+    val simpleSnackbar = LocalSimpleSnackbar.current
 
     RuleForm(
         navController = navController,
-        albums = albums
     ) { rule ->
+        val exists = viewModel.exists(rule.startHour, rule.startMinute, rule.days)
+        if (exists) {
+            simpleSnackbar.show(R.string.rule_conflicts_tips)
+            return@RuleForm
+        }
         viewModel.insert(rule.copy())
         navController.navigateUp()
     }

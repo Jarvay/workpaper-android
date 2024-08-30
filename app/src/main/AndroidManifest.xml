@@ -4,6 +4,14 @@
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.RECEIVE_USER_PRESENT" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".MainApplication"
@@ -14,6 +22,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Workpaper"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
@@ -26,23 +35,41 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.ScheduleService" />
-        <service android:name=".service.AlbumService" />
-        <service android:name=".service.TimerService" />
+        <service
+            android:name=".service.WorkpaperService"
+            android:foregroundServiceType="mediaPlayback" />
 
-        <receiver android:name=".receiver.WallpaperReceiver"
+        <receiver
+            android:name=".receiver.WallpaperReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.RuleReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.NextRuleReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".receiver.UnlockReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="jarvay.workpaper.updateWallpaper" />
+                <action android:name="android.intent.action.SCREEN_OFF" />
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".receiver.RuleReceiver"
+        <receiver
+            android:name=".receiver.NotificationReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="jarvay.workpaper.changeAlbum" />
+                <action android:name="workpaper_action_notification_update" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".receiver.GenWallpaperReceiver" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

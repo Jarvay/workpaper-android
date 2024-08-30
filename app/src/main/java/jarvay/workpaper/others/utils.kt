@@ -1,15 +1,32 @@
 package jarvay.workpaper.others
 
+import android.app.ActivityManager
+import android.app.DownloadManager
+import android.app.DownloadManager.Request
 import android.content.Context
-import android.content.SharedPreferences
-import android.icu.util.Calendar
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Environment
+import android.util.Log
+import android.util.Size
 import android.widget.Toast
 import androidx.annotation.StringRes
-import com.google.gson.Gson
-import jarvay.workpaper.data.DEFAULT_SETTINGS
-import jarvay.workpaper.data.Settings
+import androidx.core.net.toUri
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import jarvay.workpaper.R
+import jarvay.workpaper.data.preferences.RunningPreferences
+import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
-import jarvay.workpaper.data.rule.RuleWithAlbum
+import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleAlbumsToSort
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.util.Calendar
+
 
 fun formatTime(hour: Int, minute: Int): String {
     var hourString = hour.toString()
@@ -19,138 +36,190 @@ fun formatTime(hour: Int, minute: Int): String {
     return "${hourString}:${minuteString}"
 }
 
-fun nextDayOfWeek(current: Int): Int {
-    return if (current + 1 == 7) 1 else current + 1
-}
-
-fun prevDayOfWeek(current: Int): Int {
-    return if (current - 1 == 1) 7 else current - 1
-}
-
-fun getCalendarWithRule(rule: Rule): Calendar {
+fun getCalendarWithRule(rule: Rule, dayOfWeek: Int): Calendar {
     val calendar = Calendar.getInstance()
     return calendar.apply {
+        set(Calendar.DAY_OF_WEEK, dayOfWeek)
         set(Calendar.HOUR_OF_DAY, rule.startHour)
         set(Calendar.MINUTE, rule.startMinute)
         set(Calendar.SECOND, 0)
     }
 }
 
-fun findRuleByDayOfWeek(
-    ruleWithAlbums: List<RuleWithAlbum>,
-    dayOfWeek: Int,
-    filter: (RuleWithAlbum, Int) -> Boolean,
-    compare: (RuleWithAlbum, RuleWithAlbum) -> RuleWithAlbum
-): RuleWithAlbum? {
-    var currentRule: RuleWithAlbum? = null
-    ruleWithAlbums.filter { r ->
-        r.rule.days.contains(dayOfWeek)
-    }.filter {
-        filter(it, dayOfWeek)
-    }.forEach { r ->
-        if (currentRule == null) {
-            currentRule = r
+fun findRule(
+    ruleWithAlbums: List<RuleAlbums>,
+    finder: (List<RuleAlbumsToSort>) -> RuleAlbumsToSort?,
+): RuleAlbumsToSort? {
+    val rules = ArrayList<RuleAlbumsToSort>()
+    ruleWithAlbums.forEach {
+        it.rule.days.forEach { day ->
+            val minute = day * 24 * 60 + it.rule.startHour * 60 + it.rule.startMinute
+            val millis = minute * 60 * 1000
+            rules.add(
+                RuleAlbumsToSort(
+                    ruleAlbums = it.copy(),
+                    sortValue = millis.toLong(),
+                    day = day
+                )
+            )
         }
-
-        currentRule = compare(currentRule!!, r)
     }
 
-    return currentRule
+    val list = rules.apply {
+        Log.d("rules", rules.toString())
+    }
+    return finder(list)
 }
 
+fun currentMillis(): Long {
+    val calendar = Calendar.getInstance()
+    val minute =
+        calendar.get(Calendar.DAY_OF_WEEK) * 24 * 60 + calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(
+            Calendar.MINUTE
+        )
+    val millis =
+        minute * 60 * 1000 + calendar.get(Calendar.SECOND) * 1000 + calendar.get(Calendar.MILLISECOND)
+    return millis.toLong()
+}
 
-fun prevRule(ruleWithAlbums: List<RuleWithAlbum>): RuleWithAlbum? {
-    val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-    var calendar = Calendar.getInstance()
-    val filter: (RuleWithAlbum, Int) -> Boolean = filter@{ r: RuleWithAlbum, d: Int ->
-        if (d != Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
-            return@filter true
+fun prevRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
+    return findRule(ruleWithAlbums = list, finder = { l ->
+        val sortedList = l.sortedByDescending { it.sortValue }
+        val result = sortedList.find {
+            it.sortValue <= currentMillis()
         }
-        calendar = getCalendarWithRule(r.rule)
-        calendar.before(Calendar.getInstance())
-    }
-    val compare: (RuleWithAlbum, RuleWithAlbum) -> RuleWithAlbum = { current, next ->
-        val currentCalendar = getCalendarWithRule(current.rule)
-        val nextCalendar = getCalendarWithRule(next.rule)
-
-        if (currentCalendar.after(nextCalendar)) current else next
-    }
-
-    var prevRule: RuleWithAlbum? =
-        findRuleByDayOfWeek(
-            ruleWithAlbums = ruleWithAlbums,
-            dayOfWeek = dayOfWeek,
-            filter = filter,
-            compare = compare
-        )
-    var currentDayOfWeek = prevDayOfWeek(dayOfWeek)
-    while (prevRule == null && currentDayOfWeek != dayOfWeek) {
-        prevRule = findRuleByDayOfWeek(
-            ruleWithAlbums,
-            currentDayOfWeek,
-            filter = filter,
-            compare = compare
-        )
-        currentDayOfWeek = prevDayOfWeek(currentDayOfWeek)
-    }
-
-    return prevRule
+        result ?: if (sortedList.isNotEmpty()) sortedList.first() else null
+    })
 }
 
-fun nextRule(ruleWithAlbums: List<RuleWithAlbum>): RuleWithAlbum? {
-    val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-    var calendar = Calendar.getInstance()
-    val filter: (RuleWithAlbum, Int) -> Boolean = filter@{ r, d ->
-        if (d != Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
-            return@filter true
+fun nextRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
+    val currentMillis = currentMillis()
+    return findRule(ruleWithAlbums = list, finder = { l ->
+        val sortedList = l.sortedBy { it.sortValue }
+        val result = sortedList.find {
+            it.sortValue >= currentMillis
         }
-        calendar = getCalendarWithRule(r.rule)
-        calendar.after(Calendar.getInstance())
-    }
-    val compare: (RuleWithAlbum, RuleWithAlbum) -> RuleWithAlbum = { current, next ->
-        val currentCalendar = getCalendarWithRule(current.rule)
-        val nextCalendar = getCalendarWithRule(next.rule)
-
-        if (currentCalendar.before(nextCalendar)) current else next
-    }
-
-    var nextRule: RuleWithAlbum? =
-        findRuleByDayOfWeek(
-            ruleWithAlbums = ruleWithAlbums,
-            dayOfWeek = dayOfWeek,
-            filter = filter,
-            compare = compare
-        )
-    var currentDayOfWeek = nextDayOfWeek(dayOfWeek)
-    while (nextRule == null && currentDayOfWeek != dayOfWeek) {
-        nextRule = findRuleByDayOfWeek(
-            ruleWithAlbums,
-            currentDayOfWeek,
-            filter = filter,
-            compare = compare
-        )
-        currentDayOfWeek = nextDayOfWeek(currentDayOfWeek)
-    }
-
-    return nextRule
+        result ?: if (sortedList.isNotEmpty()) sortedList.first() else null
+    })
 }
 
-fun defaultSharedPreferences(context: Context): SharedPreferences {
-    return context.getSharedPreferences(
-        SharePreferenceKey.SHARED_PREFERENCE_NAME,
-        Context.MODE_PRIVATE
-    )
-}
-
-fun getSettings(context: Context): Settings {
-    val sp = defaultSharedPreferences(context)
-    val gson = Gson()
-
-    val settingsStr = sp.getString(SharePreferenceKey.SETTINGS_KEY, null) ?: return DEFAULT_SETTINGS
-
-    return gson.fromJson(settingsStr, Settings::class.java)
+fun showToast(context: Context, text: String) {
+    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
 }
 
 fun showToast(context: Context, @StringRes strId: Int) {
-    Toast.makeText(context, strId, Toast.LENGTH_SHORT).show()
+    showToast(context, context.getString(strId))
+}
+
+fun getSize(context: Context, fileStrUri: String): Size {
+    var size = Size(-1, -1)
+    try {
+        context.contentResolver.openInputStream(fileStrUri.toUri()).use { inputStream ->
+            val options = BitmapFactory.Options()
+            options.inJustDecodeBounds = true
+            BitmapFactory.decodeStream(inputStream, null, options)
+            size = Size(options.outWidth, options.outHeight)
+        }
+    } catch (e: FileNotFoundException) {
+        e.printStackTrace()
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+
+    return size
+}
+
+fun getScreenSize(context: Context): Size {
+    val dm = context.resources.displayMetrics
+    return Size(dm.widthPixels, dm.heightPixels)
+}
+
+fun getWallpaperSize(context: Context): Size {
+    val screenSize = getScreenSize(context)
+    val ratio = screenSize.width.toFloat() / screenSize.height.toFloat()
+    return if (screenSize.width > MAX_WALLPAPER_WIDTH) {
+        Size(MAX_WALLPAPER_WIDTH, (MAX_WALLPAPER_WIDTH / ratio).toInt())
+    } else if (screenSize.height > MAX_WALLPAPER_HEIGHT) {
+        Size((MAX_WALLPAPER_HEIGHT * ratio).toInt(), MAX_WALLPAPER_HEIGHT)
+    } else {
+        screenSize
+    }
+}
+
+fun runningPreferencesFlow(dataStore: DataStore<Preferences>): Flow<RunningPreferences> {
+    return dataStore.data.map { preferences ->
+        val lastIndex = preferences[RunningPreferencesKeys.LAST_INDEX] ?: -1
+        val lastWallpaper = preferences[RunningPreferencesKeys.LAST_WALLPAPER] ?: ""
+        val running = preferences[RunningPreferencesKeys.RUNNING] ?: false
+
+        RunningPreferences(
+            lastIndex = lastIndex,
+            lastWallpaper = lastWallpaper,
+            running = running,
+        )
+    }
+}
+
+fun download(url: String, context: Context): Long {
+    val request = Request(Uri.parse(url)).apply {
+        setNotificationVisibility(Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        setTitle(context.getString(R.string.download))
+        setAllowedOverRoaming(false)
+        setMimeType("application/vnd.android.package-archive")
+
+        setDestinationInExternalPublicDir(
+            Environment.DIRECTORY_DOWNLOADS,
+            "workpaper.apk"
+        )
+    }
+
+    Log.d("request", request.toString())
+
+    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    val id = downloadManager.enqueue(request)
+    Log.d("download id", id.toString())
+    return id
+}
+
+fun getUriByDownloadId(context: Context, id: Long): Uri? {
+    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    return downloadManager.getUriForDownloadedFile(id)
+}
+
+fun installApk(uri: Uri?, context: Context) {
+    uri.let {
+        val intent = Intent()
+
+        intent.action = Intent.ACTION_VIEW
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        intent.setDataAndType(uri, "application/vnd.android.package-archive")
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e("install apk failed", e.toString())
+        }
+    }
+}
+
+
+@Suppress("DEPRECATION")
+fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
+    if (activityManager != null) {
+        for (service in activityManager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+fun isToday(calendar: Calendar): Boolean {
+    val now = Calendar.getInstance()
+    return ((calendar[Calendar.YEAR] == now[Calendar.YEAR])
+            && (calendar[Calendar.MONTH] == now[Calendar.MONTH])
+            && (calendar[Calendar.DAY_OF_MONTH] == now[Calendar.DAY_OF_MONTH]))
 }

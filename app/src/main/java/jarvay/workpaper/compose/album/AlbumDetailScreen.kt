@@ -8,12 +8,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -21,55 +22,68 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.components.CustomIconButton
+import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
+import jarvay.workpaper.others.getSize
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class,
-    ExperimentalFoundationApi::class
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
 )
 @Composable
 fun AlbumDetailScreen(
     navController: NavController,
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
-    val album by viewModel.album.observeAsState()
-    var selecting by rememberSaveable {
+    val simpleSnackbar = LocalSimpleSnackbar.current
+    val album by viewModel.album.collectAsStateWithLifecycle()
+    var selecting by remember {
         mutableStateOf(false)
     }
-    var checkedState by rememberSaveable {
+    var checkedState by remember {
         mutableStateOf(setOf<String>())
     }
-    var deleteDialogShow by rememberSaveable {
+    var deleteDialogShow by remember {
         mutableStateOf(false)
+    }
+
+    var currentWallpaper by remember {
+        mutableStateOf("")
     }
 
     if (album == null) return
 
     val context = LocalContext.current
+
+    val listState = rememberLazyStaggeredGridState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -124,11 +138,19 @@ fun AlbumDetailScreen(
                             checkedState = emptySet()
                         }
 
-                        IconButton(onClick = { deleteDialogShow = true }) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = "")
+                        if (checkedState.isNotEmpty()) {
+                            CustomIconButton(onClick = { deleteDialogShow = true }) {
+                                Icon(imageVector = Icons.Default.Delete, contentDescription = "")
+                            }
+                        } else {
+                            TextButton(onClick = { selecting = false }) {
+                                Text(text = stringResource(id = R.string.cancel))
+                            }
                         }
                     } else {
-
+                        TextButton(onClick = { selecting = true }) {
+                            Text(text = stringResource(id = R.string.edit))
+                        }
                     }
                 }
             )
@@ -141,25 +163,55 @@ fun AlbumDetailScreen(
             }
         },
     ) { padding ->
-        LazyVerticalGrid(
+        LazyVerticalStaggeredGrid(
+            state = listState,
             modifier = Modifier
                 .padding(padding)
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
-            columns = GridCells.Fixed(2),
+            columns = StaggeredGridCells.Fixed(2),
         ) {
-            itemsIndexed(items = album!!.wallpaperUris, key = { _, item ->
+            items(items = album!!.wallpaperUris, key = { item ->
                 item
-            }) { _, it ->
-                Box(modifier = Modifier.combinedClickable(onLongClick = {
-                    selecting = !selecting
-                }) {
-                    if (selecting) {
-                        val checked = !checkedState.contains(it)
-                        checkedState = updateCheckedState(checked, it, checkedState)
+            }) {
+                Box(
+                    modifier = Modifier.animateItemPlacement()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .padding(8.dp)
+                    ) {
+                        val size = getSize(context, it)
+                        val floatWidth = size.width.toFloat()
+                        val floatHeight = size.height.toFloat()
+
+                        AsyncImage(
+                            model = ImageRequest.Builder(context).data(it.toUri()).size(320, 320)
+                                .build(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .aspectRatio(floatWidth / floatHeight)
+                                .combinedClickable(onLongClick = {
+                                    currentWallpaper = it
+                                }) {
+                                    if (selecting) {
+                                        val checked = !checkedState.contains(it)
+                                        checkedState = updateCheckedState(checked, it, checkedState)
+                                    }
+                                }
+                        )
                     }
-                }) {
-                    Card(modifier = Modifier.padding(8.dp)) {
-                        GlideImage(model = it, contentDescription = it)
+
+                    DropdownMenu(
+                        expanded = currentWallpaper == it,
+                        onDismissRequest = { currentWallpaper = "" }) {
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
+                            onClick = {
+                                viewModel.update(album!!.copy(coverUri = it))
+                                currentWallpaper = ""
+                                simpleSnackbar.show(R.string.tips_operation_success)
+                            }
+                        )
                     }
 
                     if (selecting) {

@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">Workpaper</string>
+    <string name="app_name">定时壁纸</string>
 
     <string name="permission_request_alarm">需要获取闹钟权限</string>
+    <string name="permission_request_notification">需要获取通知权限</string>
 
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
@@ -9,38 +10,73 @@
     <string name="edit">编辑</string>
     <string name="delete">删除</string>
     <string name="symbol_colon">：</string>
+    <string name="select_all">全选</string>
+    <string name="download">下载</string>
+
+    <string name="tips_operation_success">操作成功</string>
+    <string name="tips_network_not_available">网络连接不可用</string>
+    <string name="tips_check_update_failed">检查更新失败</string>
+    <string name="tips_no_new_version">已经是最新版本</string>
+    <string name="tips_start_downloading">开始下载</string>
+    <string name="tips_new_app_version">检测到新版本，是否下载？</string>
 
     <string name="tab_title_days">日期</string>
     <string name="tab_title_rules">规则</string>
     <string name="tab_title_albums">相册</string>
 
     <string name="drawer_menu_settings">设置</string>
+    <string name="drawer_menu_check_update">检查更新</string>
+    <string name="drawer_menu_sponsor">打赏</string>
 
-    <string name="monday">星期一</string>
-    <string name="tuesday">星期二</string>
-    <string name="wednesday">星期三</string>
-    <string name="thursday">星期四</string>
-    <string name="friday">星期五</string>
-    <string name="saturday">星期六</string>
-    <string name="sunday">星期日</string>
+    <string name="monday">周一</string>
+    <string name="tuesday">周二</string>
+    <string name="wednesday">周三</string>
+    <string name="thursday">周四</string>
+    <string name="friday">周五</string>
+    <string name="saturday">周六</string>
+    <string name="sunday">周日</string>
 
     <string name="rule_start_time">开始时间</string>
     <string name="rule_end_time">结束时间</string>
     <string name="rule_execute_time">执行时间</string>
     <string name="rule_album">相册</string>
+    <string name="rule_change_by_timing">定时更换壁纸</string>
+    <string name="rule_change_while_unlock">解锁时更换壁纸</string>
     <string name="rule_interval">间隔</string>
+    <string name="rule_random">随机切换</string>
+    <string name="rule_conflicts_tips">时间和已有规则冲突</string>
 
     <string name="album_name">相册名</string>
     <string name="album_delete_tips">确定要删除该相册吗？</string>
     <string name="album_is_using_tips">该相册已被使用</string>
+    <string name="album_name_exists">相册名已存在</string>
     <string name="album_wallpaper_delete_tips">确定要删除所选壁纸吗？</string>
+    <string name="album_no_cover">暂无封面</string>
+    <string name="album_set_as_cover">设为封面</string>
 
     <string name="rule_list_item_time">时间</string>
     <string name="rule_list_item_album">相册</string>
-    <string name="rule_list_item_interval">间隔</string>
+    <string name="rule_list_item_interval">每%s分钟更换</string>
+    <string name="rule_list_item_change_when_unlock">解锁时更换</string>
     <string name="rule_list_item_days">日期</string>
+    <string name="rule_list_item_random">随机切换</string>
     <string name="rule_list_item_delete_tips">确定要删除该项吗？</string>
+    <string name="rule_current_rule">当前生效</string>
+    <string name="rule_next_rule">即将生效</string>
+    <string name="tips_please_stop_first">请先停止运行</string>
 
     <string name="settings_item_interval">壁纸更换间隔</string>
-    <string name="settings_item_use_prev_rule_after_start">启动后应用上一条规则</string>
+    <string name="settings_item_start_with_prev_rule">启动后应用上一条规则</string>
+    <string name="settings_item_enable_notification">启用通知</string>
+    <string name="settings_item_notification_ongoing">通知常驻</string>
+    <string name="settings_item_also_set_lock_wallpaper">同时设置锁屏壁纸</string>
+    <string name="settings_item_hide_in_recent_task">在最近任务中隐藏</string>
+    <string name="settings_item_enable_dynamic_color">启用动态颜色</string>
+    <string name="settings_item_auto_check_update">自动检查更新</string>
+
+    <string name="notify_will_change_at_about">预计在%s更换壁纸</string>
+    <string name="notify_next_rule_at_about">下一条规则将在%s生效</string>
+    <string name="notify_next_wallpaper">下一张壁纸</string>
+    <string name="notify_action_change_next">换一张</string>
+    <string name="notify_action_change_to_next_now">立即更换</string>
 </resources>

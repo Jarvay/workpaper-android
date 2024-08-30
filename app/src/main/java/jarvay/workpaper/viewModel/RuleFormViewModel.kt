@@ -2,12 +2,13 @@ package jarvay.workpaper.viewModel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.others.STATE_IN_STATED
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,20 +20,28 @@ class RuleFormViewModel @Inject constructor(
 ) : ViewModel() {
     private val ruleId: String? = savedStateHandle.get<String>(RULE_ID_SAVED_STATE_KEY)
 
-    val rule = if (ruleId != null) repository.getRuleWithAlbum(ruleId.toLong()) else null
+    val ruleAlbums = if (ruleId != null) repository.getRuleWithAlbums(ruleId.toLong()) else null
 
-    val allAlbums = albumRepository.allAlbums.asLiveData()
+    val allAlbums = albumRepository.allAlbums.stateIn(
+        viewModelScope,
+        STATE_IN_STATED,
+        emptyList()
+    )
 
     fun insert(item: Rule) {
         viewModelScope.launch {
-            repository.insert(item)
+            repository.insert(item, this)
         }
     }
 
     fun update(item: Rule) {
         viewModelScope.launch {
-            repository.update(item)
+            repository.update(item, this)
         }
+    }
+
+    fun exists(startHour: Int, startMinute: Int, days: List<Int>, ruleId: Long? = null): Boolean {
+        return repository.exists(startHour, startMinute, days, ruleId)
     }
 
     companion object {

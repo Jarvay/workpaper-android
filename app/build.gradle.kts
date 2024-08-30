@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.androidx.room)
 }
 
 android {
@@ -15,7 +16,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -25,11 +26,16 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        debug {
+            applicationIdSuffix = ".debug"
         }
     }
     compileOptions {
@@ -51,9 +57,15 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    room {
+        schemaDirectory("$projectDir/app/main/java/jarvay/workpaper/data")
+    }
 }
 
 dependencies {
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
+    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.junit.ktx)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.work.compiler)
@@ -86,6 +98,10 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.glide)
+    implementation(libs.coil.compose)
     implementation(libs.gson)
+    implementation(libs.datastore.preferences)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
 }

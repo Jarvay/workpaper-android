@@ -1,5 +1,8 @@
 package jarvay.workpaper.compose.settings
 
+import android.app.NotificationManager
+import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,27 +21,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
-import jarvay.workpaper.compose.components.NumberField
-import jarvay.workpaper.others.getSettings
+import jarvay.workpaper.compose.components.SimpleDialog
+import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
+import jarvay.workpaper.others.requestNotificationPermission
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = hiltViewModel()) {
-    val labelValueSpaceArrangement = Arrangement.spacedBy(8.dp)
     val context = LocalContext.current
 
-    val settings by remember {
-        mutableStateOf(getSettings(context))
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    var notificationDialogShow by remember {
+        mutableStateOf(false)
     }
 
     Scaffold(
@@ -53,13 +58,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "")
                     }
                 },
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.saveSettings(settings, context)
-                    }) {
-                        Icon(imageVector = Icons.Default.Save, contentDescription = null)
-                    }
-                }
+                actions = {}
             )
         },
     ) {
@@ -70,27 +69,107 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            NumberField(
-                label = {
-                    Text(
-                        text = stringResource(id = R.string.settings_item_interval)
-                    )
-                },
-                value = settings.interval,
-                onValueChange = { v -> settings.interval = v },
-                min = 1,
-                max = 24 * 60
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = labelValueSpaceArrangement
-            ) {
-                Text(text = stringResource(id = R.string.settings_item_use_prev_rule_after_start))
+            SettingSItem(labelId = R.string.settings_item_start_with_prev_rule) {
                 Switch(
                     checked = settings.startWithPrevRule,
-                    onCheckedChange = { c -> settings.startWithPrevRule = c })
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.START_WITH_PREV_RULE, c)
+                    })
+            }
+
+            SettingSItem(labelId = R.string.settings_item_also_set_lock_wallpaper) {
+                Switch(
+                    checked = settings.alsoSetLockWallpaper,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.ALSO_SET_LOCK_WALLPAPER, c)
+                    })
+            }
+
+            SettingSItem(labelId = R.string.settings_item_hide_in_recent_task) {
+                Switch(
+                    checked = settings.hideInRecentTask,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.HIDE_IN_RECENT_TASK, c)
+                    })
+            }
+
+            SettingSItem(labelId = R.string.settings_item_enable_dynamic_color) {
+                Switch(
+                    checked = settings.enableDynamicColor,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.ENABLE_DYNAMIC_COLOR, c)
+                    })
+            }
+
+            SettingSItem(labelId = R.string.settings_item_enable_notification) {
+                Switch(
+                    checked = settings.enableNotification,
+                    onCheckedChange = { c ->
+                        if (c) {
+                            val hasPermission = checkNotifyPermission(context) {
+                                notificationDialogShow = true
+                            }
+                            if (!hasPermission) return@Switch
+                            viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, true)
+                        } else {
+                            viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, false)
+                        }
+                    })
+            }
+
+            if (settings.enableNotification) {
+                SettingSItem(labelId = R.string.settings_item_notification_ongoing) {
+                    Switch(
+                        checked = settings.notificationOngoing,
+                        onCheckedChange = { c ->
+                            viewModel.update(SettingsPreferencesKeys.NOTIFICATION_ONGOING, c)
+                        })
+                }
+            }
+
+            SettingSItem(labelId = R.string.settings_item_auto_check_update) {
+                Switch(
+                    checked = settings.autoCheckUpdate,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.AUTO_CHECK_UPDATE, c)
+                    })
             }
         }
+
+        SimpleDialog(
+            text = stringResource(id = R.string.permission_request_notification),
+            show = notificationDialogShow,
+            onDismissRequest = { notificationDialogShow = false }) {
+            requestNotificationPermission(context)
+        }
+    }
+}
+
+@Composable
+private fun SettingSItem(@StringRes labelId: Int, content: @Composable () -> Unit) {
+    SettingSItem(label = stringResource(id = labelId), content = content)
+}
+
+@Composable
+private fun SettingSItem(label: String, content: @Composable () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = label)
+
+        content()
+    }
+}
+
+private fun checkNotifyPermission(context: Context, onRequestPermission: () -> Unit): Boolean {
+    val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    if (notificationManager.areNotificationsEnabled()) {
+        return true
+    } else {
+        onRequestPermission()
+        return false
     }
 }

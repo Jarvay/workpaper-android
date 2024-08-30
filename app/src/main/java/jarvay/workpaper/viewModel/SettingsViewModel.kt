@@ -1,26 +1,33 @@
 package jarvay.workpaper.viewModel
 
-import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jarvay.workpaper.data.Settings
-import jarvay.workpaper.others.SharePreferenceKey
-import jarvay.workpaper.others.defaultSharedPreferences
+import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
+import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
+import jarvay.workpaper.others.STATE_IN_STATED
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
-    private val gson = Gson()
+class SettingsViewModel @Inject constructor(
+    private val repository: SettingsPreferencesRepository
+) : ViewModel() {
+    var settings = repository.settingsPreferencesFlow.stateIn(
+        viewModelScope,
+        STATE_IN_STATED,
+        DEFAULT_SETTINGS
+    )
 
-    fun saveSettings(settings: Settings, context: Context) {
-        val sp = defaultSharedPreferences(context)
-        viewModelScope.launch {
-            sp.edit().apply {
-                putString(SharePreferenceKey.SETTINGS_KEY, gson.toJson(settings))
-            }.apply()
+    fun <T> update(key: Preferences.Key<T>, value: T) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.update(
+                key = key,
+                value = value
+            )
         }
     }
 }
