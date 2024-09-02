@@ -60,7 +60,7 @@ class NotificationHelper @Inject constructor(
     fun titleAndText(): Pair<String, String> {
         fun format(calendar: Calendar): String {
             val format =
-                if (isToday(calendar)) SimpleDateFormat("HH:mm") else SimpleDateFormat("MM-dd HH:mm")
+                if (isToday(calendar)) SimpleDateFormat("HH:mm") else SimpleDateFormat("E HH:mm")
 
             return format.format(Date(calendar.timeInMillis))
         }

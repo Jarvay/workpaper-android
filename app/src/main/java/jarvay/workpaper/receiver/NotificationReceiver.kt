@@ -34,7 +34,7 @@ class NotificationReceiver : BroadcastReceiver() {
 
         if (context == null || intent == null) return
 
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.launch {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 

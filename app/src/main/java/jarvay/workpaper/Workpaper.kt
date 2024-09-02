@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.random.Random
 
 enum class AlarmType(val value: Int) {
     REPEAT(1),
@@ -46,6 +45,8 @@ class Workpaper @Inject constructor(
     private var nextWallpaper: NextWallpaper? = null
     var nextWallpaperTime: Long = 0
     var nextRuleTime: Long = 0
+
+    var wallpaperContentUris: List<String> = emptyList()
 
     fun start() {
         Log.d(javaClass.simpleName, "start")
@@ -137,32 +138,25 @@ class Workpaper @Inject constructor(
 
         if (tmpRuleId < 0) return null
 
-        val ruleWithAlbums = ruleRepository.getRuleWithAlbums(tmpRuleId) ?: return null
-        val albums = ruleWithAlbums.albums
-        val wallpaperUris: MutableList<String> = mutableListOf()
-        albums.forEach {
-            wallpaperUris.addAll(it.wallpaperUris)
-        }
+        if (wallpaperContentUris.isEmpty()) return null
 
-        Log.d(javaClass.simpleName, albums.toString())
-
-        if (wallpaperUris.isEmpty()) return null
-
-        var nextIndex = nextIndex(wallpaperUris, index)
-        if (ruleWithAlbums.rule.random && wallpaperUris.size > 1) {
-            do {
-                nextIndex = Random.nextInt(0, wallpaperUris.size - 1)
-            } while (nextIndex == index)
-        }
+        val nextIndex = nextIndex(index)
 
         return NextWallpaper(
             index = nextIndex,
-            contentUri = wallpaperUris[nextIndex],
+            contentUri = wallpaperContentUris[nextIndex],
             isManual = isManual,
         )
     }
 
-    private fun nextIndex(list: List<String>, currentIndex: Int): Int {
-        return if (currentIndex + 1 >= list.size - 1) 0 else currentIndex + 1
+    private fun nextIndex(currentIndex: Int): Int {
+        if (currentIndex + 1 >= wallpaperContentUris.size) {
+            if (currentRuleAlbums.value?.rule?.random == true) {
+                wallpaperContentUris = wallpaperContentUris.shuffled()
+            }
+            return 0
+        } else {
+            return currentIndex + 1
+        }
     }
 }

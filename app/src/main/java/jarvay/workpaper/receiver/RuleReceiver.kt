@@ -10,6 +10,7 @@ import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
+import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
@@ -43,6 +44,15 @@ class RuleReceiver : BroadcastReceiver() {
 
         if (ruleId > -1 && ruleAlbums != null) {
             workpaper.cancelAlarm(type = AlarmType.REPEAT)
+
+            workpaper.wallpaperContentUris =
+                ruleAlbums.albums.fold<Album, MutableList<String>>(mutableListOf()) { acc, album ->
+                    acc.addAll(album.wallpaperUris)
+                    acc
+                }.apply {
+                    if (ruleAlbums.rule.random) shuffle()
+                }
+
 
             Log.d("defaultPreferencesRepository", runningPreferencesRepository.toString())
             GlobalScope.launch(Dispatchers.IO) {

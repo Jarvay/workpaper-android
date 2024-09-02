@@ -50,12 +50,6 @@ class RuleListViewModel @Inject constructor(
         null
     )
 
-    fun insert(item: Rule) {
-        viewModelScope.launch {
-            repository.insert(item, this)
-        }
-    }
-
     fun deleteRule(item: Rule) {
         viewModelScope.launch {
             repository.delete(item)

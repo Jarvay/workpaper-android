@@ -22,7 +22,7 @@
     <string name="tips_please_stop_first">Please stop running first</string>
 
     <string name="tab_title_days">Days</string>
-    <string name="tab_title_rules">Rule</string>
+    <string name="tab_title_rules">Plans</string>
     <string name="tab_title_albums">Albums</string>
 
     <string name="drawer_menu_settings">Settings</string>
@@ -45,7 +45,7 @@
     <string name="rule_change_while_unlock">Change wallpaper after unlock</string>
     <string name="rule_interval">Interval</string>
     <string name="rule_random">Random</string>
-    <string name="rule_conflicts_tips">Rules conflicts</string>
+    <string name="rule_conflicts_tips">Plans time conflicts</string>
 
     <string name="album_name">Album name</string>
     <string name="album_delete_tips">Are you sure to delete this album?</string>
@@ -66,7 +66,7 @@
     <string name="rule_next_rule">Next</string>
 
     <string name="settings_item_interval">Wallpaper Change Interval</string>
-    <string name="settings_item_start_with_prev_rule">Use prev rule after start</string>
+    <string name="settings_item_start_with_prev_rule">Use prev plan after start</string>
     <string name="settings_item_enable_notification">Enable notification</string>
     <string name="settings_item_notification_ongoing">Notification ongoing</string>
     <string name="settings_item_also_set_lock_wallpaper">Also set lock wallpaper</string>
@@ -75,7 +75,7 @@
     <string name="settings_item_auto_check_update">Auto check update</string>
 
     <string name="notify_will_change_at_about">Wallpaper will change at about %s</string>
-    <string name="notify_next_rule_at_about">Will change to next rule at about %s</string>
+    <string name="notify_next_rule_at_about">Will change to next plan at about %s</string>
     <string name="notify_next_wallpaper">Next wallpaper</string>
     <string name="notify_action_change_next">CHANGE ONE</string>
     <string name="notify_action_change_to_next_now">CHANGE TO IT NOW</string>

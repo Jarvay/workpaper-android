@@ -30,13 +30,13 @@ class RuleFormViewModel @Inject constructor(
 
     fun insert(item: Rule) {
         viewModelScope.launch {
-            repository.insert(item, this)
+            repository.insert(item)
         }
     }
 
     fun update(item: Rule) {
         viewModelScope.launch {
-            repository.update(item, this)
+            repository.update(item)
         }
     }
 

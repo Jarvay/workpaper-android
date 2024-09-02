@@ -48,25 +48,27 @@ class WallpaperWorker @AssistedInject constructor(
 
         val wallpaperUri = wallpaper.toUri()
 
-        var bitmap = bitmapFromContentUri(wallpaperUri, applicationContext) ?: return
+        var bitmap = bitmapFromContentUri(wallpaperUri, applicationContext)
 
         val wallpaperSize = getWallpaperSize(applicationContext)
 
-        if (bitmap.width > wallpaperSize.width || bitmap.height > wallpaperSize.height) {
-            bitmap = bitmap.scaleFixedRatio(
-                targetWidth = wallpaperSize.width,
-                targetHeight = wallpaperSize.height
-            )
-        }
-        Log.d("Wallpaper bitmap", bitmap.info())
+        bitmap?.let {
+            if (it.width > wallpaperSize.width || it.height > wallpaperSize.height) {
+                bitmap = it.scaleFixedRatio(
+                    targetWidth = wallpaperSize.width,
+                    targetHeight = wallpaperSize.height
+                )
+            }
+            Log.d("Wallpaper bitmap", it.info())
 
-        val wallpaperManager = WallpaperManager.getInstance(applicationContext)
-        if (!settings.alsoSetLockWallpaper) {
-            Log.d(javaClass.simpleName, "set system wallpaper only")
-            wallpaperManager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_SYSTEM)
-        } else {
-            Log.d(javaClass.simpleName, "set both wallpaper")
-            wallpaperManager.setBitmap(bitmap)
+            val wallpaperManager = WallpaperManager.getInstance(applicationContext)
+            if (!settings.alsoSetLockWallpaper) {
+                Log.d(javaClass.simpleName, "set system wallpaper only")
+                wallpaperManager.setBitmap(it, null, false, WallpaperManager.FLAG_SYSTEM)
+            } else {
+                Log.d(javaClass.simpleName, "set both wallpaper")
+                wallpaperManager.setBitmap(it)
+            }
         }
     }
 

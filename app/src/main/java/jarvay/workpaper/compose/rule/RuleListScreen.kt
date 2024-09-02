@@ -170,8 +170,8 @@ fun RuleListScreen(
                         if (runningPreferences?.running == true) {
                             Row(
                                 modifier = Modifier
-                                    .padding(end = 8.dp, bottom = 16.dp)
-                                    .align(Alignment.BottomEnd),
+                                    .padding(end = 8.dp, top = 16.dp)
+                                    .align(Alignment.TopEnd),
                                 horizontalArrangement = Arrangement.spacedBy(
                                     4.dp,
                                     Alignment.CenterHorizontally
