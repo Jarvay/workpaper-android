@@ -78,6 +78,27 @@ class WallpaperWorker @AssistedInject constructor(
         context.sendBroadcast(intent)
     }
 
+    private suspend fun generateNextWallpaper() {
+        val nextRuleId = workpaper.nextRuleAlbums.value?.rule?.ruleId ?: return
+
+        val currentNext = workpaper.getNextWallpaper()
+        val startIndex =
+            if (currentNext?.isManual == false) -1 else (currentNext?.index ?: -1)
+        val next = if (workpaper.nextRuleTime < workpaper.nextWallpaperTime) {
+            workpaper.generateNextWallpaper(
+                ruleId = nextRuleId,
+                startIndex = startIndex,
+                isManual = currentNext?.isManual ?: false
+            )
+        } else {
+            workpaper.generateNextWallpaper()
+        }
+
+        next?.let {
+            workpaper.setNextWallpaper(next)
+        }
+    }
+
     override suspend fun doWork(): Result {
         Log.d(javaClass.simpleName, "start")
         Log.d(javaClass.simpleName, Thread.currentThread().name)
@@ -102,13 +123,15 @@ class WallpaperWorker @AssistedInject constructor(
             update(RunningPreferencesKeys.LAST_WALLPAPER, nextWallpaper.contentUri)
         }
 
-        if (workpaper.getNextWallpaper()?.isManual == false && ruleWithAlbums.rule.changeByTiming) {
+        if (!nextWallpaper.isManual && ruleWithAlbums.rule.changeByTiming) {
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.MINUTE, ruleWithAlbums.rule.interval)
             workpaper.nextWallpaperTime = calendar.timeInMillis
-        } else if(!ruleWithAlbums.rule.changeByTiming) {
+        } else if (!ruleWithAlbums.rule.changeByTiming) {
             workpaper.nextWallpaperTime = 0
         }
+
+        generateNextWallpaper()
 
         if (settings.enableNotification) {
             sendNotification()

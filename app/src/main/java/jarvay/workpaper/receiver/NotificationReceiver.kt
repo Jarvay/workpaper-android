@@ -11,7 +11,6 @@ import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.others.NotificationHelper
 import jarvay.workpaper.others.setBigPicture
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -47,27 +46,11 @@ class NotificationReceiver : BroadcastReceiver() {
             notificationBuilder.setContentTitle(titleAndText.first)
                 .setContentText(titleAndText.second)
 
-            val nextRuleId = workpaper.nextRuleAlbums.value?.rule?.ruleId ?: return@launch
-
-            val currentNext = workpaper.getNextWallpaper()
-            val startIndex =
-                if (currentNext?.isManual == false) -1 else (currentNext?.index ?: -1)
-            val next = if (workpaper.nextRuleTime < workpaper.nextWallpaperTime) {
-                workpaper.generateNextWallpaper(
-                    ruleId = nextRuleId,
-                    startIndex = startIndex,
-                    isManual = currentNext?.isManual ?: false
-                )
-            } else {
-                workpaper.generateNextWallpaper()
-            }
-
             val showChangeNow = workpaper.nextRuleTime >= workpaper.nextWallpaperTime
 
-            next?.let {
-                workpaper.setNextWallpaper(next)
+            workpaper.getNextWallpaper()?.let {
                 val bitmapPair =
-                    notificationHelper.createPictures(next.contentUri) ?: return@launch
+                    notificationHelper.createPictures(it.contentUri) ?: return@launch
                 notificationBuilder.setBigPicture(
                     background = bitmapPair.first,
                     bitmap = bitmapPair.second,
