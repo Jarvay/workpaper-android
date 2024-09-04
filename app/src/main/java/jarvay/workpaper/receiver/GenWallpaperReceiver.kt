@@ -23,12 +23,6 @@ class GenWallpaperReceiver : BroadcastReceiver() {
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
-    @Inject
-    lateinit var ruleRepository: RuleRepository
-
-    @Inject
-    lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
-
     @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d(javaClass.simpleName, intent.toString())
@@ -38,9 +32,9 @@ class GenWallpaperReceiver : BroadcastReceiver() {
         if (intent.action != ACTION_NEXT_WALLPAPER) return
 
         GlobalScope.launch(Dispatchers.IO) {
-            val currentNext = workpaper.getNextWallpaper() ?: return@launch
+            val next = workpaper.generateNextWallpaper() ?: return@launch
             workpaper.setNextWallpaper(
-                currentNext.copy(
+                next.copy(
                     isManual = true
                 )
             )
