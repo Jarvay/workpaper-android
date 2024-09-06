@@ -29,6 +29,7 @@ datastorePreferences = "1.1.1"
 lifecycleRuntimeComposeAndroid = "2.8.4"
 lifecycleService = "2.8.4"
 junitKtx = "1.2.1"
+documentfile = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -70,6 +71,7 @@ retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", ve
 androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroid" }
 androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
+androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

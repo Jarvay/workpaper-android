@@ -223,3 +223,4 @@ fun isToday(calendar: Calendar): Boolean {
             && (calendar[Calendar.MONTH] == now[Calendar.MONTH])
             && (calendar[Calendar.DAY_OF_MONTH] == now[Calendar.DAY_OF_MONTH]))
 }
+

@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose.android)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.junit.ktx)
+    implementation(libs.androidx.documentfile)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.work.compiler)

@@ -34,6 +34,8 @@ class MainActivityViewModel @Inject constructor(
 
     val checkingUpdate = MutableLiveData(false)
 
+    val readStorageDialogShow = MutableLiveData(false)
+
     init {
         Log.d(javaClass.simpleName, "init")
         viewModelScope.launch {
@@ -58,6 +60,8 @@ class MainActivityViewModel @Inject constructor(
                     (BuildConfig.VERSION_CODE < latest.versionCode).toString()
                 )
 
+                Log.d("BuildConfig.VERSION_CODE", BuildConfig.VERSION_CODE.toString())
+                Log.d("latest.versionCode", latest.versionCode.toString())
                 var hasNewVersion = false
                 if (BuildConfig.VERSION_CODE < latest.versionCode) {
                     latestVersion.value = latest

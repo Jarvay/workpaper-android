@@ -3,6 +3,7 @@
 
     <string name="permission_request_alarm">Request permission of alarm</string>
     <string name="permission_request_notification">Request permission of notification</string>
+    <string name="permission_read_storage">Request permission of reading storage</string>
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -54,6 +55,9 @@
     <string name="album_wallpaper_delete_tips">Are you sure to delete selected wallpaper?</string>
     <string name="album_no_cover">No Cover</string>
     <string name="album_set_as_cover">Set as cover</string>
+    <string name="album_add_images">Add images</string>
+    <string name="album_add_folder">Add folder</string>
+    <string name="album_limit_tips">Android limits 512 permission for file(folder) after Android 11(include) and 128 before Android 11, you should select folder if you want to add more than limit.</string>
 
     <string name="rule_list_item_time">Time</string>
     <string name="rule_list_item_album">Album</string>
