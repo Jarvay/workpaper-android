@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.staticCompositionLocalOf
+import jarvay.workpaper.MainActivity
 import jarvay.workpaper.viewModel.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 val LocalMainActivityModel = staticCompositionLocalOf<MainActivityViewModel> { error("") }
+
+val LocalMainActivity = staticCompositionLocalOf<MainActivity> { error("") }
 
 val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> { error("") }
 

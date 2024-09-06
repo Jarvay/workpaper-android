@@ -3,6 +3,7 @@
 
     <string name="permission_request_alarm">需要获取闹钟权限</string>
     <string name="permission_request_notification">需要获取通知权限</string>
+    <string name="permission_read_storage">需要获取读取存储的权限</string>
 
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
@@ -53,6 +54,9 @@
     <string name="album_wallpaper_delete_tips">确定要删除所选壁纸吗？</string>
     <string name="album_no_cover">暂无封面</string>
     <string name="album_set_as_cover">设为封面</string>
+    <string name="album_add_images">添加图片</string>
+    <string name="album_add_folder">添加文件夹</string>
+    <string name="album_limit_tips">安卓11以下只允许128个文件(夹)授权，安卓11及以上允许512个，如果超过限制请选择文件夹(所有相册共享这个限制)</string>
 
     <string name="rule_list_item_time">时间</string>
     <string name="rule_list_item_album">相册</string>

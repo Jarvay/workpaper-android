@@ -1,5 +1,6 @@
 package jarvay.workpaper.others
 
+import android.os.Build
 import androidx.annotation.StringRes
 import jarvay.workpaper.data.day.DayValue
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,3 +23,5 @@ const val MAX_WALLPAPER_WIDTH = 1200
 const val DEFAULT_WALLPAPER_CHANGE_INTERVAL = 15
 
 val STATE_IN_STATED = SharingStarted.WhileSubscribed(5000)
+
+val MAX_PERSISTED_URI_GRANTS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 512 else 128
