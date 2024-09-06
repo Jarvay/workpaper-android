@@ -40,7 +40,7 @@ class RequestInterceptor(val context: Context) : Interceptor {
 @Singleton
 class RetrofitClient(context: Context) {
     companion object {
-        const val BASE_URL = "https://gcore.jsdelivr.net/gh/Jarvay/workpaper-android-release@latest/"
+        const val BASE_URL = "https://gh-proxy.com/https://raw.githubusercontent.com/Jarvay/workpaper-android-release/main/"
     }
 
     private val okHttpClient = OkHttpClient.Builder()
