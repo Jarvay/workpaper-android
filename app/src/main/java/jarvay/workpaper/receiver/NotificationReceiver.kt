@@ -46,8 +46,6 @@ class NotificationReceiver : BroadcastReceiver() {
             notificationBuilder.setContentTitle(titleAndText.first)
                 .setContentText(titleAndText.second)
 
-            val showChangeNow = workpaper.nextRuleTime >= workpaper.nextWallpaperTime
-
             workpaper.getNextWallpaper()?.let {
                 val bitmapPair =
                     notificationHelper.createPictures(it.contentUri) ?: return@launch
@@ -55,7 +53,6 @@ class NotificationReceiver : BroadcastReceiver() {
                     background = bitmapPair.first,
                     bitmap = bitmapPair.second,
                     context = context,
-                    showChangeNow = showChangeNow
                 )
             }
 

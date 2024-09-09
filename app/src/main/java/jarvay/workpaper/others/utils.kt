@@ -23,8 +23,6 @@ import jarvay.workpaper.data.rule.RuleAlbums
 import jarvay.workpaper.data.rule.RuleAlbumsToSort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.io.FileNotFoundException
-import java.io.IOException
 import java.util.Calendar
 
 
@@ -111,22 +109,18 @@ fun showToast(context: Context, @StringRes strId: Int) {
     showToast(context, context.getString(strId))
 }
 
-fun getSize(context: Context, fileStrUri: String): Size {
-    var size = Size(-1, -1)
+fun getSize(context: Context, fileStrUri: String): Size? {
     try {
         context.contentResolver.openInputStream(fileStrUri.toUri()).use { inputStream ->
             val options = BitmapFactory.Options()
             options.inJustDecodeBounds = true
             BitmapFactory.decodeStream(inputStream, null, options)
-            size = Size(options.outWidth, options.outHeight)
+            return Size(options.outWidth, options.outHeight)
         }
-    } catch (e: FileNotFoundException) {
+    } catch (e: Exception) {
         e.printStackTrace()
-    } catch (e: IOException) {
-        e.printStackTrace()
+        return null
     }
-
-    return size
 }
 
 fun getScreenSize(context: Context): Size {

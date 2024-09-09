@@ -7,6 +7,7 @@
 
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
+    <string name="close">关闭</string>
     <string name="add">添加</string>
     <string name="edit">编辑</string>
     <string name="delete">删除</string>
@@ -56,7 +57,7 @@
     <string name="album_set_as_cover">设为封面</string>
     <string name="album_add_images">添加图片</string>
     <string name="album_add_folder">添加文件夹</string>
-    <string name="album_limit_tips">安卓11以下只允许128个文件(夹)授权，安卓11及以上允许512个，如果超过限制请选择文件夹(所有相册共享这个限制)</string>
+    <string name="album_limit_tips">安卓限制%d个文件(夹)授权，已授权%d，剩余%d，已选择%d， 添加后将超出限制，请使用添加文件夹功能。</string>
 
     <string name="rule_list_item_time">时间</string>
     <string name="rule_list_item_album">相册</string>

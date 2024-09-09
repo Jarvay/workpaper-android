@@ -7,7 +7,7 @@ import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
-import com.google.gson.Gson
+import android.util.Log
 import kotlin.math.min
 
 fun Bitmap.scaleFixedRatio(targetWidth: Int, targetHeight: Int): Bitmap {
@@ -43,13 +43,18 @@ fun Bitmap.info(): String {
 
 fun bitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
     fun fromStream(): Bitmap? {
-        return context.contentResolver.openInputStream(contentUri)
-            ?.use { inputStream ->
-                val options = BitmapFactory.Options().apply {
-                    inMutable = true
+        return try {
+            context.contentResolver.openInputStream(contentUri)
+                ?.use { inputStream ->
+                    val options = BitmapFactory.Options().apply {
+                        inMutable = true
+                    }
+                    BitmapFactory.decodeStream(inputStream, null, options)
                 }
-                BitmapFactory.decodeStream(inputStream, null, options)
-            }
+        } catch (e: Exception) {
+            Log.w("bitmapFromContentUri", e.toString())
+            null
+        }
     }
 
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
