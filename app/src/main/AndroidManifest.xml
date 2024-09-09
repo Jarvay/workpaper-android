@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <queries />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -70,6 +72,14 @@
         </receiver>
 
         <receiver android:name=".receiver.GenWallpaperReceiver" />
+
+        <receiver android:name=".receiver.ActionWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/action_widget_info" />
+        </receiver>
 
         <provider
             android:name="androidx.startup.InitializationProvider"

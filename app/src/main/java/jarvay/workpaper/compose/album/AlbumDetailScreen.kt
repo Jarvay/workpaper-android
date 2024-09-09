@@ -11,6 +11,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -29,7 +31,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,20 +53,19 @@ import coil.request.ImageRequest
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
+import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.getSize
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 
-@OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumDetailScreen(
     navController: NavController,
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
-    val simpleSnackbar = LocalSimpleSnackbar.current
+    val context = LocalContext.current
     val album by viewModel.album.collectAsStateWithLifecycle()
     var selecting by remember {
         mutableStateOf(false)
@@ -77,23 +77,38 @@ fun AlbumDetailScreen(
         mutableStateOf(false)
     }
 
-    var currentWallpaper by remember {
-        mutableStateOf("")
-    }
 
     var actionsShow by remember {
         mutableStateOf(false)
     }
 
+    var limitTipShow by remember {
+        mutableStateOf(false)
+    }
+    var limitTipsContent by remember {
+        mutableStateOf("")
+    }
+
     if (album == null) return
-
-    val context = LocalContext.current
-
-    val listState = rememberLazyStaggeredGridState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
         onResult = { uris: List<Uri> ->
+            val existsCount = context.contentResolver.persistedUriPermissions.size
+            val leaveCount = MAX_PERSISTED_URI_GRANTS - existsCount
+            val after = existsCount + uris.size
+            if (after > MAX_PERSISTED_URI_GRANTS) {
+                limitTipsContent = context.getString(
+                    R.string.album_limit_tips,
+                    MAX_PERSISTED_URI_GRANTS,
+                    existsCount,
+                    leaveCount,
+                    uris.size
+                )
+                limitTipShow = true
+                return@rememberLauncherForActivityResult
+            }
+
             val takeFlags: Int =
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
@@ -169,11 +184,9 @@ fun AlbumDetailScreen(
                         text = stringResource(id = R.string.album_wallpaper_delete_tips),
                         onDismissRequest = {
                             deleteDialogShow = false
-                        }) {
-                        val uris =
-                            album!!.wallpaperUris.filter { !checkedState.contains(it) }
-                        Log.d("uris", uris.toString())
-                        viewModel.update(album!!.copy(wallpaperUris = uris))
+                        }
+                    ) {
+                        viewModel.deleteWallpaperUris(context, checkedState.toList())
                         selecting = false
                         checkedState = emptySet()
                     }
@@ -245,72 +258,121 @@ fun AlbumDetailScreen(
                 .padding(padding)
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING)
         ) {
-            Text(
-                text = stringResource(R.string.album_limit_tips),
-                color = MaterialTheme.colorScheme.tertiary
-            )
+            WallpaperList(
+                album = album!!,
+                checkedState = checkedState,
+                selecting = selecting,
+                viewModel = viewModel
+            ) { checked, uri ->
+                checkedState =
+                    updateCheckedState(checked, uri, checkedState)
+            }
+        }
+    }
 
-            LazyVerticalStaggeredGrid(
-                state = listState,
-                modifier = Modifier.padding(top = 16.dp),
-                columns = StaggeredGridCells.Fixed(2),
+    SimpleDialog(
+        content = {
+            Text(text = limitTipsContent)
+        },
+        show = limitTipShow,
+        hideDismissButton = true,
+        confirmButtonText = stringResource(id = R.string.close),
+        onDismissRequest = { limitTipShow = false }
+    ) {
+        limitTipShow = false
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WallpaperList(
+    album: Album,
+    checkedState: Set<String>,
+    selecting: Boolean,
+    viewModel: AlbumDetailViewModel,
+    onItemCheckedChange: (Boolean, String) -> Unit = { _: Boolean, _: String -> }
+) {
+    val context = LocalContext.current
+
+    val simpleSnackbar = LocalSimpleSnackbar.current
+    val listState = rememberLazyStaggeredGridState()
+
+    var currentWallpaper by remember {
+        mutableStateOf("")
+    }
+
+    LazyVerticalStaggeredGrid(
+        state = listState,
+        modifier = Modifier.padding(top = 16.dp),
+        columns = StaggeredGridCells.Fixed(2),
+    ) {
+        items(items = album.wallpaperUris, key = { item ->
+            item
+        }) {
+            val model = try {
+                ImageRequest.Builder(context)
+                    .data(it.toUri())
+                    .size(256, 256)
+                    .build()
+            } catch (e: Exception) {
+                Log.w("AlbumDetailScreen", e.toString())
+                null
+            }
+
+            Box(
+                modifier = Modifier.animateItemPlacement()
             ) {
-                items(items = album!!.wallpaperUris, key = { item ->
-                    item
-                }) {
-                    Box(
-                        modifier = Modifier.animateItemPlacement()
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .padding(8.dp)
-                        ) {
-                            val size = getSize(context, it)
-                            val floatWidth = size.width.toFloat()
-                            val floatHeight = size.height.toFloat()
-
-                            AsyncImage(
-                                model = ImageRequest.Builder(context).data(it.toUri())
-                                    .size(320, 320)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .aspectRatio(floatWidth / floatHeight)
-                                    .combinedClickable(onLongClick = {
-                                        currentWallpaper = it
-                                    }) {
-                                        if (selecting) {
-                                            val checked = !checkedState.contains(it)
-                                            checkedState =
-                                                updateCheckedState(checked, it, checkedState)
-                                        }
-                                    }
-                            )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .apply {
+                            if (model == null) {
+                                height(256.dp)
+                            }
                         }
+                ) {
+                    val size = getSize(context, it) ?: return@Card
+                    val floatWidth = size.width.toFloat()
+                    val floatHeight = size.height.toFloat()
 
-                        DropdownMenu(
-                            expanded = currentWallpaper == it,
-                            onDismissRequest = { currentWallpaper = "" }) {
-                            DropdownMenuItem(
-                                text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
-                                onClick = {
-                                    viewModel.update(album!!.copy(coverUri = it))
-                                    currentWallpaper = ""
-                                    simpleSnackbar.show(R.string.tips_operation_success)
+                    AsyncImage(
+                        model = model,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .aspectRatio(floatWidth / floatHeight)
+                            .combinedClickable(onLongClick = {
+                                currentWallpaper = it
+                            }) {
+                                if (selecting) {
+                                    val checked = !checkedState.contains(it)
+                                    onItemCheckedChange(checked, it)
                                 }
-                            )
-                        }
+                            }
+                    )
+                }
 
-                        if (selecting) {
-                            Checkbox(
-                                checked = checkedState.contains(it),
-                                onCheckedChange = { checked ->
-                                    checkedState = updateCheckedState(checked, it, checkedState)
-                                },
-                                modifier = Modifier.align(Alignment.TopEnd)
-                            )
+                DropdownMenu(
+                    expanded = currentWallpaper == it,
+                    onDismissRequest = { currentWallpaper = "" }) {
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
+                        onClick = {
+                            viewModel.update(album.copy(coverUri = it))
+                            currentWallpaper = ""
+                            simpleSnackbar.show(R.string.tips_operation_success)
                         }
-                    }
+                    )
+                }
+
+                if (selecting) {
+                    Checkbox(
+                        checked = checkedState.contains(it),
+                        onCheckedChange = { checked ->
+                            onItemCheckedChange(checked, it)
+                        },
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    )
                 }
             }
         }

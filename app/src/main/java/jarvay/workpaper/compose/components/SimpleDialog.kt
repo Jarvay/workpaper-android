@@ -14,6 +14,9 @@ fun SimpleDialog(
     show: Boolean,
     dismissOnConfirm: Boolean = true,
     confirmButtonEnable: Boolean = true,
+    confirmButtonText: String = stringResource(id = R.string.ok),
+    dismissButtonText: String = stringResource(id = R.string.cancel),
+    hideDismissButton: Boolean = false,
     title: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
     onDismissRequest: () -> Unit,
@@ -29,12 +32,14 @@ fun SimpleDialog(
                         onDismissRequest()
                     }
                 }) {
-                    Text(text = stringResource(id = R.string.ok))
+                    Text(text = confirmButtonText)
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { onDismissRequest() }) {
-                    Text(text = stringResource(id = R.string.cancel))
+            dismissButton = if (hideDismissButton) null else {
+                {
+                    TextButton(onClick = { onDismissRequest() }) {
+                        Text(text = dismissButtonText)
+                    }
                 }
             },
             title = title,

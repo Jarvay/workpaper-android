@@ -1,5 +1,7 @@
 package jarvay.workpaper.viewModel
 
+import android.content.Context
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -7,6 +9,7 @@ import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.STATE_IN_STATED
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,9 +37,17 @@ class AlbumListViewModel @Inject constructor(
         }
     }
 
-    fun delete(item: Album) {
-        viewModelScope.launch {
+    fun delete(item: Album, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
             repository.delete(item)
+
+            item.wallpaperUris.forEach {
+                AlbumDetailViewModel.updatePermissions(
+                    context = context,
+                    contentUri = it.toUri(),
+                    albums = allAlbums.value
+                )
+            }
         }
     }
 

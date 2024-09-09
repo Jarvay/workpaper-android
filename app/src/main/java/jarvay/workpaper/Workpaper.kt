@@ -4,17 +4,25 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.util.Log
+import androidx.core.net.toUri
+import androidx.glance.appwidget.updateAll
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.RuleAlbums
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.glance.ActionWidget
+import jarvay.workpaper.others.bitmapFromContentUri
+import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.WorkpaperService
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,9 +50,10 @@ class Workpaper @Inject constructor(
     var currentRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
     var nextRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
 
-    private var nextWallpaper: NextWallpaper? = null
+    var nextWallpaper: MutableStateFlow<NextWallpaper?> = MutableStateFlow(null)
     var nextWallpaperTime: Long = 0
     var nextRuleTime: Long = 0
+    val nextWallpaperBitmap: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
 
     var wallpaperContentUris: List<String> = emptyList()
 
@@ -64,13 +73,16 @@ class Workpaper @Inject constructor(
 
         cancelAllAlarm()
 
-        val intent = Intent(context, WorkpaperService::class.java)
-        context.stopService(intent)
-
         runningPreferencesRepository.apply {
             update(RunningPreferencesKeys.LAST_INDEX, -1)
             update(RunningPreferencesKeys.LAST_WALLPAPER, "")
         }
+
+        nextWallpaper.value = null
+        nextWallpaperBitmap.value = null
+
+        val intent = Intent(context, WorkpaperService::class.java)
+        context.stopService(intent)
     }
 
     private fun cancelAllAlarm() {
@@ -118,11 +130,19 @@ class Workpaper @Inject constructor(
     }
 
     suspend fun getNextWallpaper(): NextWallpaper? {
-        return if (nextWallpaper == null) generateNextWallpaper() else nextWallpaper
+        return if (nextWallpaper.value == null) generateNextWallpaper() else nextWallpaper.value
     }
 
     fun setNextWallpaper(next: NextWallpaper) {
-        nextWallpaper = next
+        nextWallpaper.value = next
+        MainScope().launch {
+            var bitmap = bitmapFromContentUri(next.contentUri.toUri(), context)
+            if (bitmap != null) {
+                bitmap = bitmap.scaleFixedRatio(320, 320)
+                nextWallpaperBitmap.value = bitmap
+            }
+            ActionWidget().updateAll(context)
+        }
     }
 
     suspend fun generateNextWallpaper(
@@ -133,7 +153,7 @@ class Workpaper @Inject constructor(
         val runningPreferences = runningPreferencesRepository.runningPreferencesFlow.first()
 
         Log.d(javaClass.simpleName, runningPreferences.toString())
-        val index = startIndex ?: nextWallpaper?.index ?: -1
+        val index = startIndex ?: nextWallpaper.value?.index ?: -1
         val tmpRuleId = ruleId ?: this.currentRuleAlbums.value?.rule?.ruleId ?: -1
 
         if (tmpRuleId < 0) return null
