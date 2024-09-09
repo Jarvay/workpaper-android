@@ -146,7 +146,6 @@ fun NotificationCompat.Builder.setBigPicture(
     background: Bitmap,
     bitmap: Bitmap,
     context: Context,
-    showChangeNow: Boolean = true
 ): NotificationCompat.Builder {
     val changeNextPendingIntent = PendingIntent.getBroadcast(
         context,
@@ -174,13 +173,9 @@ fun NotificationCompat.Builder.setBigPicture(
             0,
             context.getString(R.string.notify_action_change_next),
             changeNextPendingIntent
-        ).apply {
-            if (showChangeNow) {
-                addAction(
-                    0,
-                    context.getString(R.string.notify_action_change_to_next_now),
-                    changeNowPendingIntent
-                )
-            }
-        }
+        ).addAction(
+            0,
+            context.getString(R.string.notify_action_change_to_next_now),
+            changeNowPendingIntent
+        )
 }

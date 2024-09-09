@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,11 +36,17 @@ import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
+import jarvay.workpaper.viewModel.AlbumDetailViewModel
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel = hiltViewModel()) {
+fun AlbumListScreen(
+    navController: NavController,
+    viewModel: AlbumListViewModel = hiltViewModel(),
+) {
+    val context = LocalContext.current
+
     val mainActivityViewModel = LocalMainActivityModel.current
     val simpleSnackbar = LocalSimpleSnackbar.current
     val runningPreferences by mainActivityViewModel.runningPreferences.observeAsState()
@@ -115,11 +122,11 @@ fun AlbumListScreen(navController: NavController, viewModel: AlbumListViewModel 
     }
 
     SimpleDialog(
-        text = stringResource(R.string.album_wallpaper_delete_tips),
+        text = stringResource(R.string.album_delete_tips),
         show = deleteDialogShow,
         onDismissRequest = { deleteDialogShow = false }) {
         currentAlbum?.let {
-            viewModel.delete(currentAlbum!!)
+            viewModel.delete(currentAlbum!!, context)
             currentAlbum = null
             simpleSnackbar.show(R.string.tips_operation_success)
         }

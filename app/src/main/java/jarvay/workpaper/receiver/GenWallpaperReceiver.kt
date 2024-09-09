@@ -12,6 +12,9 @@ import jarvay.workpaper.data.rule.RuleRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,7 +26,9 @@ class GenWallpaperReceiver : BroadcastReceiver() {
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @Inject
+    lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
+
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d(javaClass.simpleName, intent.toString())
 
@@ -31,7 +36,7 @@ class GenWallpaperReceiver : BroadcastReceiver() {
 
         if (intent.action != ACTION_NEXT_WALLPAPER) return
 
-        GlobalScope.launch(Dispatchers.IO) {
+        MainScope().launch(Dispatchers.IO) {
             val next = workpaper.generateNextWallpaper() ?: return@launch
             workpaper.setNextWallpaper(
                 next.copy(
@@ -39,9 +44,12 @@ class GenWallpaperReceiver : BroadcastReceiver() {
                 )
             )
 
-            val notificationIntent = Intent(context, NotificationReceiver::class.java)
-            notificationIntent.setAction(NotificationReceiver.ACTION_NOTIFICATION_UPDATE)
-            context.sendBroadcast(notificationIntent)
+            val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
+            if (settings.enableNotification) {
+                val notificationIntent = Intent(context, NotificationReceiver::class.java)
+                notificationIntent.setAction(NotificationReceiver.ACTION_NOTIFICATION_UPDATE)
+                context.sendBroadcast(notificationIntent)
+            }
         }
     }
 
