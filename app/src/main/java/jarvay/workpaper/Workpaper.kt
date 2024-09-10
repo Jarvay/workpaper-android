@@ -7,22 +7,17 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.core.net.toUri
-import androidx.glance.appwidget.updateAll
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.RuleAlbums
-import jarvay.workpaper.data.rule.RuleRepository
-import jarvay.workpaper.glance.ActionWidget
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.WorkpaperService
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,9 +39,6 @@ class Workpaper @Inject constructor(
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
-    @Inject
-    lateinit var ruleRepository: RuleRepository
-
     var currentRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
     var nextRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
 
@@ -56,6 +48,8 @@ class Workpaper @Inject constructor(
     val nextWallpaperBitmap: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
 
     var wallpaperContentUris: List<String> = emptyList()
+
+    val settingWallpaper = MutableStateFlow(false)
 
     fun start() {
         Log.d(javaClass.simpleName, "start")
@@ -134,14 +128,13 @@ class Workpaper @Inject constructor(
     }
 
     fun setNextWallpaper(next: NextWallpaper) {
+        if (nextWallpaper.value?.contentUri == next.contentUri) return
         nextWallpaper.value = next
-        MainScope().launch {
-            var bitmap = bitmapFromContentUri(next.contentUri.toUri(), context)
-            if (bitmap != null) {
-                bitmap = bitmap.scaleFixedRatio(320, 320)
-                nextWallpaperBitmap.value = bitmap
-            }
-            ActionWidget().updateAll(context)
+
+        var bitmap = bitmapFromContentUri(next.contentUri.toUri(), context)
+        if (bitmap != null) {
+            bitmap = bitmap.scaleFixedRatio(320, 320)
+            nextWallpaperBitmap.value = bitmap
         }
     }
 

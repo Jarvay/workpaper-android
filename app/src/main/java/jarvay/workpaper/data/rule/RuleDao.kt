@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface RuleDao {
     @Query(
-        "SELECT * FROM rules " +
+        "SELECT rules.*, albums.* FROM rules " +
                 "JOIN rule_album_relations ON rules.id = rule_album_relations.ruleId " +
                 "JOIN albums ON rule_album_relations.albumId = albums.id " +
                 "ORDER BY rules.id ASC"
@@ -19,7 +19,7 @@ interface RuleDao {
     fun findAll(): Map<Rule, List<Album>>
 
     @Query(
-        "SELECT * FROM rules " +
+        "SELECT rules.*, albums.* FROM rules " +
                 "JOIN rule_album_relations ON rules.id = rule_album_relations.ruleId " +
                 "JOIN albums ON rule_album_relations.albumId = albums.id " +
                 "ORDER BY rules.id ASC"
@@ -33,7 +33,7 @@ interface RuleDao {
     fun findById(id: Long): Rule?
 
     @Query(
-        "SELECT * FROM rules " +
+        "SELECT rules.*, albums.* FROM rules " +
                 "JOIN rule_album_relations ON rules.id = rule_album_relations.ruleId " +
                 "JOIN albums ON rule_album_relations.albumId = albums.id " +
                 "WHERE rules.id = :id"

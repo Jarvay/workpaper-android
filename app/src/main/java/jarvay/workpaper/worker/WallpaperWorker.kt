@@ -43,8 +43,9 @@ class WallpaperWorker @AssistedInject constructor(
     @Inject
     lateinit var settingPreferencesRepository: SettingsPreferencesRepository
 
-    private fun setWallpaper(wallpaper: String, settings: SettingsPreferences) {
+    private suspend fun setWallpaper(wallpaper: String, settings: SettingsPreferences) {
         Log.d(javaClass.simpleName, settings.toString())
+        workpaper.settingWallpaper.emit(true)
 
         val wallpaperUri = wallpaper.toUri()
 
@@ -70,33 +71,13 @@ class WallpaperWorker @AssistedInject constructor(
                 wallpaperManager.setBitmap(it)
             }
         }
+        workpaper.settingWallpaper.emit(false)
     }
 
     private fun sendNotification() {
         val intent = Intent(context, NotificationReceiver::class.java)
         intent.setAction(NotificationReceiver.ACTION_NOTIFICATION_UPDATE)
         context.sendBroadcast(intent)
-    }
-
-    private suspend fun generateNextWallpaper() {
-        val nextRuleId = workpaper.nextRuleAlbums.value?.rule?.ruleId ?: return
-
-        val currentNext = workpaper.getNextWallpaper()
-        val startIndex =
-            if (currentNext?.isManual == false) -1 else (currentNext?.index ?: -1)
-        val next = if (workpaper.nextRuleTime < workpaper.nextWallpaperTime) {
-            workpaper.generateNextWallpaper(
-                ruleId = nextRuleId,
-                startIndex = startIndex,
-                isManual = currentNext?.isManual ?: false
-            )
-        } else {
-            workpaper.generateNextWallpaper()
-        }
-
-        next?.let {
-            workpaper.setNextWallpaper(next)
-        }
     }
 
     override suspend fun doWork(): Result {
@@ -131,7 +112,11 @@ class WallpaperWorker @AssistedInject constructor(
             workpaper.nextWallpaperTime = 0
         }
 
-        generateNextWallpaper()
+        workpaper.apply {
+            generateNextWallpaper()?.let {
+                setNextWallpaper(it)
+            }
+        }
 
         if (settings.enableNotification) {
             sendNotification()
