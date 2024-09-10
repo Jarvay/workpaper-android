@@ -33,8 +33,6 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
-    lateinit var settings: SettingsPreferences
-
     @Inject
     lateinit var workpaper: Workpaper
 
@@ -47,7 +45,7 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
         Log.d(javaClass.simpleName, Thread.currentThread().name)
 
         lifecycle.coroutineScope.launch(Dispatchers.Default) {
-            settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
+            val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (settings.enableNotification) {
                 val notification =
                     notificationHelper.notificationBuilder(
@@ -74,6 +72,7 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
 
             Log.d("prev rule", prevRule.toString())
 
+            val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (prevRule != null && settings.startWithPrevRule) {
                 val prevRuleIntent = Intent(this@WorkpaperService, RuleReceiver::class.java)
                 prevRuleIntent.putExtra(RuleReceiver.RULE_ID_KEY, prevRule.ruleAlbums.rule.ruleId)

@@ -15,6 +15,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.cornerRadius
@@ -49,6 +50,10 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
     private fun Content() {
         val context = LocalContext.current
 
+        val size = LocalSize.current
+
+        Log.d(javaClass.simpleName, size.toString())
+
         Log.d(javaClass.simpleName, workpaper.toString())
 
         Column(
@@ -61,6 +66,7 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val bitmap by workpaper.nextWallpaperBitmap.collectAsState()
+            val settingWallpaper by workpaper.settingWallpaper.collectAsState(initial = false)
 
             if (bitmap == null) {
                 Placeholder()
@@ -69,10 +75,11 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
 
             Log.d(javaClass.simpleName, bitmap!!.info())
 
-            val doubleClick = DoubleClick(
+            val clickHelper = ClickHelper(
                 interval = 300,
                 onDouble = {
                     Log.d(javaClass.simpleName, "onDouble")
+                    if (settingWallpaper) return@ClickHelper
                     val i = Intent(context, WallpaperReceiver::class.java)
                     context.sendBroadcast(i)
                 }
@@ -84,11 +91,13 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             }
 
             Image(
-                modifier = GlanceModifier.cornerRadius(16.dp).fillMaxSize().clickable {
-                    doubleClick.click()
-                },
+                modifier = GlanceModifier.cornerRadius(16.dp)
+                    .fillMaxSize()
+                    .clickable {
+                        clickHelper.click()
+                    },
                 provider = BitmapImageProvider(bitmap!!),
-                contentScale = ContentScale.FillBounds,
+                contentScale = ContentScale.Fit,
                 contentDescription = null
             )
         }

@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
@@ -218,3 +219,7 @@ fun isToday(calendar: Calendar): Boolean {
             && (calendar[Calendar.DAY_OF_MONTH] == now[Calendar.DAY_OF_MONTH]))
 }
 
+fun Context.dpToPx(dp: Float): Int {
+    val displayMetrics = resources.displayMetrics
+    return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT))
+}

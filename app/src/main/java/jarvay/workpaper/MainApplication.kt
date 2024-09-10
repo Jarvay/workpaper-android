@@ -42,7 +42,7 @@ class MainApplication : Application(), Configuration.Provider {
         }
         registerReceiver(unlockReceiver, unlockFilter)
 
-        MainScope().launch(Dispatchers.IO) {
+        MainScope().launch {
             val runningPreferences = runningPreferencesRepository.runningPreferencesFlow.first()
             val running = runningPreferences.running
             if (running) {
