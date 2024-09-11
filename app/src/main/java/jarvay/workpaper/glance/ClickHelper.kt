@@ -13,8 +13,8 @@ class ClickHelper(
 
     fun click() {
         if (System.currentTimeMillis() - lastTime <= interval) {
-            onDouble()
             lastTime = 0
+            onDouble()
         } else {
             lastTime = System.currentTimeMillis()
             MainScope().launch {

@@ -121,7 +121,7 @@ fun RuleListScreen(
 
                             RuleInfoItem(
                                 labelId = R.string.rule_list_item_album,
-                                value = albums.joinToString(separator = ", ") { album -> album.name }
+                                value = albums.joinToString(separator = ", ") { item -> item.album.name }
                             )
 
                             if (rule.random) {

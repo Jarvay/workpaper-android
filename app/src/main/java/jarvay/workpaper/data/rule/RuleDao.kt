@@ -5,7 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-import jarvay.workpaper.data.album.Album
+import jarvay.workpaper.data.album.AlbumWithWallpapers
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,7 +16,7 @@ interface RuleDao {
                 "JOIN albums ON rule_album_relations.albumId = albums.id " +
                 "ORDER BY rules.id ASC"
     )
-    fun findAll(): Map<Rule, List<Album>>
+    fun findAll(): Map<Rule, List<AlbumWithWallpapers>>
 
     @Query(
         "SELECT rules.*, albums.* FROM rules " +
@@ -24,7 +24,7 @@ interface RuleDao {
                 "JOIN albums ON rule_album_relations.albumId = albums.id " +
                 "ORDER BY rules.id ASC"
     )
-    fun findAllFlow(): Flow<Map<Rule, List<Album>>>
+    fun findAllFlow(): Flow<Map<Rule, List<AlbumWithWallpapers>>>
 
     @Query("SELECT * FROM rules WHERE id= :id ")
     fun findByIdFlow(id: Long): Flow<Rule>
@@ -38,7 +38,7 @@ interface RuleDao {
                 "JOIN albums ON rule_album_relations.albumId = albums.id " +
                 "WHERE rules.id = :id"
     )
-    fun findWithAlbumsById(id: Long): Map<Rule, List<Album>>?
+    fun findWithAlbumsById(id: Long): Map<Rule, List<AlbumWithWallpapers>>?
 
     @Insert
     suspend fun insert(item: Rule): Long

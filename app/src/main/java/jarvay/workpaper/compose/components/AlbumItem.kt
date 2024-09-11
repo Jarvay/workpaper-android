@@ -22,16 +22,18 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import jarvay.workpaper.R
 import jarvay.workpaper.data.album.Album
+import jarvay.workpaper.data.wallpaper.Wallpaper
 
 @Composable
 fun AlbumItem(
     modifier: Modifier = Modifier,
     album: Album,
+    wallpapers: List<Wallpaper>,
     onClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
-    val cover = album.coverUri ?: album.wallpaperUris.getOrNull(0)
+    val cover = album.coverUri ?: wallpapers.getOrNull(0)?.contentUri
 
     val model = try {
         ImageRequest.Builder(context).data(cover).size(256, 256)
@@ -70,7 +72,7 @@ fun AlbumItem(
             ) {
                 Text(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    text = album.wallpaperUris.size.toString(),
+                    text = wallpapers.size.toString(),
                     color = Color.White
                 )
             }

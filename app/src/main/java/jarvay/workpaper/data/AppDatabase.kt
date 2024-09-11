@@ -11,8 +11,18 @@ import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleAlbumRelation
 import jarvay.workpaper.data.rule.RuleAlbumRelationDao
 import jarvay.workpaper.data.rule.RuleDao
+import jarvay.workpaper.data.wallpaper.Wallpaper
+import jarvay.workpaper.data.wallpaper.WallpaperDao
 
-@Database(entities = [Rule::class, Album::class, RuleAlbumRelation::class], version = 1)
+@Database(
+    entities = [
+        Rule::class,
+        Album::class,
+        RuleAlbumRelation::class,
+        Wallpaper::class
+    ],
+    version = 2
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun ruleDao(): RuleDao
@@ -21,7 +31,11 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun ruleAlbumRelationDao(): RuleAlbumRelationDao
 
+    abstract fun wallpaperDao(): WallpaperDao
+
     companion object {
+        private const val DB_FILE = "workpaper.db"
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -33,7 +47,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun getDatabaseBuilder(ctx: Context): Builder<AppDatabase> {
             val appContext = ctx.applicationContext
-            val dbFile = appContext.getDatabasePath("workpaper.db")
+            val dbFile = appContext.getDatabasePath(DB_FILE)
             return Room.databaseBuilder(
                 context = appContext,
                 klass = AppDatabase::class.java,
@@ -44,6 +58,9 @@ abstract class AppDatabase : RoomDatabase() {
         private fun getRoomDatabase(builder: Builder<AppDatabase>): AppDatabase {
             return builder
                 .allowMainThreadQueries()
+                .addMigrations(
+                    Migration_1_2
+                )
                 .build()
         }
     }

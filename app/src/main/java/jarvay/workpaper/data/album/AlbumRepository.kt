@@ -10,7 +10,7 @@ class AlbumRepository @Inject constructor(
     private val albumDao: AlbumDao
 ) {
 
-    val allAlbums: Flow<List<Album>> = albumDao.findAll()
+    val allAlbums = albumDao.findAll()
 
     fun getAlbum(albumId: Long) = albumDao.findFlowById(albumId)
 

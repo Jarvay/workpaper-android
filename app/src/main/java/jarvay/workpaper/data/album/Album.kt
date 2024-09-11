@@ -11,5 +11,4 @@ data class Album(
     val albumId: Long = 0,
     val name: String,
     val coverUri: String? = null,
-    val wallpaperUris: List<String> = emptyList()
 )

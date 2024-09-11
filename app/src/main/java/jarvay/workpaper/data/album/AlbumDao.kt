@@ -9,14 +9,27 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AlbumDao {
-    @Query("SELECT * FROM albums ORDER BY id ASC")
-    fun findAll(): Flow<List<Album>>
+    @Query(
+        """
+        SELECT * FROM albums
+        """
+    )
+    fun findAll(): Flow<List<AlbumWithWallpapers>>
 
-    @Query("SELECT * FROM albums WHERE id=:id ")
-    fun findFlowById(id: Long): Flow<Album>
+    @Query(
+        """
+        SELECT * FROM albums WHERE id = :id
+        """
+    )
+    fun findFlowById(id: Long): Flow<AlbumWithWallpapers>
 
-    @Query("SELECT * FROM albums WHERE id=:id ")
-    fun findById(id: Long): Album?
+    @Query(
+        """
+        SELECT * FROM albums 
+        WHERE albums.id = :id
+    """
+    )
+    fun findById(id: Long): AlbumWithWallpapers?
 
     @Query("SELECT EXISTS (SELECT * FROM albums WHERE name=:name )")
     fun existsByName(name: String): Boolean

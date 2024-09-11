@@ -266,8 +266,12 @@ fun RuleForm(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.weight(0.3f)
                             ) {
-                                AlbumItem(album = it, modifier = Modifier.fillMaxSize()) {
-                                    navController.navigate(Screen.AlbumDetail.createRoute(it.albumId))
+                                AlbumItem(
+                                    album = it.album,
+                                    wallpapers = it.wallpapers,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    navController.navigate(Screen.AlbumDetail.createRoute(it.album.albumId))
                                 }
                             }
                         }
@@ -356,7 +360,7 @@ fun RuleForm(
         ) {
             selectedAlbums = it.toList()
             rule = rule.copy(
-                albumIds = it.map { album -> album.albumId }
+                albumIds = it.map { i -> i.album.albumId }
             )
         }
     }

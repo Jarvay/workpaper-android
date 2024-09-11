@@ -68,6 +68,7 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             val bitmap by workpaper.nextWallpaperBitmap.collectAsState()
             val settingWallpaper by workpaper.settingWallpaper.collectAsState(initial = false)
 
+            Log.d(javaClass.simpleName, listOf("bitmap", bitmap?.info()).toString())
             if (bitmap == null) {
                 Placeholder()
                 return@Column
@@ -76,7 +77,7 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             Log.d(javaClass.simpleName, bitmap!!.info())
 
             val clickHelper = ClickHelper(
-                interval = 300,
+                interval = 200,
                 onDouble = {
                     Log.d(javaClass.simpleName, "onDouble")
                     if (settingWallpaper) return@ClickHelper
