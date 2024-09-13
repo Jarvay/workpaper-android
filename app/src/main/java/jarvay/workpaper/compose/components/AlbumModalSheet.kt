@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import jarvay.workpaper.data.album.Album
+import jarvay.workpaper.data.album.AlbumWithWallpapers
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +35,7 @@ fun AlbumModalSheet(
     defaultValues: List<Long> = emptyList(),
     onDismissRequest: () -> Unit,
     viewModal: AlbumListViewModel = hiltViewModel(),
-    onCheckedChange: (List<Album>) -> Unit
+    onCheckedChange: (List<AlbumWithWallpapers>) -> Unit
 ) {
     val albumItemSize = 96.dp
     val albumList by viewModal.allAlbums.collectAsStateWithLifecycle()
@@ -45,7 +45,7 @@ fun AlbumModalSheet(
     }
 
     fun emitChange() {
-        val albums = albumList.filter { checkedAlbumIds.contains(it.albumId) }
+        val albums = albumList.filter { checkedAlbumIds.contains(it.album.albumId) }
         onCheckedChange(albums)
     }
 
@@ -67,9 +67,11 @@ fun AlbumModalSheet(
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
                 itemsIndexed(
-                    items = albumList,
-                    key = { _, item -> item.albumId }) { _, album ->
-
+                    items = albumList.toList(),
+                    key = { _, item -> item.album.albumId }
+                ) { _, item ->
+                    val album = item.album
+                    val wallpapers = item.wallpapers
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -85,6 +87,7 @@ fun AlbumModalSheet(
                     ) {
                         AlbumItem(
                             album = album,
+                            wallpapers = wallpapers,
                             modifier = Modifier
                                 .size(albumItemSize, albumItemSize)
                         )

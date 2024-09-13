@@ -35,8 +35,9 @@ import jarvay.workpaper.compose.components.LocalMainActivityModel
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.Album
+import jarvay.workpaper.data.album.AlbumWithWallpapers
+import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
-import jarvay.workpaper.viewModel.AlbumDetailViewModel
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -62,7 +63,7 @@ fun AlbumListScreen(
         mutableStateOf(false)
     }
 
-    var currentAlbum: Album? by remember {
+    var currentAlbumWithWallpapers: AlbumWithWallpapers? by remember {
         mutableStateOf(null)
     }
 
@@ -78,18 +79,21 @@ fun AlbumListScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(albums, key = { it.albumId }) {
+            items(albums, key = { it.album.albumId }) {
                 var itemMenuExpanded by remember {
                     mutableStateOf(false)
                 }
 
                 Box {
-                    AlbumItem(album = it, modifier = Modifier.combinedClickable(onLongClick = {
-                        currentAlbum = it
-                        itemMenuExpanded = true
-                    }) {
-                        navController.navigate(Screen.AlbumDetail.createRoute(it.albumId))
-                    })
+                    AlbumItem(
+                        album = it.album,
+                        wallpapers = it.wallpapers,
+                        modifier = Modifier.combinedClickable(onLongClick = {
+                            currentAlbumWithWallpapers = it
+                            itemMenuExpanded = true
+                        }) {
+                            navController.navigate(Screen.AlbumDetail.createRoute(it.album.albumId))
+                        })
 
                     DropdownMenu(
                         expanded = itemMenuExpanded,
@@ -108,7 +112,7 @@ fun AlbumListScreen(
                                 return@DropdownMenuItem
                             }
 
-                            if (viewModel.isUsing(it.albumId)) {
+                            if (viewModel.isUsing(it.album.albumId)) {
                                 simpleSnackbar.show(R.string.album_is_using_tips)
                             } else {
                                 deleteDialogShow = true
@@ -125,14 +129,14 @@ fun AlbumListScreen(
         text = stringResource(R.string.album_delete_tips),
         show = deleteDialogShow,
         onDismissRequest = { deleteDialogShow = false }) {
-        currentAlbum?.let {
-            viewModel.delete(currentAlbum!!, context)
-            currentAlbum = null
+        currentAlbumWithWallpapers?.let {
+            viewModel.delete(currentAlbumWithWallpapers!!, context)
+            currentAlbumWithWallpapers = null
             simpleSnackbar.show(R.string.tips_operation_success)
         }
     }
 
-    AlbumUpdateDialog(show = updateDialogShow, album = currentAlbum) {
+    AlbumUpdateDialog(show = updateDialogShow, album = currentAlbumWithWallpapers?.album) {
         updateDialogShow = false
     }
 }

@@ -11,6 +11,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.album.Album
+import jarvay.workpaper.data.album.AlbumWithWallpapers
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
@@ -46,8 +47,8 @@ class RuleReceiver : BroadcastReceiver() {
             workpaper.cancelAlarm(type = AlarmType.REPEAT)
 
             workpaper.wallpaperContentUris =
-                ruleAlbums.albums.fold<Album, MutableList<String>>(mutableListOf()) { acc, album ->
-                    acc.addAll(album.wallpaperUris)
+                ruleAlbums.albums.fold<AlbumWithWallpapers, MutableList<String>>(mutableListOf()) { acc, album ->
+                    acc.addAll(album.wallpapers.map { it.contentUri })
                     acc
                 }.apply {
                     if (ruleAlbums.rule.random) shuffle()

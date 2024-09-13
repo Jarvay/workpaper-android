@@ -53,6 +53,7 @@ fun bitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
                 }
         } catch (e: Exception) {
             Log.w("bitmapFromContentUri", e.toString())
+            e.printStackTrace()
             null
         }
     }

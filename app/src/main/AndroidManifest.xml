@@ -81,6 +81,8 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/action_widget_info" />
         </receiver>
 
+        <receiver android:name=".receiver.UpdateActionWidgetReceiver" android:exported="false" />
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

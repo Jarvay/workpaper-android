@@ -14,6 +14,7 @@ import jarvay.workpaper.data.rule.RuleAlbums
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.RuleReceiver
+import jarvay.workpaper.receiver.UpdateActionWidgetReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.WorkpaperService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +75,8 @@ class Workpaper @Inject constructor(
 
         nextWallpaper.value = null
         nextWallpaperBitmap.value = null
+        val i = Intent(context, UpdateActionWidgetReceiver::class.java)
+        context.sendBroadcast(i)
 
         val intent = Intent(context, WorkpaperService::class.java)
         context.stopService(intent)
@@ -135,6 +138,9 @@ class Workpaper @Inject constructor(
         if (bitmap != null) {
             bitmap = bitmap.scaleFixedRatio(320, 320)
             nextWallpaperBitmap.value = bitmap
+
+            val intent = Intent(context, UpdateActionWidgetReceiver::class.java)
+            context.sendBroadcast(intent)
         }
     }
 

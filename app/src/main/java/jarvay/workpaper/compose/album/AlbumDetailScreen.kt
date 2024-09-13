@@ -54,6 +54,7 @@ import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.Album
+import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.getSize
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
@@ -66,12 +67,17 @@ fun AlbumDetailScreen(
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val album by viewModel.album.collectAsStateWithLifecycle()
+    val albumWithWallpapers by viewModel.album.collectAsStateWithLifecycle()
+    if (albumWithWallpapers == null) return
+
+    val album = albumWithWallpapers!!.album
+    val wallpapers = albumWithWallpapers!!.wallpapers
+
     var selecting by remember {
         mutableStateOf(false)
     }
     var checkedState by remember {
-        mutableStateOf(setOf<String>())
+        mutableStateOf(setOf<Long>())
     }
     var deleteDialogShow by remember {
         mutableStateOf(false)
@@ -88,8 +94,6 @@ fun AlbumDetailScreen(
     var limitTipsContent by remember {
         mutableStateOf("")
     }
-
-    if (album == null) return
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -118,7 +122,7 @@ fun AlbumDetailScreen(
                 uris
             }
 
-            val newUris = album!!.wallpaperUris.toMutableList()
+            val newUris = wallpapers.map { it.contentUri }.toMutableList()
             for (uri in splitUris) {
                 if (newUris.contains(uri.toString())) continue
                 context.contentResolver.takePersistableUriPermission(uri, takeFlags)
@@ -128,7 +132,7 @@ fun AlbumDetailScreen(
                 }
             }
 
-            viewModel.update(album!!.copy(wallpaperUris = newUris))
+            viewModel.addWallpapers(newUris)
         }
     )
 
@@ -146,13 +150,11 @@ fun AlbumDetailScreen(
                     val result = getImagesInDir(documentFile)
                     Log.d("result", result.toString())
 
-                    var newUris = album!!.wallpaperUris.toMutableList()
+                    var newUris = wallpapers.map { it.contentUri }.toMutableList()
                     newUris.addAll(result)
                     newUris = newUris.distinct().toMutableList()
 
-                    viewModel.update(
-                        album!!.copy(wallpaperUris = newUris)
-                    )
+                    viewModel.addWallpapers(newUris)
                 }
             }
         }
@@ -167,7 +169,7 @@ fun AlbumDetailScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text(album!!.name)
+                    Text(album.name)
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
@@ -186,7 +188,7 @@ fun AlbumDetailScreen(
                             deleteDialogShow = false
                         }
                     ) {
-                        viewModel.deleteWallpaperUris(context, checkedState.toList())
+                        viewModel.deleteWallpapers(checkedState.toList())
                         selecting = false
                         checkedState = emptySet()
                     }
@@ -216,14 +218,14 @@ fun AlbumDetailScreen(
                                     actionsShow = false
                                     selecting = true
                                 },
-                                enabled = album!!.wallpaperUris.isNotEmpty()
+                                enabled = wallpapers.isNotEmpty()
                             )
                         } else {
                             DropdownMenuItem(text = {
                                 Text(text = stringResource(id = R.string.select_all))
                             }, onClick = {
                                 actionsShow = false
-                                checkedState = album!!.wallpaperUris.toMutableSet()
+                                checkedState = wallpapers.map { it.wallpaperId }.toMutableSet()
                             })
 
                             DropdownMenuItem(text = {
@@ -259,7 +261,8 @@ fun AlbumDetailScreen(
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING)
         ) {
             WallpaperList(
-                album = album!!,
+                album = album,
+                wallpapers = wallpapers,
                 checkedState = checkedState,
                 selecting = selecting,
                 viewModel = viewModel
@@ -287,10 +290,11 @@ fun AlbumDetailScreen(
 @Composable
 private fun WallpaperList(
     album: Album,
-    checkedState: Set<String>,
+    wallpapers: List<Wallpaper>,
+    checkedState: Set<Long>,
     selecting: Boolean,
     viewModel: AlbumDetailViewModel,
-    onItemCheckedChange: (Boolean, String) -> Unit = { _: Boolean, _: String -> }
+    onItemCheckedChange: (Boolean, Long) -> Unit = { _: Boolean, _: Long -> }
 ) {
     val context = LocalContext.current
 
@@ -298,7 +302,7 @@ private fun WallpaperList(
     val listState = rememberLazyStaggeredGridState()
 
     var currentWallpaper by remember {
-        mutableStateOf("")
+        mutableStateOf<Wallpaper?>(null)
     }
 
     LazyVerticalStaggeredGrid(
@@ -306,12 +310,14 @@ private fun WallpaperList(
         modifier = Modifier.padding(top = 16.dp),
         columns = StaggeredGridCells.Fixed(2),
     ) {
-        items(items = album.wallpaperUris, key = { item ->
-            item
+        items(items = wallpapers, key = { item ->
+            item.wallpaperId
         }) {
+            val contentUri = it.contentUri
+
             val model = try {
                 ImageRequest.Builder(context)
-                    .data(it.toUri())
+                    .data(contentUri.toUri())
                     .size(256, 256)
                     .build()
             } catch (e: Exception) {
@@ -332,7 +338,7 @@ private fun WallpaperList(
                             }
                         }
                 ) {
-                    val size = getSize(context, it) ?: return@Card
+                    val size = getSize(context, contentUri) ?: return@Card
                     val floatWidth = size.width.toFloat()
                     val floatHeight = size.height.toFloat()
 
@@ -345,8 +351,8 @@ private fun WallpaperList(
                                 currentWallpaper = it
                             }) {
                                 if (selecting) {
-                                    val checked = !checkedState.contains(it)
-                                    onItemCheckedChange(checked, it)
+                                    val checked = !checkedState.contains(it.wallpaperId)
+                                    onItemCheckedChange(checked, it.wallpaperId)
                                 }
                             }
                     )
@@ -354,12 +360,12 @@ private fun WallpaperList(
 
                 DropdownMenu(
                     expanded = currentWallpaper == it,
-                    onDismissRequest = { currentWallpaper = "" }) {
+                    onDismissRequest = { currentWallpaper = null }) {
                     DropdownMenuItem(
                         text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
                         onClick = {
-                            viewModel.update(album.copy(coverUri = it))
-                            currentWallpaper = ""
+                            viewModel.update(album.copy(coverUri = contentUri))
+                            currentWallpaper = null
                             simpleSnackbar.show(R.string.tips_operation_success)
                         }
                     )
@@ -367,9 +373,9 @@ private fun WallpaperList(
 
                 if (selecting) {
                     Checkbox(
-                        checked = checkedState.contains(it),
+                        checked = checkedState.contains(it.wallpaperId),
                         onCheckedChange = { checked ->
-                            onItemCheckedChange(checked, it)
+                            onItemCheckedChange(checked, it.wallpaperId)
                         },
                         modifier = Modifier.align(Alignment.TopEnd)
                     )
@@ -398,14 +404,14 @@ private fun getImagesInDir(
 
 private fun updateCheckedState(
     checked: Boolean,
-    uri: String,
-    checkedState: Set<String>
-): MutableSet<String> {
+    wallpaperId: Long,
+    checkedState: Set<Long>
+): MutableSet<Long> {
     val checkedSet = checkedState.toMutableSet()
     if (checked) {
-        checkedSet.add(uri)
+        checkedSet.add(wallpaperId)
     } else {
-        checkedSet.remove(uri)
+        checkedSet.remove(wallpaperId)
     }
     return checkedSet
 }
