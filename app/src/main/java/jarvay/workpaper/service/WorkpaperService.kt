@@ -6,10 +6,8 @@ import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.coroutineScope
 import dagger.hilt.android.AndroidEntryPoint
-import jarvay.workpaper.NextWallpaper
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
-import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleAlbums
 import jarvay.workpaper.data.rule.RuleRepository
@@ -17,6 +15,7 @@ import jarvay.workpaper.others.NotificationHelper
 import jarvay.workpaper.others.prevRule
 import jarvay.workpaper.receiver.NextRuleReceiver
 import jarvay.workpaper.receiver.RuleReceiver
+import jarvay.workpaper.receiver.UpdateActionWidgetReceiver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -91,13 +90,10 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
         Log.d("onDestroy", javaClass.simpleName)
 
         lifecycle.coroutineScope.launch {
-            workpaper.setNextWallpaper(
-                NextWallpaper(
-                    index = -1,
-                    contentUri = "",
-                    isManual = false,
-                )
-            )
+            workpaper.nextWallpaper.value = null
+            workpaper.nextWallpaperBitmap.value = null
+            val intent = Intent(this@WorkpaperService, UpdateActionWidgetReceiver::class.java)
+            sendBroadcast(intent)
         }
     }
 

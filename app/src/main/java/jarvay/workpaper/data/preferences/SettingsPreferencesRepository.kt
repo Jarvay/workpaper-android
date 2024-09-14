@@ -27,7 +27,9 @@ class SettingsPreferencesRepository @Inject constructor(
                 autoCheckUpdate = preferences[SettingsPreferencesKeys.AUTO_CHECK_UPDATE]
                     ?: DEFAULT_SETTINGS.autoCheckUpdate,
                 enableDynamicColor = preferences[SettingsPreferencesKeys.ENABLE_DYNAMIC_COLOR]
-                    ?: DEFAULT_SETTINGS.enableDynamicColor
+                    ?: DEFAULT_SETTINGS.enableDynamicColor,
+                disableWhenPlayingAudio = preferences[SettingsPreferencesKeys.DISABLE_WHEN_PLAYING_AUDIO]
+                    ?: DEFAULT_SETTINGS.disableWhenPlayingAudio
             )
         }.distinctUntilChanged { old, new ->
             old == new

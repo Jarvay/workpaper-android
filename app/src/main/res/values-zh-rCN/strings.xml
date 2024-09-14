@@ -78,6 +78,7 @@
     <string name="settings_item_hide_in_recent_task">在最近任务中隐藏</string>
     <string name="settings_item_enable_dynamic_color">启用动态颜色</string>
     <string name="settings_item_auto_check_update">自动检查更新</string>
+    <string name="settings_item_disabled_when_playing_audio">播放音频时不更换壁纸</string>
 
     <string name="notify_will_change_at_about">预计在%s更换壁纸</string>
     <string name="notify_next_rule_at_about">下一计划将在%s生效</string>
