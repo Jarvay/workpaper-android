@@ -8,18 +8,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.glance.ActionWidget
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class UpdateActionWidgetReceiver : BroadcastReceiver() {
-    @Inject
-    lateinit var actionWidget: ActionWidget
-
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
 
         MainScope().launch {
-            actionWidget.updateAll(context)
+            ActionWidget(null).updateAll(context)
         }
     }
 }

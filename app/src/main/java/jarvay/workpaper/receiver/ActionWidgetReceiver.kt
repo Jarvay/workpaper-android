@@ -10,8 +10,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ActionWidgetReceiver : GlanceAppWidgetReceiver() {
     @Inject
-    lateinit var actionWidget: ActionWidget
+    lateinit var workpaper: Workpaper
 
     override val glanceAppWidget: GlanceAppWidget
-        get() = actionWidget
+        get() = ActionWidget(this)
 }
