@@ -27,15 +27,15 @@ import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.text.Text
 import jarvay.workpaper.R
-import jarvay.workpaper.Workpaper
 import jarvay.workpaper.others.info
+import jarvay.workpaper.receiver.ActionWidgetReceiver
 import jarvay.workpaper.receiver.GenWallpaperReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import javax.inject.Inject
 
-class ActionWidget @Inject constructor() : GlanceAppWidget() {
-    @Inject
-    lateinit var workpaper: Workpaper
+class ActionWidget @Inject constructor(
+    private val receiver: ActionWidgetReceiver?
+) : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
@@ -48,6 +48,7 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
     @SuppressLint("RestrictedApi")
     @Composable
     private fun Content() {
+        val workpaper = receiver?.workpaper ?: return
         val context = LocalContext.current
 
         val size = LocalSize.current

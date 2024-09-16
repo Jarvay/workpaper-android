@@ -101,6 +101,14 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
+            SettingSItem(labelId = R.string.settings_item_disabled_when_playing_audio) {
+                Switch(
+                    checked = settings.disableWhenPlayingAudio,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.DISABLE_WHEN_PLAYING_AUDIO, c)
+                    })
+            }
+
             SettingSItem(labelId = R.string.settings_item_enable_notification) {
                 Switch(
                     checked = settings.enableNotification,

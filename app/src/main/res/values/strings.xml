@@ -78,6 +78,7 @@
     <string name="settings_item_hide_in_recent_task">Hide in recent task</string>
     <string name="settings_item_enable_dynamic_color">Enable dynamic color</string>
     <string name="settings_item_auto_check_update">Auto check update</string>
+    <string name="settings_item_disabled_when_playing_audio">Do not change wallpaper when playing audio</string>
 
     <string name="notify_will_change_at_about">Wallpaper will change at about %s</string>
     <string name="notify_next_rule_at_about">Will change to next plan at about %s</string>

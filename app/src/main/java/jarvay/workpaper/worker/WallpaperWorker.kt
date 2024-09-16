@@ -17,6 +17,7 @@ import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.others.audioManager
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.info
@@ -44,6 +45,18 @@ class WallpaperWorker @AssistedInject constructor(
     lateinit var settingPreferencesRepository: SettingsPreferencesRepository
 
     private suspend fun setWallpaper(wallpaper: String, settings: SettingsPreferences) {
+        Log.d(
+            "context.audioManager().isMusicActive",
+            (context.audioManager().isMusicActive).toString()
+        )
+        if (context.audioManager().isMusicActive && settings.disableWhenPlayingAudio) {
+            return
+        }
+
+        val lastWallpaper =
+            runningPreferencesRepository.runningPreferencesFlow.first().lastWallpaper
+        if (lastWallpaper == wallpaper) return
+
         Log.d(javaClass.simpleName, settings.toString())
         workpaper.settingWallpaper.emit(true)
 
@@ -90,14 +103,12 @@ class WallpaperWorker @AssistedInject constructor(
         val settings = settingPreferencesRepository.settingsPreferencesFlow.first()
 
         Log.d(javaClass.simpleName, runningPreferences.toString())
-        val lastWallpaper = runningPreferences.lastWallpaper
 
         val ruleWithAlbums = workpaper.currentRuleAlbums.value ?: return Result.failure()
 
         val nextWallpaper = workpaper.getNextWallpaper() ?: return Result.failure()
-        if (lastWallpaper != nextWallpaper.contentUri) {
-            setWallpaper(wallpaper = nextWallpaper.contentUri, settings = settings)
-        }
+
+        setWallpaper(wallpaper = nextWallpaper.contentUri, settings = settings)
 
         runningPreferencesRepository.apply {
             update(RunningPreferencesKeys.LAST_INDEX, nextWallpaper.index)

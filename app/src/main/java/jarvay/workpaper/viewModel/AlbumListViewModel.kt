@@ -1,6 +1,7 @@
 package jarvay.workpaper.viewModel
 
 import android.content.Context
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +10,6 @@ import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.album.AlbumWithWallpapers
 import jarvay.workpaper.data.rule.RuleRepository
-import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperRepository
 import jarvay.workpaper.others.STATE_IN_STATED
 import kotlinx.coroutines.Dispatchers
@@ -47,9 +47,15 @@ class AlbumListViewModel @Inject constructor(
 
             wallpaperRepository.delete(item.wallpapers.map { it.wallpaperId })
 
+            val persistedUriPermissions = context.contentResolver.persistedUriPermissions
+
             item.wallpapers.forEach {
                 val contentUri = it.contentUri
-                if (!wallpaperRepository.existsByContentUri(contentUri)) {
+                val exists = wallpaperRepository.existsByContentUri(contentUri)
+                val persisted = persistedUriPermissions.any { permissionUri ->
+                    permissionUri.uri.toString() == contentUri
+                }
+                if (!exists && persisted) {
                     AlbumDetailViewModel.releasePermissions(
                         context = context,
                         contentUri = contentUri.toUri(),

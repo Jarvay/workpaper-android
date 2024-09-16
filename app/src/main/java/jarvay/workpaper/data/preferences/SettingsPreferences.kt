@@ -10,6 +10,7 @@ data class SettingsPreferences(
     var hideInRecentTask: Boolean,
     var autoCheckUpdate: Boolean,
     var enableDynamicColor: Boolean,
+    var disableWhenPlayingAudio: Boolean,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -24,6 +25,7 @@ data class SettingsPreferences(
         result = 31 * result + hideInRecentTask.hashCode()
         result = 31 * result + autoCheckUpdate.hashCode()
         result = 31 * result + enableDynamicColor.hashCode()
+        result = 31 * result + disableWhenPlayingAudio.hashCode()
         return result
     }
 }
@@ -36,6 +38,7 @@ data object SettingsPreferencesKeys {
     val HIDE_IN_RECENT_TASK = booleanPreferencesKey("hideInRecentTask")
     val ENABLE_DYNAMIC_COLOR = booleanPreferencesKey("enableDynamicColor")
     val AUTO_CHECK_UPDATE = booleanPreferencesKey("autoCheckUpdate")
+    val DISABLE_WHEN_PLAYING_AUDIO = booleanPreferencesKey("disableWhenPlayingAudio")
 }
 
 val DEFAULT_SETTINGS =
@@ -47,4 +50,5 @@ val DEFAULT_SETTINGS =
         hideInRecentTask = false,
         autoCheckUpdate = false,
         enableDynamicColor = false,
+        disableWhenPlayingAudio = true,
     )

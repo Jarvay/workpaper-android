@@ -6,9 +6,9 @@ import android.app.DownloadManager.Request
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Environment
-import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
@@ -198,20 +198,6 @@ fun installApk(uri: Uri?, context: Context) {
     }
 }
 
-
-@Suppress("DEPRECATION")
-fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
-    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager?
-    if (activityManager != null) {
-        for (service in activityManager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                return true
-            }
-        }
-    }
-    return false
-}
-
 fun isToday(calendar: Calendar): Boolean {
     val now = Calendar.getInstance()
     return ((calendar[Calendar.YEAR] == now[Calendar.YEAR])
@@ -219,7 +205,6 @@ fun isToday(calendar: Calendar): Boolean {
             && (calendar[Calendar.DAY_OF_MONTH] == now[Calendar.DAY_OF_MONTH]))
 }
 
-fun Context.dpToPx(dp: Float): Int {
-    val displayMetrics = resources.displayMetrics
-    return Math.round(dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT))
+fun Context.audioManager(): AudioManager {
+    return getSystemService(Context.AUDIO_SERVICE) as AudioManager
 }
