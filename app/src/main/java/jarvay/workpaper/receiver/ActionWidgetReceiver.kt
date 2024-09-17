@@ -1,5 +1,8 @@
 package jarvay.workpaper.receiver
 
+import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import dagger.hilt.android.AndroidEntryPoint
@@ -13,5 +16,10 @@ class ActionWidgetReceiver : GlanceAppWidgetReceiver() {
     lateinit var workpaper: Workpaper
 
     override val glanceAppWidget: GlanceAppWidget
-        get() = ActionWidget(this)
+        get() = ActionWidget(workpaper)
+
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        Log.d(javaClass.simpleName, "onReceive")
+    }
 }
