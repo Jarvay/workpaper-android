@@ -31,12 +31,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +61,8 @@ import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.getSize
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,11 +71,17 @@ fun AlbumDetailScreen(
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val simpleSnackbar = LocalSimpleSnackbar.current
+
     val albumWithWallpapers by viewModel.album.collectAsStateWithLifecycle()
     if (albumWithWallpapers == null) return
 
     val album = albumWithWallpapers!!.album
     val wallpapers = albumWithWallpapers!!.wallpapers
+
+    val loading by viewModel.loading.collectAsStateWithLifecycle(initialValue = false)
 
     var selecting by remember {
         mutableStateOf(false)
@@ -82,7 +92,6 @@ fun AlbumDetailScreen(
     var deleteDialogShow by remember {
         mutableStateOf(false)
     }
-
 
     var actionsShow by remember {
         mutableStateOf(false)
@@ -139,23 +148,18 @@ fun AlbumDetailScreen(
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri: Uri? ->
-            val takeFlags: Int =
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            if (uri != null) {
-                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                val persistedUriPermissions = context.contentResolver.persistedUriPermissions
-                if (persistedUriPermissions.any { it.uri == uri }) {
+            simpleSnackbar.show(R.string.album_add_wallpaper_folder_tips)
+            scope.launch(Dispatchers.IO) {
+                viewModel.loading.value = true
+                val takeFlags: Int =
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                if (uri != null) {
+                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                     val documentFile = DocumentFile.fromTreeUri(context, uri)
-                        ?: return@rememberLauncherForActivityResult
-                    val result = getImagesInDir(documentFile)
-                    Log.d("result", result.toString())
-
-                    var newUris = wallpapers.map { it.contentUri }.toMutableList()
-                    newUris.addAll(result)
-                    newUris = newUris.distinct().toMutableList()
-
-                    viewModel.addWallpapers(newUris)
+                        ?: return@launch
+                    viewModel.addWallpapersFromFolder(documentFile)
                 }
+                viewModel.loading.value = false
             }
         }
     )
@@ -260,6 +264,10 @@ fun AlbumDetailScreen(
                 .padding(padding)
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING)
         ) {
+            if (loading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
             WallpaperList(
                 album = album,
                 wallpapers = wallpapers,
@@ -383,23 +391,6 @@ private fun WallpaperList(
             }
         }
     }
-}
-
-private fun getImagesInDir(
-    documentFile: DocumentFile,
-    result: MutableList<String> = mutableListOf()
-): MutableList<String> {
-    for (item in documentFile.listFiles()) {
-        if (item.isDirectory) {
-            getImagesInDir(item, result)
-        } else if (item.isFile) {
-            val mimeType = item.type ?: continue
-            if (!mimeType.startsWith("image/")) continue
-            result.add(item.uri.toString())
-        }
-    }
-
-    return result
 }
 
 private fun updateCheckedState(
