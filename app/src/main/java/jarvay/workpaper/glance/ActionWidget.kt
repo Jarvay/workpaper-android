@@ -24,15 +24,13 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.text.Text
+import dagger.hilt.EntryPoints
 import jarvay.workpaper.R
-import jarvay.workpaper.Workpaper
 import jarvay.workpaper.receiver.GenWallpaperReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import javax.inject.Inject
 
-class ActionWidget @Inject constructor(
-    private val workpaper: Workpaper
-) : GlanceAppWidget() {
+class ActionWidget @Inject constructor() : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
@@ -56,7 +54,8 @@ class ActionWidget @Inject constructor(
             verticalAlignment = Alignment.CenterVertically,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
+            val workpaper =
+                EntryPoints.get(context.applicationContext, EntryPoint::class.java).workpaper()
             val bitmap by workpaper.nextWallpaperBitmap.collectAsState()
             val settingWallpaper by workpaper.settingWallpaper.collectAsState(initial = false)
 

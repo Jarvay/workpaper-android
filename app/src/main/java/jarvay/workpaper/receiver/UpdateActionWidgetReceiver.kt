@@ -20,7 +20,7 @@ class UpdateActionWidgetReceiver : BroadcastReceiver() {
         if (context == null || intent == null) return
 
         MainScope().launch {
-            ActionWidget(workpaper).updateAll(context)
+            ActionWidget().updateAll(context)
         }
     }
 }

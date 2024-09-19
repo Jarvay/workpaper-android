@@ -12,11 +12,11 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class ActionWidgetReceiver : GlanceAppWidgetReceiver() {
-    @Inject
-    lateinit var workpaper: Workpaper
+//    @Inject
+//    lateinit var workpaper: Workpaper
 
     override val glanceAppWidget: GlanceAppWidget
-        get() = ActionWidget(workpaper)
+        get() = ActionWidget()
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
