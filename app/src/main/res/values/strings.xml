@@ -59,6 +59,7 @@
     <string name="album_add_images">Add images</string>
     <string name="album_add_folder">Add folder</string>
     <string name="album_limit_tips">Android limits %d permission for file(folder), %d used, %d leave, %d selected, exceeds limit after adding, please add folder instead of adding images.</string>
+    <string name="album_add_wallpaper_folder_tips">If too many files are selected, it may take some time to wait</string>
 
     <string name="rule_list_item_time">Time</string>
     <string name="rule_list_item_album">Album</string>

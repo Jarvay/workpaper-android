@@ -50,5 +50,5 @@ val DEFAULT_SETTINGS =
         hideInRecentTask = false,
         autoCheckUpdate = false,
         enableDynamicColor = false,
-        disableWhenPlayingAudio = true,
+        disableWhenPlayingAudio = false,
     )

@@ -3,7 +3,6 @@ package jarvay.workpaper.glance
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -15,7 +14,6 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.LocalContext
-import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.cornerRadius
@@ -26,16 +24,13 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.text.Text
+import dagger.hilt.EntryPoints
 import jarvay.workpaper.R
-import jarvay.workpaper.others.info
-import jarvay.workpaper.receiver.ActionWidgetReceiver
 import jarvay.workpaper.receiver.GenWallpaperReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import javax.inject.Inject
 
-class ActionWidget @Inject constructor(
-    private val receiver: ActionWidgetReceiver?
-) : GlanceAppWidget() {
+class ActionWidget @Inject constructor() : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
@@ -48,14 +43,7 @@ class ActionWidget @Inject constructor(
     @SuppressLint("RestrictedApi")
     @Composable
     private fun Content() {
-        val workpaper = receiver?.workpaper ?: return
         val context = LocalContext.current
-
-        val size = LocalSize.current
-
-        Log.d(javaClass.simpleName, size.toString())
-
-        Log.d(javaClass.simpleName, workpaper.toString())
 
         Column(
             modifier = GlanceModifier.fillMaxSize()
@@ -66,27 +54,24 @@ class ActionWidget @Inject constructor(
             verticalAlignment = Alignment.CenterVertically,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val workpaper =
+                EntryPoints.get(context.applicationContext, EntryPoint::class.java).workpaper()
             val bitmap by workpaper.nextWallpaperBitmap.collectAsState()
             val settingWallpaper by workpaper.settingWallpaper.collectAsState(initial = false)
 
-            Log.d(javaClass.simpleName, listOf("bitmap", bitmap?.info()).toString())
             if (bitmap == null) {
                 Placeholder()
                 return@Column
             }
 
-            Log.d(javaClass.simpleName, bitmap!!.info())
-
             val clickHelper = ClickHelper(
                 interval = 200,
                 onDouble = {
-                    Log.d(javaClass.simpleName, "onDouble")
                     if (settingWallpaper) return@ClickHelper
                     val i = Intent(context, WallpaperReceiver::class.java)
                     context.sendBroadcast(i)
                 }
             ) {
-                Log.d(javaClass.simpleName, "onSingle")
                 val i = Intent(context, GenWallpaperReceiver::class.java)
                 i.setAction(GenWallpaperReceiver.ACTION_NEXT_WALLPAPER)
                 context.sendBroadcast(i)

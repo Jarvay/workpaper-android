@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import jarvay.workpaper.BuildConfig
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Screen
 import jarvay.workpaper.compose.components.LocalMainActivityModel
@@ -52,11 +53,19 @@ fun DrawerContent(
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .fillMaxSize()
     ) {
-        Text(
-            text = stringResource(id = R.string.app_name),
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.titleMedium
-        )
+        Column(modifier = Modifier.padding(16.dp),) {
+            Text(
+                text = stringResource(id = R.string.app_name),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                modifier = Modifier.padding(top = 4.dp),
+                text = BuildConfig.VERSION_NAME,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
         HorizontalDivider()
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
