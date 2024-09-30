@@ -1,7 +1,6 @@
 package jarvay.workpaper.viewModel
 
 import android.content.Context
-import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

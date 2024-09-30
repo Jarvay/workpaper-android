@@ -53,7 +53,7 @@ fun DrawerContent(
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .fillMaxSize()
     ) {
-        Column(modifier = Modifier.padding(16.dp),) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = stringResource(id = R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,

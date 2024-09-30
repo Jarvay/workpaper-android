@@ -19,6 +19,7 @@ import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.audioManager
 import jarvay.workpaper.others.bitmapFromContentUri
+import jarvay.workpaper.others.blur
 import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.info
 import jarvay.workpaper.others.scaleFixedRatio
@@ -55,7 +56,7 @@ class WallpaperWorker @AssistedInject constructor(
 
         val lastWallpaper =
             runningPreferencesRepository.runningPreferencesFlow.first().lastWallpaper
-        if (lastWallpaper == wallpaper) return
+        if (lastWallpaper == wallpaper && !settings.useLiveWallpaper) return
 
         Log.d(javaClass.simpleName, settings.toString())
         workpaper.settingWallpaper.emit(true)
@@ -66,25 +67,37 @@ class WallpaperWorker @AssistedInject constructor(
 
         val wallpaperSize = getWallpaperSize(applicationContext)
 
+        Log.d("settings.useLiveWallpaper", settings.useLiveWallpaper.toString())
+
         bitmap?.let {
-            if (it.width > wallpaperSize.width || it.height > wallpaperSize.height) {
-                bitmap = it.scaleFixedRatio(
-                    targetWidth = wallpaperSize.width,
-                    targetHeight = wallpaperSize.height
-                )
-            }
+            bitmap = it.scaleFixedRatio(
+                targetWidth = wallpaperSize.width,
+                targetHeight = wallpaperSize.height,
+                useMin = !settings.useLiveWallpaper,
+            )
             Log.d("Wallpaper bitmap", it.info())
 
-            val wallpaperManager = WallpaperManager.getInstance(applicationContext)
-            if (!settings.alsoSetLockWallpaper) {
-                Log.d(javaClass.simpleName, "set system wallpaper only")
-                wallpaperManager.setBitmap(it, null, false, WallpaperManager.FLAG_SYSTEM)
-            } else {
-                Log.d(javaClass.simpleName, "set both wallpaper")
-                wallpaperManager.setBitmap(it)
+            val rule = workpaper.currentRuleAlbums.value!!.rule
+            if (rule.replaceGlobalBlur && rule.blurRadius > 0) {
+                bitmap = bitmap!!.blur(rule.blurRadius)
+            } else if (!rule.replaceGlobalBlur && settings.blurRadius > 0) {
+                bitmap = bitmap!!.blur(settings.blurRadius)
             }
+
+            val wallpaperManager = WallpaperManager.getInstance(applicationContext)
+            if (!settings.useLiveWallpaper) {
+                if (!settings.alsoSetLockWallpaper) {
+                    Log.d(javaClass.simpleName, "set system wallpaper only")
+                    wallpaperManager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_SYSTEM)
+                } else {
+                    Log.d(javaClass.simpleName, "set both wallpaper")
+                    wallpaperManager.setBitmap(bitmap)
+                }
+            }
+
+            workpaper.currentBitmap.value = bitmap
         }
-        workpaper.settingWallpaper.emit(false)
+        workpaper.settingWallpaper.value = false
     }
 
     private fun sendNotification() {

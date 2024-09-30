@@ -17,4 +17,8 @@ data class Rule(
     var changeWhileUnlock: Boolean,
     var random: Boolean = false,
     var interval: Int = 15,
+    @ColumnInfo(defaultValue = "0")
+    var blurRadius: Int = 0,
+    @ColumnInfo(defaultValue = "0")
+    var replaceGlobalBlur: Boolean = false,
 )

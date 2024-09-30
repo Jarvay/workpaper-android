@@ -1,6 +1,7 @@
 package jarvay.workpaper.data.preferences
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 
 data class SettingsPreferences(
     var startWithPrevRule: Boolean,
@@ -11,6 +12,8 @@ data class SettingsPreferences(
     var autoCheckUpdate: Boolean,
     var enableDynamicColor: Boolean,
     var disableWhenPlayingAudio: Boolean,
+    var useLiveWallpaper: Boolean,
+    var blurRadius: Int,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -26,6 +29,8 @@ data class SettingsPreferences(
         result = 31 * result + autoCheckUpdate.hashCode()
         result = 31 * result + enableDynamicColor.hashCode()
         result = 31 * result + disableWhenPlayingAudio.hashCode()
+        result = 31 * result + useLiveWallpaper.hashCode()
+        result = 31 * result + blurRadius
         return result
     }
 }
@@ -39,6 +44,8 @@ data object SettingsPreferencesKeys {
     val ENABLE_DYNAMIC_COLOR = booleanPreferencesKey("enableDynamicColor")
     val AUTO_CHECK_UPDATE = booleanPreferencesKey("autoCheckUpdate")
     val DISABLE_WHEN_PLAYING_AUDIO = booleanPreferencesKey("disableWhenPlayingAudio")
+    val USE_LIVE_WALLPAPER = booleanPreferencesKey("useLiveWallpaper")
+    val BLUR_RADIUS = intPreferencesKey("blurRadius")
 }
 
 val DEFAULT_SETTINGS =
@@ -51,4 +58,6 @@ val DEFAULT_SETTINGS =
         autoCheckUpdate = false,
         enableDynamicColor = false,
         disableWhenPlayingAudio = false,
+        useLiveWallpaper = false,
+        blurRadius = 0,
     )

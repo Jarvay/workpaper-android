@@ -1,7 +1,6 @@
 package jarvay.workpaper.data.album
 
 import androidx.annotation.WorkerThread
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 

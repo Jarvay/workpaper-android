@@ -1,6 +1,5 @@
 package jarvay.workpaper.others
 
-import android.app.ActivityManager
 import android.app.DownloadManager
 import android.app.DownloadManager.Request
 import android.content.Context

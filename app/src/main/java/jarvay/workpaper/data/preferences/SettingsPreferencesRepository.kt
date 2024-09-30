@@ -29,7 +29,11 @@ class SettingsPreferencesRepository @Inject constructor(
                 enableDynamicColor = preferences[SettingsPreferencesKeys.ENABLE_DYNAMIC_COLOR]
                     ?: DEFAULT_SETTINGS.enableDynamicColor,
                 disableWhenPlayingAudio = preferences[SettingsPreferencesKeys.DISABLE_WHEN_PLAYING_AUDIO]
-                    ?: DEFAULT_SETTINGS.disableWhenPlayingAudio
+                    ?: DEFAULT_SETTINGS.disableWhenPlayingAudio,
+                useLiveWallpaper = preferences[SettingsPreferencesKeys.USE_LIVE_WALLPAPER]
+                    ?: DEFAULT_SETTINGS.useLiveWallpaper,
+                blurRadius = preferences[SettingsPreferencesKeys.BLUR_RADIUS]
+                    ?: DEFAULT_SETTINGS.blurRadius,
             )
         }.distinctUntilChanged { old, new ->
             old == new

@@ -34,9 +34,7 @@ import jarvay.workpaper.compose.components.AlbumItem
 import jarvay.workpaper.compose.components.LocalMainActivityModel
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
-import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumWithWallpapers
-import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumListViewModel
 

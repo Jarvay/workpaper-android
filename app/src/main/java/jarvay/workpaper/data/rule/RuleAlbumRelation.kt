@@ -3,7 +3,6 @@ package jarvay.workpaper.data.rule
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumWithWallpapers
 
 @Entity(tableName = "rule_album_relations")

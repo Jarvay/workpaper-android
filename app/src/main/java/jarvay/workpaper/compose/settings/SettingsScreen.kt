@@ -2,6 +2,7 @@ package jarvay.workpaper.compose.settings
 
 import android.app.NotificationManager
 import android.content.Context
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.requestNotificationPermission
@@ -46,6 +49,8 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
     var notificationDialogShow by remember {
         mutableStateOf(false)
     }
+
+    val simpleSnackbar = LocalSimpleSnackbar.current
 
     Scaffold(
         topBar = {
@@ -133,6 +138,33 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                             viewModel.update(SettingsPreferencesKeys.NOTIFICATION_ONGOING, c)
                         })
                 }
+            }
+
+            SettingSItem(labelId = R.string.settings_item_blur_radius) {
+                Slider(
+                    modifier = Modifier.padding(start = 16.dp),
+                    value = settings.blurRadius.toFloat(),
+                    valueRange = 0f..25f,
+                    steps = 25,
+                    onValueChange = { radius ->
+                        Log.d("radius.toInt()", radius.toInt().toString())
+                        viewModel.update(
+                            SettingsPreferencesKeys.BLUR_RADIUS,
+                            radius.toInt()
+                        )
+                    }
+                )
+            }
+
+            SettingSItem(labelId = R.string.settings_item_use_live_wallpaper) {
+                Switch(
+                    checked = settings.useLiveWallpaper,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.USE_LIVE_WALLPAPER, c)
+                        if (c) {
+                            simpleSnackbar.show(R.string.settings_live_wallpaper_tips)
+                        }
+                    })
             }
 
             SettingSItem(labelId = R.string.settings_item_auto_check_update) {

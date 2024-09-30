@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.glance.BitmapImageProvider
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -16,7 +15,6 @@ import androidx.glance.Image
 import androidx.glance.LocalContext
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -47,7 +45,6 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
 
         Column(
             modifier = GlanceModifier.fillMaxSize()
-                .cornerRadius(16.dp)
                 .background(
                     Color(255, 255, 255, (255 * 0.25).toInt())
                 ),
@@ -65,7 +62,7 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             }
 
             val clickHelper = ClickHelper(
-                interval = 200,
+                interval = 250,
                 onDouble = {
                     if (settingWallpaper) return@ClickHelper
                     val i = Intent(context, WallpaperReceiver::class.java)
@@ -78,13 +75,12 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             }
 
             Image(
-                modifier = GlanceModifier.cornerRadius(16.dp)
-                    .fillMaxSize()
+                modifier = GlanceModifier.fillMaxSize()
                     .clickable {
                         clickHelper.click()
                     },
                 provider = BitmapImageProvider(bitmap!!),
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Crop,
                 contentDescription = null
             )
         }

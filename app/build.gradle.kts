@@ -105,4 +105,6 @@ dependencies {
     implementation(libs.androidx.glance.glance.appwidget2)
     implementation(libs.glance.material3)
     implementation(libs.androidx.glance.material)
+
+    implementation(fileTree("libs"))
 }

@@ -1,6 +1,7 @@
 package jarvay.workpaper.compose.rule
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
@@ -350,6 +352,39 @@ fun RuleForm(
                 Checkbox(
                     checked = rule.changeWhileUnlock,
                     onCheckedChange = { rule = rule.copy(changeWhileUnlock = it) })
+            }
+
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = defaultModifier,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = stringResource(id = R.string.rule_replace_global_blur))
+
+                Checkbox(
+                    checked = rule.replaceGlobalBlur,
+                    onCheckedChange = { rule = rule.copy(replaceGlobalBlur = it) })
+            }
+            if (rule.replaceGlobalBlur) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = defaultModifier,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(id = R.string.rule_blur_radius))
+
+                    Slider(
+                        modifier = Modifier.padding(start = 16.dp),
+                        value = rule.blurRadius.toFloat(),
+                        valueRange = 0f..25f,
+                        steps = 25,
+                        onValueChange = { radius ->
+                            Log.d("radius.toInt()", radius.toInt().toString())
+                            rule = rule.copy(blurRadius = radius.toInt())
+                        }
+                    )
+                }
             }
         }
 

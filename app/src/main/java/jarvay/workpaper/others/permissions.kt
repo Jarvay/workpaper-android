@@ -2,7 +2,6 @@ package jarvay.workpaper.others
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -24,21 +23,4 @@ fun requestNotificationPermission(context: Context) {
         putExtra("android.provider.extra.APP_PACKAGE", context.packageName);
     }
     context.startActivity(intent)
-}
-
-fun Context.grantUriPermissionToHomeActivity(uri: Uri, flags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION) {
-    grantUriPermission(packageManager.homeActivityPackages(), uri, flags)
-}
-
-fun PackageManager.homeActivityPackages(): List<String> {
-    val intent = Intent(Intent.ACTION_MAIN)
-    intent.addCategory(Intent.CATEGORY_HOME)
-    return queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        .map { it.activityInfo.packageName }
-}
-
-fun Context.grantUriPermission(packages: List<String>, uri: Uri, flags: Int) {
-    for (name in packages) {
-        grantUriPermission(name, uri, flags)
-    }
 }
