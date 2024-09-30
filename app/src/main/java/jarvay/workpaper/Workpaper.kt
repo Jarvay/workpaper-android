@@ -63,6 +63,12 @@ class Workpaper @Inject constructor(
 
     val settingWallpaper = MutableStateFlow(false)
 
+    suspend fun restart() {
+        stop()
+
+        start()
+    }
+
     fun start() {
         Log.d(javaClass.simpleName, "start")
 

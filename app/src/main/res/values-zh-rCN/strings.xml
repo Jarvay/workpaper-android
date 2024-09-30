@@ -70,6 +70,9 @@
     <string name="rule_list_item_days">日期</string>
     <string name="rule_list_item_random">随机切换</string>
     <string name="rule_list_item_delete_tips">确定要删除该项吗？</string>
+    <string name="rule_list_item_forced_used">强制生效</string>
+    <string name="rule_list_item_cancel_forced_used">取消强制生效</string>
+    <string name="rule_forced_apply">强制生效</string>
     <string name="rule_current_rule">当前生效</string>
     <string name="rule_next_rule">即将生效</string>
     <string name="tips_please_stop_first">请先停止运行</string>
