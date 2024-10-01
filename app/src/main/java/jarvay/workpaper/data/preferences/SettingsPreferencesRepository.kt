@@ -34,6 +34,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.useLiveWallpaper,
                 blurRadius = preferences[SettingsPreferencesKeys.BLUR_RADIUS]
                     ?: DEFAULT_SETTINGS.blurRadius,
+                forcedUsedRuleId = preferences[SettingsPreferencesKeys.FORCED_USED_RULE_ID]
+                    ?: DEFAULT_SETTINGS.forcedUsedRuleId,
             )
         }.distinctUntilChanged { old, new ->
             old == new

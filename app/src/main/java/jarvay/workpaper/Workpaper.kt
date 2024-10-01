@@ -22,8 +22,11 @@ import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.LiveWallpaperService
 import jarvay.workpaper.service.WorkpaperService
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -63,6 +66,12 @@ class Workpaper @Inject constructor(
 
     val settingWallpaper = MutableStateFlow(false)
 
+    suspend fun restart() {
+        stop()
+
+        start()
+    }
+
     fun start() {
         Log.d(javaClass.simpleName, "start")
 
@@ -70,26 +79,27 @@ class Workpaper @Inject constructor(
         context.startService(i)
 
         MainScope().launch {
-            if (settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper) {
-                context.startActivity(
-                    Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
-                        .putExtra(
-                            WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                            ComponentName(
-                                context,
-                                LiveWallpaperService::class.java
+            currentBitmap.collect {
+                if (settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper) {
+                    context.startActivity(
+                        Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                            .putExtra(
+                                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                                ComponentName(
+                                    context,
+                                    LiveWallpaperService::class.java
+                                )
                             )
-                        )
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                    coroutineContext.job.cancel()
+                }
             }
         }
     }
 
     suspend fun stop() {
         Log.d(javaClass.simpleName, "stop")
-
-        Log.d(javaClass.simpleName, runningPreferencesRepository.toString())
 
         currentRuleAlbums.value = null
         nextRuleAlbums.value = null
@@ -100,6 +110,8 @@ class Workpaper @Inject constructor(
             update(RunningPreferencesKeys.LAST_INDEX, -1)
             update(RunningPreferencesKeys.LAST_WALLPAPER, "")
         }
+
+        currentBitmap.value = null
 
         nextWallpaper.value = null
         nextWallpaperBitmap.value = null
