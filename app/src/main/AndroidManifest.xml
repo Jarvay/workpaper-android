@@ -41,6 +41,19 @@
             android:name=".service.WorkpaperService"
             android:foregroundServiceType="mediaPlayback" />
 
+        <service
+            android:name=".service.LiveWallpaperService"
+            android:exported="true"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/wallpaper" />
+        </service>
+
         <receiver
             android:name=".receiver.WallpaperReceiver"
             android:exported="false" />
@@ -73,15 +86,20 @@
 
         <receiver android:name=".receiver.GenWallpaperReceiver" />
 
-        <receiver android:name=".receiver.ActionWidgetReceiver"
+        <receiver
+            android:name=".receiver.ActionWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/action_widget_info" />
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/action_widget_info" />
         </receiver>
 
-        <receiver android:name=".receiver.UpdateActionWidgetReceiver" android:exported="false" />
+        <receiver
+            android:name=".receiver.UpdateActionWidgetReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

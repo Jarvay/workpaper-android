@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class ActionWidgetViewModel @Inject constructor(): ViewModel() {
+class ActionWidgetViewModel @Inject constructor() : ViewModel() {
     @Inject
     lateinit var workpaper: Workpaper
 

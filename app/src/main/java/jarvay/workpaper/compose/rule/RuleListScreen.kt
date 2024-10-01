@@ -33,16 +33,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Screen
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
+import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
+import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.RuleListViewModel
+import jarvay.workpaper.viewModel.SettingsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalFoundationApi::class
@@ -52,6 +57,7 @@ import jarvay.workpaper.viewModel.RuleListViewModel
 fun RuleListScreen(
     navController: NavController,
     viewModel: RuleListViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val rules by viewModel.allRules.collectAsStateWithLifecycle()
     val currentRuleAlbums by viewModel.currentRuleAlbums.collectAsStateWithLifecycle()
@@ -60,6 +66,7 @@ fun RuleListScreen(
     Log.d("currentRuleAlbums", currentRuleAlbums.toString())
 
     val runningPreferences by viewModel.runningPreferences.collectAsStateWithLifecycle()
+    val settingsPreferences by settingsViewModel.settings.collectAsStateWithLifecycle()
 
     var expandedMenuRuleId by remember {
         mutableLongStateOf(-1L)
@@ -152,8 +159,46 @@ fun RuleListScreen(
                         }
 
                         DropdownMenu(
-                            expanded = expandedMenuRuleId == it.rule.ruleId,
-                            onDismissRequest = { expandedMenuRuleId = -1 }) {
+                            expanded = expandedMenuRuleId == rule.ruleId,
+                            onDismissRequest = { expandedMenuRuleId = -1 }
+                        ) {
+                            val isForced = settingsPreferences.forcedUsedRuleId == rule.ruleId
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(
+                                            id = if (isForced) {
+                                                R.string.rule_list_item_cancel_forced_used
+                                            } else {
+                                                R.string.rule_list_item_forced_used
+                                            }
+                                        )
+                                    )
+                                },
+                                onClick = {
+                                    if (isForced) {
+                                        settingsViewModel.update(
+                                            SettingsPreferencesKeys.FORCED_USED_RULE_ID,
+                                            DEFAULT_SETTINGS.forcedUsedRuleId
+                                        )
+                                    } else {
+                                        settingsViewModel.update(
+                                            SettingsPreferencesKeys.FORCED_USED_RULE_ID,
+                                            rule.ruleId
+                                        )
+                                    }
+                                    expandedMenuRuleId = -1
+
+                                    if (runningPreferences?.running == true) {
+                                        viewModel.apply {
+                                            viewModelScope.launch {
+                                                workpaper.restart()
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+
                             DropdownMenuItem(text = {
                                 Text(text = stringResource(id = R.string.delete))
                             }, onClick = {
@@ -167,21 +212,28 @@ fun RuleListScreen(
                             })
                         }
 
-                        if (runningPreferences?.running == true) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(end = 8.dp, top = 16.dp)
-                                    .align(Alignment.TopEnd),
-                                horizontalArrangement = Arrangement.spacedBy(
-                                    4.dp,
-                                    Alignment.CenterHorizontally
-                                )
-                            ) {
-                                val textModifier =
-                                    Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        val textModifier =
+                            Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        val textColor = Color(0xFFFFFFFF)
 
-                                val textColor = Color(0xFFFFFFFF)
-
+                        Row(
+                            modifier = Modifier
+                                .padding(end = 8.dp, top = 16.dp)
+                                .align(Alignment.TopEnd),
+                            horizontalArrangement = Arrangement.spacedBy(
+                                4.dp,
+                                Alignment.CenterHorizontally
+                            )
+                        ) {
+                            if (settingsPreferences.forcedUsedRuleId == rule.ruleId) {
+                                Badge(containerColor = Color(0xFF81C784)) {
+                                    Text(
+                                        text = stringResource(id = R.string.rule_forced_apply),
+                                        modifier = textModifier,
+                                        color = textColor
+                                    )
+                                }
+                            } else if (runningPreferences?.running == true) {
                                 if (currentRuleAlbums?.rule?.ruleId == it.rule.ruleId) {
                                     Badge(containerColor = Color(0xFF81C784)) {
                                         Text(
@@ -203,6 +255,7 @@ fun RuleListScreen(
                                 }
                             }
                         }
+
                     }
                 }
             }

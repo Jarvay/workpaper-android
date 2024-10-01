@@ -8,7 +8,6 @@ import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.receiver.UnlockReceiver
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

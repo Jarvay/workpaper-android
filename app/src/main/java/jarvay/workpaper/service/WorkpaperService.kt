@@ -10,6 +10,7 @@ import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleAlbumsToSort
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.NotificationHelper
 import jarvay.workpaper.others.prevRule
@@ -60,6 +61,10 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycle.coroutineScope.launch(Dispatchers.Default) {
+            val forcedRuleId: Long =
+                settingsPreferencesRepository.settingsPreferencesFlow.first().forcedUsedRuleId
+            val forcedRuleAlbums = ruleRepository.getRuleWithAlbums(forcedRuleId)
+
             val rules = ruleRepository.allRules.first().map {
                 RuleAlbums(
                     rule = it.key,
@@ -67,7 +72,16 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
                 )
             }
 
-            val prevRule = prevRule(rules)
+
+            val prevRule = if (forcedRuleAlbums != null) {
+                RuleAlbumsToSort(
+                    ruleAlbums = forcedRuleAlbums,
+                    sortValue = 0,
+                    day = 0
+                )
+            } else {
+                prevRule(rules)
+            }
 
             Log.d("prev rule", prevRule.toString())
 

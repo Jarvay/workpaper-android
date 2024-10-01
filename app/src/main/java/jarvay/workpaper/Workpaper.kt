@@ -2,6 +2,8 @@ package jarvay.workpaper
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.app.WallpaperManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -10,15 +12,22 @@ import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
+import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleAlbums
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.receiver.UpdateActionWidgetReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
+import jarvay.workpaper.service.LiveWallpaperService
 import jarvay.workpaper.service.WorkpaperService
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,6 +49,9 @@ class Workpaper @Inject constructor(
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
+    @Inject
+    lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
+
     var currentRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
     var nextRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
 
@@ -48,20 +60,46 @@ class Workpaper @Inject constructor(
     var nextRuleTime: Long = 0
     val nextWallpaperBitmap: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
 
+    val currentBitmap: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
+
     var wallpaperContentUris: List<String> = emptyList()
 
     val settingWallpaper = MutableStateFlow(false)
 
+    suspend fun restart() {
+        stop()
+
+        start()
+    }
+
     fun start() {
         Log.d(javaClass.simpleName, "start")
+
         val i = Intent(context, WorkpaperService::class.java)
         context.startService(i)
+
+        MainScope().launch {
+            currentBitmap.collect {
+                if (settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper) {
+                    context.startActivity(
+                        Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                            .putExtra(
+                                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                                ComponentName(
+                                    context,
+                                    LiveWallpaperService::class.java
+                                )
+                            )
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                    coroutineContext.job.cancel()
+                }
+            }
+        }
     }
 
     suspend fun stop() {
         Log.d(javaClass.simpleName, "stop")
-
-        Log.d(javaClass.simpleName, runningPreferencesRepository.toString())
 
         currentRuleAlbums.value = null
         nextRuleAlbums.value = null
@@ -72,6 +110,8 @@ class Workpaper @Inject constructor(
             update(RunningPreferencesKeys.LAST_INDEX, -1)
             update(RunningPreferencesKeys.LAST_WALLPAPER, "")
         }
+
+        currentBitmap.value = null
 
         nextWallpaper.value = null
         nextWallpaperBitmap.value = null

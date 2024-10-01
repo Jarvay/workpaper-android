@@ -47,6 +47,8 @@
     <string name="rule_change_while_unlock">Change wallpaper after unlock</string>
     <string name="rule_interval">Interval</string>
     <string name="rule_random">Random</string>
+    <string name="rule_replace_global_blur">Cover global blur in settings</string>
+    <string name="rule_blur_radius">Wallpaper blur radius</string>
     <string name="rule_conflicts_tips">Plans time conflicts</string>
 
     <string name="album_name">Album name</string>
@@ -68,6 +70,9 @@
     <string name="rule_list_item_days">Days</string>
     <string name="rule_list_item_random">Random</string>
     <string name="rule_list_item_delete_tips">Are you sure to delete deleted this rule?</string>
+    <string name="rule_list_item_forced_used">Use it by force</string>
+    <string name="rule_list_item_cancel_forced_used">Cancel using it by force</string>
+    <string name="rule_forced_apply">Forced apply</string>
     <string name="rule_current_rule">Current</string>
     <string name="rule_next_rule">Next</string>
 
@@ -80,6 +85,9 @@
     <string name="settings_item_enable_dynamic_color">Enable dynamic color</string>
     <string name="settings_item_auto_check_update">Auto check update</string>
     <string name="settings_item_disabled_when_playing_audio">Do not change wallpaper when playing audio</string>
+    <string name="settings_item_use_live_wallpaper">Use live wallpaper</string>
+    <string name="settings_item_blur_radius">Wallpaper blur radius</string>
+    <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
 
     <string name="notify_will_change_at_about">Wallpaper will change at about %s</string>
     <string name="notify_next_rule_at_about">Will change to next plan at about %s</string>

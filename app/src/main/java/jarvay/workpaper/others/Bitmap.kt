@@ -8,13 +8,20 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.annotation.IntRange
+import com.google.android.renderscript.Toolkit
+import kotlin.math.max
 import kotlin.math.min
 
-fun Bitmap.scaleFixedRatio(targetWidth: Int, targetHeight: Int): Bitmap {
+fun Bitmap.scaleFixedRatio(targetWidth: Int, targetHeight: Int, useMin: Boolean = true): Bitmap {
     val scaleWidth = (targetWidth.toFloat()) / width
     val scaleHeight = (targetHeight.toFloat()) / height
 
-    val scaleRatio = min(scaleHeight.toDouble(), scaleWidth.toDouble()).toFloat()
+    val scaleRatio = if (useMin) {
+        min(scaleHeight.toDouble(), scaleWidth.toDouble()).toFloat()
+    } else {
+        max(scaleHeight.toDouble(), scaleWidth.toDouble()).toFloat()
+    }
     val matrix = Matrix()
     matrix.postScale(scaleRatio, scaleRatio)
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
@@ -71,4 +78,8 @@ fun bitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
     } else {
         fromStream()
     }
+}
+
+fun Bitmap.blur(@IntRange(1, 25) radius: Int): Bitmap {
+    return Toolkit.blur(this, radius)
 }

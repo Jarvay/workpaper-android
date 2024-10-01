@@ -11,11 +11,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
+import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleAlbumsToSort
 import jarvay.workpaper.data.rule.RuleDao
+import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.getCalendarWithRule
 import jarvay.workpaper.others.nextRule
 import jarvay.workpaper.receiver.RuleReceiver.Companion.RULE_ID_KEY
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.Date
 import javax.inject.Inject
 
@@ -25,19 +30,38 @@ class NextRuleReceiver : BroadcastReceiver() {
     lateinit var ruleDao: RuleDao
 
     @Inject
+    lateinit var ruleRepository: RuleRepository
+
+    @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
+
+    @Inject
+    lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
 
     @Inject
     lateinit var workpaper: Workpaper
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        val forcedRuleId: Long = runBlocking {
+            settingsPreferencesRepository.settingsPreferencesFlow.first().forcedUsedRuleId
+        }
+        val forcedRuleAlbums = ruleRepository.getRuleWithAlbums(forcedRuleId)
+
         val list = ruleDao.findAll().map {
             RuleAlbums(
                 rule = it.key,
                 albums = it.value
             )
         }
-        val nextRule = nextRule(list)
+        val nextRule = if (forcedRuleAlbums != null) {
+            RuleAlbumsToSort(
+                ruleAlbums = forcedRuleAlbums,
+                sortValue = 0,
+                day = 0
+            )
+        } else {
+            nextRule(list)
+        }
         Log.d("nextRule", nextRule.toString())
 
         if (intent == null || context == null || nextRule == null) return
