@@ -22,9 +22,7 @@ import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.LiveWallpaperService
 import jarvay.workpaper.service.WorkpaperService
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
