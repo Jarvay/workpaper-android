@@ -93,6 +93,8 @@ class LiveWallpaperService : WallpaperService() {
                 targetWidth = canvas.width,
                 targetHeight = canvas.height
             )
+            workpaper.currentBitmap.value!!.recycle()
+            workpaper.currentBitmap.value = null
             canvas?.let { surfaceHolder.unlockCanvasAndPost(canvas) }
 
             while (alpha <= 255) {
@@ -102,7 +104,7 @@ class LiveWallpaperService : WallpaperService() {
                 canvas.drawBitmap(bitmap, 0F, 0F, paint)
 
                 alpha += 5
-                Thread.sleep(15)
+                Thread.sleep(10)
 
                 canvas?.let {
                     surfaceHolder.unlockCanvasAndPost(it)

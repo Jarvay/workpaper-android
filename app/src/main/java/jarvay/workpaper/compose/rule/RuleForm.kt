@@ -1,7 +1,7 @@
 package jarvay.workpaper.compose.rule
 
 import android.annotation.SuppressLint
-import android.util.Log
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,14 +23,16 @@ import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,12 +57,13 @@ import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.NumberField
 import jarvay.workpaper.compose.components.TimePickerDialog
 import jarvay.workpaper.data.rule.Rule
-import jarvay.workpaper.data.rule.RuleAlbums
-import jarvay.workpaper.others.DEFAULT_WALLPAPER_CHANGE_INTERVAL
+import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
+import jarvay.workpaper.ui.theme.COLOR_FORM_LABEL
 import jarvay.workpaper.ui.theme.FORM_ITEM_SPACE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
+import jarvay.workpaper.viewModel.RuleFormViewModel
 import jarvay.workpaper.viewModel.WorkpaperViewModel
 
 @SuppressLint("MutableCollectionMutableState")
@@ -68,36 +71,33 @@ import jarvay.workpaper.viewModel.WorkpaperViewModel
 @Composable
 fun RuleForm(
     navController: NavController,
-    values: RuleAlbums? = null,
+    values: RuleWithRelation? = null,
+    viewModel: RuleFormViewModel,
     workpaperViewModel: WorkpaperViewModel = hiltViewModel(),
     onSave: (Rule) -> Unit,
 ) {
     val simpleSnackbar = LocalSimpleSnackbar.current
-    val currentRule = values?.rule
 
     val scrollState = rememberScrollState()
 
     val runningPreferences by workpaperViewModel.runningPreferences.collectAsStateWithLifecycle()
 
     var rule by remember {
-        mutableStateOf(
-            Rule(
-                days = currentRule?.days ?: dayOptions.map { it.value },
-                random = currentRule?.random ?: false,
-                interval = currentRule?.interval ?: DEFAULT_WALLPAPER_CHANGE_INTERVAL,
-                startHour = currentRule?.startHour ?: 0,
-                startMinute = currentRule?.startMinute ?: 0,
-                albumIds = currentRule?.albumIds ?: emptyList(),
-                changeByTiming = currentRule?.changeByTiming ?: true,
-                changeWhileUnlock = currentRule?.changeWhileUnlock ?: false
-            )
-        )
+        mutableStateOf(values?.rule ?: Rule())
     }
 
     var startPickerShow by remember {
         mutableStateOf(false)
     }
     var albumModalSheetShow by remember {
+        mutableStateOf(false)
+    }
+
+    val styles by viewModel.styles.collectAsStateWithLifecycle()
+    var selectedStyle by remember {
+        mutableStateOf(value = values?.style)
+    }
+    var stylesExpanded by remember {
         mutableStateOf(false)
     }
 
@@ -178,9 +178,10 @@ fun RuleForm(
                     rule = rule.copy(days = checkedDays)
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
-                    toggleAllChecked()
-                }) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable {
+                        toggleAllChecked()
+                    }) {
                     TriStateCheckbox(
                         state = parentState,
                         onClick = {
@@ -229,19 +230,19 @@ fun RuleForm(
             }
 
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = defaultModifier,
-                horizontalArrangement = Arrangement.SpaceBetween
+            RuleFormItem(
+                labelId = R.string.rule_start_time
             ) {
                 OutlinedTextField(
+                    modifier = Modifier
+                        .padding(start = 24.dp)
+                        .weight(0.8f),
                     label = {
                         Text(text = stringResource(id = R.string.rule_start_time))
                     },
                     value = formatTime(rule.startHour, rule.startMinute),
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.weight(0.8F, true)
                 )
 
                 CustomIconButton(
@@ -298,31 +299,85 @@ fun RuleForm(
 
                         val placeholderCount = 3 - (selectedAlbums.size % 3)
                         repeat(placeholderCount) {
-                            Column(modifier = Modifier.weight(0.3f)) {
+                            Column(modifier = Modifier.weight(0.3f)) {}
+                        }
+                    }
+                }
+            }
 
+            RuleFormItem(
+                labelId = R.string.rule_no_style
+            ) {
+                Checkbox(checked = rule.noStyle, onCheckedChange = {
+                    rule = rule.copy(
+                        noStyle = it,
+                        styleId = if (it) -1 else rule.styleId
+                    )
+                    selectedStyle = null
+                })
+            }
+
+            if (!rule.noStyle) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = defaultModifier,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = stringResource(id = R.string.rule_style), color = COLOR_FORM_LABEL)
+
+                        Text(
+                            modifier = Modifier.padding(start = 8.dp),
+                            text = selectedStyle?.name ?: ""
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        if (selectedStyle != null) {
+                            TextButton(
+                                modifier = Modifier.padding(end = 4.dp),
+                                onClick = {
+                                    selectedStyle = null
+                                }
+                            ) {
+                                Text(text = stringResource(R.string.action_empty))
+                            }
+                        }
+
+                        Box {
+                            TextButton(onClick = {
+                                stylesExpanded = true
+                            }) {
+                                Text(text = stringResource(R.string.select))
+                            }
+
+                            DropdownMenu(
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                                expanded = stylesExpanded,
+                                onDismissRequest = { stylesExpanded = false }) {
+                                styles.forEach {
+                                    DropdownMenuItem(text = {
+                                        Text(text = it.name)
+                                    }, onClick = {
+                                        rule = rule.copy(styleId = it.styleId)
+                                        selectedStyle = it
+                                        stylesExpanded = false
+                                    })
+                                }
                             }
                         }
                     }
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = defaultModifier,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(id = R.string.rule_random))
-
+            RuleFormItem(labelId = R.string.rule_random) {
                 Switch(checked = rule.random, onCheckedChange = { rule = rule.copy(random = it) })
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = defaultModifier,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(id = R.string.rule_change_by_timing))
-
+            RuleFormItem(labelId = R.string.rule_change_by_timing) {
                 Checkbox(
                     checked = rule.changeByTiming,
                     onCheckedChange = { rule = rule.copy(changeByTiming = it) })
@@ -342,55 +397,16 @@ fun RuleForm(
                 )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = defaultModifier,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(id = R.string.rule_change_while_unlock))
-
+            RuleFormItem(labelId = R.string.rule_change_while_unlock) {
                 Checkbox(
                     checked = rule.changeWhileUnlock,
                     onCheckedChange = { rule = rule.copy(changeWhileUnlock = it) })
-            }
-
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = defaultModifier,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(id = R.string.rule_replace_global_blur))
-
-                Checkbox(
-                    checked = rule.replaceGlobalBlur,
-                    onCheckedChange = { rule = rule.copy(replaceGlobalBlur = it) })
-            }
-            if (rule.replaceGlobalBlur) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = defaultModifier,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = stringResource(id = R.string.rule_blur_radius))
-
-                    Slider(
-                        modifier = Modifier.padding(start = 16.dp),
-                        value = rule.blurRadius.toFloat(),
-                        valueRange = 0f..25f,
-                        steps = 25,
-                        onValueChange = { radius ->
-                            Log.d("radius.toInt()", radius.toInt().toString())
-                            rule = rule.copy(blurRadius = radius.toInt())
-                        }
-                    )
-                }
             }
         }
 
         AlbumModalSheet(
             show = albumModalSheetShow,
-            defaultValues = rule.albumIds,
+            defaultValues = selectedAlbums.map { it.album.albumId },
             onDismissRequest = { albumModalSheetShow = false }
         ) {
             selectedAlbums = it.toList()
@@ -398,5 +414,24 @@ fun RuleForm(
                 albumIds = it.map { i -> i.album.albumId }
             )
         }
+    }
+}
+
+@Composable
+private fun RuleFormItem(
+    @StringRes labelId: Int,
+    content: @Composable () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = stringResource(id = labelId),
+            color = COLOR_FORM_LABEL
+        )
+
+        content()
     }
 }

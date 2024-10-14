@@ -9,11 +9,9 @@ import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
-import jarvay.workpaper.data.rule.RuleAlbums
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.others.STATE_IN_STATED
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,14 +23,7 @@ class RuleListViewModel @Inject constructor(
     val runningPreferencesRepository: RunningPreferencesRepository,
     val workpaper: Workpaper
 ) : ViewModel() {
-    val allRules = repository.allRules.map {
-        it.entries.map { e ->
-            RuleAlbums(
-                rule = e.key,
-                albums = e.value
-            )
-        }
-    }.stateIn(
+    val allRules = repository.allRules.stateIn(
         viewModelScope,
         STATE_IN_STATED,
         emptyList()
@@ -50,12 +41,12 @@ class RuleListViewModel @Inject constructor(
         DEFAULT_SETTINGS
     )
 
-    val currentRuleAlbums = workpaper.currentRuleAlbums.stateIn(
+    val currentRuleId = workpaper.currentRuleId.stateIn(
         viewModelScope,
         STATE_IN_STATED,
-        null
+        -1
     )
-    val nextRuleAlbums = workpaper.nextRuleAlbums.stateIn(
+    val nextRuleAlbums = workpaper.nextRuleWithRelation.stateIn(
         viewModelScope,
         STATE_IN_STATED,
         null

@@ -13,6 +13,7 @@ fun RuleCreateScreen(navController: NavController, viewModel: RuleFormViewModel 
 
     RuleForm(
         navController = navController,
+        viewModel = viewModel,
     ) { rule ->
         val exists = viewModel.exists(rule.startHour, rule.startMinute, rule.days)
         if (exists) {

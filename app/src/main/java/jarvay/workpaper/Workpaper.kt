@@ -13,7 +13,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
-import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.RuleReceiver
@@ -22,10 +23,13 @@ import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.LiveWallpaperService
 import jarvay.workpaper.service.WorkpaperService
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,6 +47,7 @@ data class NextWallpaper(
 @Singleton
 class Workpaper @Inject constructor(
     @ApplicationContext private val context: Context,
+    val ruleRepository: RuleRepository,
 ) {
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
@@ -50,8 +55,9 @@ class Workpaper @Inject constructor(
     @Inject
     lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
 
-    var currentRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
-    var nextRuleAlbums: MutableStateFlow<RuleAlbums?> = MutableStateFlow(null)
+    var currentRuleId: MutableStateFlow<Long> = MutableStateFlow(-1)
+    var currentRuleWithRelation: Flow<RuleWithRelation?> = MutableStateFlow(null)
+    var nextRuleWithRelation: MutableStateFlow<RuleWithRelation?> = MutableStateFlow(null)
 
     var nextWallpaper: MutableStateFlow<NextWallpaper?> = MutableStateFlow(null)
     var nextWallpaperTime: Long = 0
@@ -63,6 +69,16 @@ class Workpaper @Inject constructor(
     var wallpaperContentUris: List<String> = emptyList()
 
     val settingWallpaper = MutableStateFlow(false)
+
+    init {
+        MainScope().launch {
+            currentRuleId.collect {
+                currentRuleWithRelation = ruleRepository.findRuleFlowById(it)!!.stateIn(
+                    MainScope()
+                )
+            }
+        }
+    }
 
     suspend fun restart() {
         stop()
@@ -99,8 +115,8 @@ class Workpaper @Inject constructor(
     suspend fun stop() {
         Log.d(javaClass.simpleName, "stop")
 
-        currentRuleAlbums.value = null
-        nextRuleAlbums.value = null
+        currentRuleId.value = -1
+        nextRuleWithRelation.value = null
 
         cancelAllAlarm()
 
@@ -191,7 +207,7 @@ class Workpaper @Inject constructor(
 
         Log.d(javaClass.simpleName, runningPreferences.toString())
         val index = startIndex ?: nextWallpaper.value?.index ?: -1
-        val tmpRuleId = ruleId ?: this.currentRuleAlbums.value?.rule?.ruleId ?: -1
+        val tmpRuleId = ruleId ?: this.currentRuleId.value
 
         if (tmpRuleId < 0) return null
 
@@ -207,8 +223,12 @@ class Workpaper @Inject constructor(
     }
 
     private fun nextIndex(currentIndex: Int): Int {
+        val ruleWithRelation = runBlocking {
+            currentRuleWithRelation?.first()
+        }
+
         if (currentIndex + 1 >= wallpaperContentUris.size) {
-            if (currentRuleAlbums.value?.rule?.random == true) {
+            if (ruleWithRelation?.rule?.random == true) {
                 wallpaperContentUris = wallpaperContentUris.shuffled()
             }
             return 0

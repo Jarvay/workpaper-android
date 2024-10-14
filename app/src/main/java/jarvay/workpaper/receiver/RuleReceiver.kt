@@ -38,19 +38,19 @@ class RuleReceiver : BroadcastReceiver() {
 
         val ruleId = intent.getLongExtra(RULE_ID_KEY, -1)
         Log.d(javaClass.simpleName, ruleId.toString())
-        val ruleAlbums = ruleRepository.getRuleWithAlbums(ruleId)
+        val ruleWithRelation = ruleRepository.findRuleById(ruleId)
 
-        workpaper.currentRuleAlbums.value = ruleAlbums
+        workpaper.currentRuleId.value = ruleId
 
-        if (ruleId > -1 && ruleAlbums != null) {
+        if (ruleId > -1 && ruleWithRelation != null) {
             workpaper.cancelAlarm(type = AlarmType.REPEAT)
 
             workpaper.wallpaperContentUris =
-                ruleAlbums.albums.fold<AlbumWithWallpapers, MutableList<String>>(mutableListOf()) { acc, album ->
+                ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<String>>(mutableListOf()) { acc, album ->
                     acc.addAll(album.wallpapers.map { it.contentUri })
                     acc
                 }.apply {
-                    if (ruleAlbums.rule.random) shuffle()
+                    if (ruleWithRelation.rule.random) shuffle()
                 }
 
 
@@ -59,8 +59,8 @@ class RuleReceiver : BroadcastReceiver() {
                 runningPreferencesRepository.update(RunningPreferencesKeys.LAST_INDEX, -1)
 
                 sendWallpaperBroadcast(context)
-                if (ruleAlbums.rule.changeByTiming) {
-                    startRepeatAlarm(context, ruleAlbums.rule)
+                if (ruleWithRelation.rule.changeByTiming) {
+                    startRepeatAlarm(context, ruleWithRelation.rule)
                 }
             }
         }
