@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lens
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PhotoAlbum
+import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -65,6 +66,7 @@ import jarvay.workpaper.compose.album.AlbumCreateDialog
 import jarvay.workpaper.compose.album.AlbumListScreen
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.compose.rule.RuleListScreen
+import jarvay.workpaper.compose.style.StyleListScreen
 import jarvay.workpaper.others.requestAlarmPermission
 import jarvay.workpaper.viewModel.HomeScreenViewModel
 import kotlinx.coroutines.launch
@@ -74,7 +76,8 @@ enum class WorkpaperPage(
     val iconImageVector: ImageVector
 ) {
     RULES(R.string.tab_title_rules, Icons.AutoMirrored.Default.FormatListBulleted),
-    ALBUMS(R.string.tab_title_albums, Icons.Default.PhotoAlbum)
+    ALBUMS(R.string.tab_title_albums, Icons.Default.PhotoAlbum),
+    STYLES(R.string.tab_title_styles, Icons.Default.Style),
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -113,6 +116,10 @@ fun HomeScreen(
 
                         WorkpaperPage.ALBUMS -> {
                             albumCreateDialogShow = true
+                        }
+
+                        WorkpaperPage.STYLES -> {
+                            navController.navigate(Screen.StyleCreate.route)
                         }
                     }
                 }) {
@@ -174,6 +181,10 @@ fun HomePagerScreen(
 
                 WorkpaperPage.ALBUMS -> {
                     AlbumListScreen(navController = navController)
+                }
+
+                WorkpaperPage.STYLES -> {
+                    StyleListScreen(navController = navController)
                 }
             }
         }

@@ -11,11 +11,12 @@ import jarvay.workpaper.viewModel.RuleFormViewModel
 fun RuleUpdateScreen(navController: NavController, viewModel: RuleFormViewModel = hiltViewModel()) {
     val simpleSnackbar = LocalSimpleSnackbar.current
 
-    val rule = viewModel.ruleAlbums?.rule
+    val rule = viewModel.ruleWithRelation?.rule
 
     RuleForm(
         navController = navController,
-        values = viewModel.ruleAlbums
+        values = viewModel.ruleWithRelation,
+        viewModel = viewModel,
     ) { r ->
         rule?.let {
             val exists = viewModel.exists(r.startHour, r.startMinute, r.days, rule.ruleId)

@@ -2,6 +2,7 @@ package jarvay.workpaper.service
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.hardware.display.DisplayManager
@@ -25,6 +26,11 @@ import javax.inject.Inject
 class LiveWallpaperService : WallpaperService() {
     @Inject
     lateinit var workpaper: Workpaper
+
+    override fun onCreate() {
+        super.onCreate()
+        workpaper.liveWallpaperEngineCreated = true
+    }
 
     override fun onCreateEngine(): Engine {
         return LiveWallpaperEngine()
@@ -56,7 +62,7 @@ class LiveWallpaperService : WallpaperService() {
                 workpaper.currentBitmap.collect {
                     Log.d(javaClass.simpleName, "wallpaper bitmap update")
                     if (surfaceHolder == null || it == null) return@collect
-                    updateBitmap()
+                    updateBitmap(it)
                 }
             }
         }
@@ -68,7 +74,7 @@ class LiveWallpaperService : WallpaperService() {
             gestureDetector.onTouchEvent(event)
         }
 
-        private fun updateBitmap() {
+        private fun updateBitmap(originBitmap: Bitmap) {
             if (!surfaceHolder.surface.isValid) return
             var canvas: Canvas?
             var alpha = 0
@@ -85,7 +91,7 @@ class LiveWallpaperService : WallpaperService() {
             }
 
             canvas = surfaceHolder.lockCanvas()
-            val bitmap = workpaper.currentBitmap.value!!.scaleFixedRatio(
+            val bitmap = originBitmap.scaleFixedRatio(
                 targetWidth = canvas.width,
                 targetHeight = canvas.height,
                 useMin = false
@@ -93,6 +99,7 @@ class LiveWallpaperService : WallpaperService() {
                 targetWidth = canvas.width,
                 targetHeight = canvas.height
             )
+
             canvas?.let { surfaceHolder.unlockCanvasAndPost(canvas) }
 
             while (alpha <= 255) {
@@ -102,12 +109,15 @@ class LiveWallpaperService : WallpaperService() {
                 canvas.drawBitmap(bitmap, 0F, 0F, paint)
 
                 alpha += 5
-                Thread.sleep(15)
+                Thread.sleep(10)
 
                 canvas?.let {
                     surfaceHolder.unlockCanvasAndPost(it)
                 }
             }
+
+//            workpaper.currentBitmap.value!!.recycle()
+//            workpaper.currentBitmap.value = null
         }
     }
 }

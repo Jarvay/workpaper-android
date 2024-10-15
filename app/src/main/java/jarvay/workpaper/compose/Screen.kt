@@ -13,6 +13,11 @@ sealed class Screen(
         fun createRoute(ruleId: Long) = "rule/update/${ruleId}"
     }
 
+    data object StyleCreate : Screen(route = "style/create")
+    data object StyleUpdate : Screen(route = "style/update/{styleId}") {
+        fun createRoute(styleId: Long) = "style/update/${styleId}"
+    }
+
     data object AlbumDetail : Screen(route = "album/detail/{albumId}") {
         fun createRoute(albumId: Long) = "album/detail/${albumId}"
     }

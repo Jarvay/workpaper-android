@@ -9,6 +9,7 @@ import dagger.hilt.components.SingletonComponent
 import jarvay.workpaper.data.album.AlbumDao
 import jarvay.workpaper.data.rule.RuleAlbumRelationDao
 import jarvay.workpaper.data.rule.RuleDao
+import jarvay.workpaper.data.style.StyleDao
 import jarvay.workpaper.data.wallpaper.WallpaperDao
 import javax.inject.Singleton
 
@@ -40,5 +41,10 @@ class AppDatabaseModule {
     @Provides
     fun provideWallpaperDao(appDatabase: AppDatabase): WallpaperDao {
         return appDatabase.wallpaperDao()
+    }
+
+    @Provides
+    fun provideStyleDao(appDatabase: AppDatabase): StyleDao {
+        return appDatabase.styleDao()
     }
 }

@@ -3,7 +3,6 @@ package jarvay.workpaper.data.rule
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import jarvay.workpaper.data.album.AlbumWithWallpapers
 
 @Entity(tableName = "rule_album_relations")
 data class RuleAlbumRelation(
@@ -14,13 +13,8 @@ data class RuleAlbumRelation(
     val albumId: Long
 )
 
-data class RuleAlbums(
-    var rule: Rule,
-    var albums: List<AlbumWithWallpapers>
-)
-
-data class RuleAlbumsToSort(
-    var ruleAlbums: RuleAlbums,
+data class RuleWithRelationToSort(
+    var ruleWithRelation: RuleWithRelation,
     var sortValue: Long,
     var day: Int,
 )

@@ -19,8 +19,8 @@ import jarvay.workpaper.R
 import jarvay.workpaper.data.preferences.RunningPreferences
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
-import jarvay.workpaper.data.rule.RuleAlbums
-import jarvay.workpaper.data.rule.RuleAlbumsToSort
+import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.RuleWithRelationToSort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
@@ -45,17 +45,17 @@ fun getCalendarWithRule(rule: Rule, dayOfWeek: Int): Calendar {
 }
 
 fun findRule(
-    ruleWithAlbums: List<RuleAlbums>,
-    finder: (List<RuleAlbumsToSort>) -> RuleAlbumsToSort?,
-): RuleAlbumsToSort? {
-    val rules = ArrayList<RuleAlbumsToSort>()
-    ruleWithAlbums.forEach {
+    ruleWithRelationList: List<RuleWithRelation>,
+    finder: (List<RuleWithRelationToSort>) -> RuleWithRelationToSort?,
+): RuleWithRelationToSort? {
+    val rules = ArrayList<RuleWithRelationToSort>()
+    ruleWithRelationList.forEach {
         it.rule.days.forEach { day ->
             val minute = day * 24 * 60 + it.rule.startHour * 60 + it.rule.startMinute
             val millis = minute * 60 * 1000
             rules.add(
-                RuleAlbumsToSort(
-                    ruleAlbums = it.copy(),
+                RuleWithRelationToSort(
+                    ruleWithRelation = it.copy(),
                     sortValue = millis.toLong(),
                     day = day
                 )
@@ -80,8 +80,8 @@ fun currentMillis(): Long {
     return millis.toLong()
 }
 
-fun prevRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
-    return findRule(ruleWithAlbums = list, finder = { l ->
+fun prevRule(list: List<RuleWithRelation>): RuleWithRelationToSort? {
+    return findRule(ruleWithRelationList = list, finder = { l ->
         val sortedList = l.sortedByDescending { it.sortValue }
         val result = sortedList.find {
             it.sortValue <= currentMillis()
@@ -90,9 +90,9 @@ fun prevRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
     })
 }
 
-fun nextRule(list: List<RuleAlbums>): RuleAlbumsToSort? {
+fun nextRule(list: List<RuleWithRelation>): RuleWithRelationToSort? {
     val currentMillis = currentMillis()
-    return findRule(ruleWithAlbums = list, finder = { l ->
+    return findRule(ruleWithRelationList = list, finder = { l ->
         val sortedList = l.sortedBy { it.sortValue }
         val result = sortedList.find {
             it.sortValue >= currentMillis
