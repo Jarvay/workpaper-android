@@ -17,14 +17,18 @@ import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.others.audioManager
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.blur
+import jarvay.workpaper.others.effect
 import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.info
+import jarvay.workpaper.others.noise
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.NotificationReceiver
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -40,12 +44,16 @@ class WallpaperWorker @AssistedInject constructor(
     lateinit var ruleRepository: RuleRepository
 
     @Inject
+    lateinit var styleRepository: StyleRepository
+
+    @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
     @Inject
     lateinit var settingPreferencesRepository: SettingsPreferencesRepository
 
     private suspend fun setWallpaper(wallpaper: String, settings: SettingsPreferences) {
+        workpaper.settingWallpaper.value = true
         Log.d(
             "context.audioManager().isMusicActive",
             (context.audioManager().isMusicActive).toString()
@@ -59,7 +67,6 @@ class WallpaperWorker @AssistedInject constructor(
         if (lastWallpaper == wallpaper && !settings.useLiveWallpaper) return
 
         Log.d(javaClass.simpleName, settings.toString())
-        workpaper.settingWallpaper.emit(true)
 
         val wallpaperUri = wallpaper.toUri()
 
@@ -77,11 +84,28 @@ class WallpaperWorker @AssistedInject constructor(
             )
             Log.d("Wallpaper bitmap", it.info())
 
-            val rule = workpaper.currentRuleAlbums.value!!.rule
-            if (rule.replaceGlobalBlur && rule.blurRadius > 0) {
-                bitmap = bitmap!!.blur(rule.blurRadius)
-            } else if (!rule.replaceGlobalBlur && settings.blurRadius > 0) {
-                bitmap = bitmap!!.blur(settings.blurRadius)
+
+            val defaultStyle = styleRepository.findById(settings.defaultStyleId)
+            val ruleWithRelation = runBlocking {
+                workpaper.currentRuleWithRelation.first()
+            }
+            if (ruleWithRelation == null) return
+
+            if (!ruleWithRelation.rule.noStyle) {
+                val style = defaultStyle ?: ruleWithRelation.style
+                style?.let {
+                    if (style.blurRadius > 0) {
+                        bitmap = bitmap!!.blur(style.blurRadius)
+                    }
+                    if (style.noisePercent > 0) {
+                        bitmap = bitmap!!.noise(style.noisePercent)
+                    }
+                    bitmap = bitmap!!.effect(
+                        brightness = style.brightness,
+                        contrast = style.contrast,
+                        saturation = style.saturation
+                    )
+                }
             }
 
             val wallpaperManager = WallpaperManager.getInstance(applicationContext)
@@ -93,9 +117,12 @@ class WallpaperWorker @AssistedInject constructor(
                     Log.d(javaClass.simpleName, "set both wallpaper")
                     wallpaperManager.setBitmap(bitmap)
                 }
+            } else {
+                while (!workpaper.liveWallpaperEngineCreated) {
+                    Thread.sleep(100)
+                }
+                workpaper.currentBitmap.value = bitmap
             }
-
-            workpaper.currentBitmap.value = bitmap
         }
         workpaper.settingWallpaper.value = false
     }
@@ -110,6 +137,10 @@ class WallpaperWorker @AssistedInject constructor(
         Log.d(javaClass.simpleName, "start")
         Log.d(javaClass.simpleName, Thread.currentThread().name)
 
+        if (workpaper.settingWallpaper.value) {
+            return Result.failure()
+        }
+
         val runningPreferences: RunningPreferences =
             runningPreferencesRepository.runningPreferencesFlow.first()
 
@@ -117,9 +148,15 @@ class WallpaperWorker @AssistedInject constructor(
 
         Log.d(javaClass.simpleName, runningPreferences.toString())
 
-        val ruleWithAlbums = workpaper.currentRuleAlbums.value ?: return Result.failure()
+        val ruleWithRelation = workpaper.currentRuleWithRelation.first() ?: return Result.failure()
 
         val nextWallpaper = workpaper.getNextWallpaper() ?: return Result.failure()
+
+        workpaper.apply {
+            generateNextWallpaper()?.let {
+                setNextWallpaper(it)
+            }
+        }
 
         setWallpaper(wallpaper = nextWallpaper.contentUri, settings = settings)
 
@@ -128,18 +165,12 @@ class WallpaperWorker @AssistedInject constructor(
             update(RunningPreferencesKeys.LAST_WALLPAPER, nextWallpaper.contentUri)
         }
 
-        if (!nextWallpaper.isManual && ruleWithAlbums.rule.changeByTiming) {
+        if (!nextWallpaper.isManual && ruleWithRelation.rule.changeByTiming) {
             val calendar = Calendar.getInstance()
-            calendar.add(Calendar.MINUTE, ruleWithAlbums.rule.interval)
+            calendar.add(Calendar.MINUTE, ruleWithRelation.rule.interval)
             workpaper.nextWallpaperTime = calendar.timeInMillis
-        } else if (!ruleWithAlbums.rule.changeByTiming) {
+        } else if (!ruleWithRelation.rule.changeByTiming) {
             workpaper.nextWallpaperTime = 0
-        }
-
-        workpaper.apply {
-            generateNextWallpaper()?.let {
-                setNextWallpaper(it)
-            }
         }
 
         if (settings.enableNotification) {

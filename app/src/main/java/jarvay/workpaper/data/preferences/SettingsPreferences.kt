@@ -1,7 +1,6 @@
 package jarvay.workpaper.data.preferences
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 
 data class SettingsPreferences(
@@ -14,7 +13,7 @@ data class SettingsPreferences(
     var enableDynamicColor: Boolean,
     var disableWhenPlayingAudio: Boolean,
     var useLiveWallpaper: Boolean,
-    var blurRadius: Int,
+    var defaultStyleId: Long,
     var forcedUsedRuleId: Long,
 ) {
 
@@ -32,7 +31,7 @@ data class SettingsPreferences(
         result = 31 * result + enableDynamicColor.hashCode()
         result = 31 * result + disableWhenPlayingAudio.hashCode()
         result = 31 * result + useLiveWallpaper.hashCode()
-        result = 31 * result + blurRadius
+        result = 31 * result + defaultStyleId.hashCode()
         result = 31 * result + forcedUsedRuleId.hashCode()
         return result
     }
@@ -48,7 +47,7 @@ data object SettingsPreferencesKeys {
     val AUTO_CHECK_UPDATE = booleanPreferencesKey("autoCheckUpdate")
     val DISABLE_WHEN_PLAYING_AUDIO = booleanPreferencesKey("disableWhenPlayingAudio")
     val USE_LIVE_WALLPAPER = booleanPreferencesKey("useLiveWallpaper")
-    val BLUR_RADIUS = intPreferencesKey("blurRadius")
+    val DEFAULT_STYLE_ID = longPreferencesKey("defaultStyleId")
     val FORCED_USED_RULE_ID = longPreferencesKey("forcedUsedRuleId")
 }
 
@@ -63,6 +62,6 @@ val DEFAULT_SETTINGS =
         enableDynamicColor = false,
         disableWhenPlayingAudio = false,
         useLiveWallpaper = false,
-        blurRadius = 0,
+        defaultStyleId = -1,
         forcedUsedRuleId = -1,
     )

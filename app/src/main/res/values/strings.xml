@@ -12,8 +12,10 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="symbol_colon">:</string>
+    <string name="select">Select</string>
     <string name="select_all">Select all</string>
     <string name="download">Download</string>
+    <string name="action_empty">Empty</string>
 
     <string name="tips_operation_success">Operation success</string>
     <string name="tips_network_not_available">Network not available</string>
@@ -26,6 +28,7 @@
     <string name="tab_title_days">Days</string>
     <string name="tab_title_rules">Plans</string>
     <string name="tab_title_albums">Albums</string>
+    <string name="tab_title_styles">Styles</string>
 
     <string name="drawer_menu_settings">Settings</string>
     <string name="drawer_menu_check_update">Check update</string>
@@ -47,6 +50,8 @@
     <string name="rule_change_while_unlock">Change wallpaper after unlock</string>
     <string name="rule_interval">Interval</string>
     <string name="rule_random">Random</string>
+    <string name="rule_style">Style</string>
+    <string name="rule_no_style">Do not use any style</string>
     <string name="rule_replace_global_blur">Cover global blur in settings</string>
     <string name="rule_blur_radius">Wallpaper blur radius</string>
     <string name="rule_conflicts_tips">Plans time conflicts</string>
@@ -72,9 +77,27 @@
     <string name="rule_list_item_delete_tips">Are you sure to delete deleted this rule?</string>
     <string name="rule_list_item_forced_used">Use it by force</string>
     <string name="rule_list_item_cancel_forced_used">Cancel using it by force</string>
+    <string name="rule_list_item_style">Style</string>
     <string name="rule_forced_apply">Forced apply</string>
     <string name="rule_current_rule">Current</string>
     <string name="rule_next_rule">Next</string>
+
+    <string name="style_form_item_name">Name</string>
+    <string name="style_form_item_blur_radius">Blur radius</string>
+    <string name="style_form_item_noise">Noise percentage</string>
+    <string name="style_form_item_brightness">Brightness</string>
+    <string name="style_form_item_contrast">Contrast</string>
+    <string name="style_form_item_saturation">Saturation</string>
+
+    <string name="style_list_item_name">Name</string>
+    <string name="style_list_item_blur_radius">Blur radius</string>
+    <string name="style_list_item_noise">Noise percentage</string>
+    <string name="style_list_item_brightness">Brightness</string>
+    <string name="style_list_item_contrast">Contrast</string>
+    <string name="style_list_item_saturation">Saturation</string>
+    <string name="style_list_item_action_set_default">Set as default</string>
+    <string name="style_list_item_action_cancel_default">Cancel setting as default</string>
+    <string name="style_list_item_default">Default</string>
 
     <string name="settings_item_interval">Wallpaper Change Interval</string>
     <string name="settings_item_start_with_prev_rule">Use prev plan after start</string>

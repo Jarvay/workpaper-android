@@ -34,8 +34,6 @@ class MainActivityViewModel @Inject constructor(
 
     val checkingUpdate = MutableLiveData(false)
 
-    val readStorageDialogShow = MutableLiveData(false)
-
     init {
         Log.d(javaClass.simpleName, "init")
         viewModelScope.launch {

@@ -12,10 +12,9 @@ import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
-import jarvay.workpaper.data.rule.RuleAlbums
-import jarvay.workpaper.data.rule.RuleAlbumsToSort
 import jarvay.workpaper.data.rule.RuleDao
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.data.rule.RuleWithRelationToSort
 import jarvay.workpaper.others.getCalendarWithRule
 import jarvay.workpaper.others.nextRule
 import jarvay.workpaper.receiver.RuleReceiver.Companion.RULE_ID_KEY
@@ -45,17 +44,12 @@ class NextRuleReceiver : BroadcastReceiver() {
         val forcedRuleId: Long = runBlocking {
             settingsPreferencesRepository.settingsPreferencesFlow.first().forcedUsedRuleId
         }
-        val forcedRuleAlbums = ruleRepository.getRuleWithAlbums(forcedRuleId)
+        val forcedRuleWithRelation = ruleRepository.findRuleById(forcedRuleId)
 
-        val list = ruleDao.findAll().map {
-            RuleAlbums(
-                rule = it.key,
-                albums = it.value
-            )
-        }
-        val nextRule = if (forcedRuleAlbums != null) {
-            RuleAlbumsToSort(
-                ruleAlbums = forcedRuleAlbums,
+        val list = ruleDao.findAll()
+        val nextRule = if (forcedRuleWithRelation != null) {
+            RuleWithRelationToSort(
+                ruleWithRelation = forcedRuleWithRelation,
                 sortValue = 0,
                 day = 0
             )
@@ -66,7 +60,7 @@ class NextRuleReceiver : BroadcastReceiver() {
 
         if (intent == null || context == null || nextRule == null) return
 
-        val calendar = getCalendarWithRule(nextRule.ruleAlbums.rule, nextRule.day)
+        val calendar = getCalendarWithRule(nextRule.ruleWithRelation.rule, nextRule.day)
         val now = Calendar.getInstance().timeInMillis
         if (calendar.timeInMillis <= now) {
             calendar.add(Calendar.DATE, 7);
@@ -75,10 +69,10 @@ class NextRuleReceiver : BroadcastReceiver() {
         Log.d("nextRule timeInMillis", calendar.timeInMillis.toString())
         Log.d("now timeInMillis", now.toString())
 
-        workpaper.nextRuleAlbums.value = nextRule.ruleAlbums
+        workpaper.nextRuleWithRelation.value = nextRule.ruleWithRelation
 
         val i = Intent(context, RuleReceiver::class.java)
-        i.putExtra(RULE_ID_KEY, nextRule.ruleAlbums.rule.ruleId)
+        i.putExtra(RULE_ID_KEY, nextRule.ruleWithRelation.rule.ruleId)
         val pendingIntent: PendingIntent = PendingIntent.getBroadcast(
             context,
             AlarmType.RULE.value,

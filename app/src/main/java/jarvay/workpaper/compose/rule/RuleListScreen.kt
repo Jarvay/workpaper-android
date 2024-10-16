@@ -38,9 +38,12 @@ import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
-import jarvay.workpaper.data.rule.RuleAlbums
+import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
+import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
+import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
+import jarvay.workpaper.ui.theme.COLOR_LIST_LABEL
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.RuleListViewModel
 import kotlinx.coroutines.launch
@@ -50,12 +53,12 @@ fun RuleListScreen(
     navController: NavController,
     viewModel: RuleListViewModel = hiltViewModel(),
 ) {
-    val ruleAlbumsList by viewModel.allRules.collectAsStateWithLifecycle()
+    val ruleWithRelationList by viewModel.allRules.collectAsStateWithLifecycle()
 
     Scaffold { paddingValues ->
         RuleList(
             modifier = Modifier.padding(paddingValues),
-            ruleAlbumsList = ruleAlbumsList,
+            ruleWithRelationList = ruleWithRelationList,
             viewModel = viewModel,
             navController = navController,
         )
@@ -65,13 +68,13 @@ fun RuleListScreen(
 @Composable
 private fun RuleList(
     modifier: Modifier,
-    ruleAlbumsList: List<RuleAlbums>,
+    ruleWithRelationList: List<RuleWithRelation>,
     viewModel: RuleListViewModel,
     navController: NavController,
 ) {
     val listState = rememberLazyListState()
 
-    val currentRuleAlbums by viewModel.currentRuleAlbums.collectAsStateWithLifecycle()
+    val currentRuleId by viewModel.currentRuleId.collectAsStateWithLifecycle()
     val nextRuleAlbums by viewModel.nextRuleAlbums.collectAsStateWithLifecycle()
 
     val settingsPreferences by viewModel.settings.collectAsStateWithLifecycle()
@@ -83,15 +86,15 @@ private fun RuleList(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         userScrollEnabled = true
     ) {
-        items(items = ruleAlbumsList, key = { item -> item.rule.ruleId }) {
+        items(items = ruleWithRelationList, key = { item -> item.rule.ruleId }) {
             val rule = it.rule
 
             RuleItem(
                 modifier = Modifier,
-                ruleAlbums = it,
+                ruleWithRelation = it,
                 isForced = settingsPreferences.forcedUsedRuleId == rule.ruleId,
                 viewModel = viewModel,
-                isCurrent = currentRuleAlbums?.rule?.ruleId == rule.ruleId,
+                isCurrent = currentRuleId == rule.ruleId,
                 isNext = nextRuleAlbums?.rule?.ruleId == rule.ruleId,
                 navController = navController,
             )
@@ -103,15 +106,15 @@ private fun RuleList(
 @Composable
 private fun RuleItem(
     modifier: Modifier,
-    ruleAlbums: RuleAlbums,
+    ruleWithRelation: RuleWithRelation,
     isForced: Boolean,
     viewModel: RuleListViewModel,
     isCurrent: Boolean,
     isNext: Boolean,
     navController: NavController,
 ) {
-    val rule = ruleAlbums.rule
-    val albums = ruleAlbums.albums
+    val rule = ruleWithRelation.rule
+    val albums = ruleWithRelation.albums
 
     var expanded by remember {
         mutableStateOf(false)
@@ -161,6 +164,13 @@ private fun RuleItem(
                     labelId = R.string.rule_list_item_album,
                     value = albums.joinToString(separator = ", ") { item -> item.album.name }
                 )
+
+                if (ruleWithRelation.style != null) {
+                    RuleInfoItem(
+                        labelId = R.string.rule_list_item_style,
+                        value = ruleWithRelation.style.name
+                    )
+                }
 
                 if (rule.random) {
                     Text(text = stringResource(id = R.string.rule_list_item_random))
@@ -283,7 +293,7 @@ private fun RuleItemBadges(
         )
     ) {
         if (isForced) {
-            Badge(containerColor = Color(0xFF81C784)) {
+            Badge(containerColor = COLOR_BADGE_GREEN) {
                 Text(
                     text = stringResource(id = R.string.rule_forced_apply),
                     modifier = textModifier,
@@ -291,10 +301,10 @@ private fun RuleItemBadges(
                 )
             }
         }
-        if (!isRunning) return
+        if (!isRunning || isForced) return
 
         if (isCurrent) {
-            Badge(containerColor = Color(0xFF81C784)) {
+            Badge(containerColor = COLOR_BADGE_GREEN) {
                 Text(
                     text = stringResource(id = R.string.rule_current_rule),
                     modifier = textModifier,
@@ -304,7 +314,7 @@ private fun RuleItemBadges(
         }
 
         if (isNext) {
-            Badge(containerColor = Color(0xFFFFB74D)) {
+            Badge(containerColor = COLOR_BADGE_ORANGE) {
                 Text(
                     text = stringResource(id = R.string.rule_next_rule),
                     modifier = textModifier,
@@ -317,10 +327,9 @@ private fun RuleItemBadges(
 
 @Composable
 private fun RuleInfoItem(@StringRes labelId: Int, value: String) {
-    val labelColor = Color(0xFF6D6D6D)
     Row(verticalAlignment = Alignment.Top) {
-        Text(text = stringResource(id = labelId), color = labelColor)
-        Text(text = stringResource(id = R.string.symbol_colon), color = labelColor)
+        Text(text = stringResource(id = labelId), color = COLOR_LIST_LABEL)
+        Text(text = stringResource(id = R.string.symbol_colon), color = COLOR_LIST_LABEL)
         Text(text = value)
     }
 }

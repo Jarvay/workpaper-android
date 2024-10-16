@@ -18,6 +18,8 @@ import jarvay.workpaper.R
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.receiver.GenWallpaperReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -78,7 +80,10 @@ class NotificationHelper @Inject constructor(
 
         var title: String
 
-        if (workpaper.currentRuleAlbums.value?.rule?.changeByTiming == true) {
+        val changeByTiming = runBlocking {
+            workpaper.currentRuleWithRelation?.first()?.rule?.changeByTiming
+        }
+        if (changeByTiming == true) {
             title = context.getString(
                 R.string.notify_will_change_at_about,
                 format(calendar)

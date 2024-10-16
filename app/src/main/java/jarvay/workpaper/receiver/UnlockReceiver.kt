@@ -11,6 +11,7 @@ import jarvay.workpaper.data.rule.RuleRepository
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,7 +42,7 @@ class UnlockReceiver : BroadcastReceiver() {
         GlobalScope.launch(Dispatchers.Default) {
             if (!workpaper.isRunning()) return@launch
 
-            val ruleAlbums = workpaper.currentRuleAlbums.value ?: return@launch
+            val ruleAlbums = workpaper.currentRuleWithRelation.first() ?: return@launch
 
             if (ruleAlbums.rule.changeWhileUnlock) {
                 val i = Intent(context, WallpaperReceiver::class.java)

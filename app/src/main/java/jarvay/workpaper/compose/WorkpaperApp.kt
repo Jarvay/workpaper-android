@@ -24,6 +24,8 @@ import jarvay.workpaper.compose.rule.RuleCreateScreen
 import jarvay.workpaper.compose.rule.RuleUpdateScreen
 import jarvay.workpaper.compose.settings.SettingsScreen
 import jarvay.workpaper.compose.sponsor.SponsorScreen
+import jarvay.workpaper.compose.style.StyleCreateScreen
+import jarvay.workpaper.compose.style.StyleUpdateScreen
 import jarvay.workpaper.others.Global
 import jarvay.workpaper.viewModel.MainActivityViewModel
 
@@ -92,6 +94,13 @@ fun WorkpaperNavHost(
 
         composable(route = Screen.Sponsor.route) {
             SponsorScreen(navController = navController)
+        }
+
+        composable(route = Screen.StyleCreate.route) {
+            StyleCreateScreen(navController = navController)
+        }
+        composable(route = Screen.StyleUpdate.route) {
+            StyleUpdateScreen(navController = navController)
         }
     }
 }
