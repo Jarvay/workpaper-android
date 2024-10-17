@@ -2,7 +2,6 @@ package jarvay.workpaper.compose.settings
 
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +15,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,7 +72,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SettingSItem(labelId = R.string.settings_item_start_with_prev_rule) {
+            SettingsItem(labelId = R.string.settings_item_start_with_prev_rule) {
                 Switch(
                     checked = settings.startWithPrevRule,
                     onCheckedChange = { c ->
@@ -82,7 +80,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_also_set_lock_wallpaper) {
+            SettingsItem(labelId = R.string.settings_item_also_set_lock_wallpaper) {
                 Switch(
                     checked = settings.alsoSetLockWallpaper,
                     onCheckedChange = { c ->
@@ -90,7 +88,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_hide_in_recent_task) {
+            SettingsItem(labelId = R.string.settings_item_hide_in_recent_task) {
                 Switch(
                     checked = settings.hideInRecentTask,
                     onCheckedChange = { c ->
@@ -98,7 +96,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_enable_dynamic_color) {
+            SettingsItem(labelId = R.string.settings_item_enable_dynamic_color) {
                 Switch(
                     checked = settings.enableDynamicColor,
                     onCheckedChange = { c ->
@@ -106,7 +104,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_disabled_when_playing_audio) {
+            SettingsItem(labelId = R.string.settings_item_disabled_when_playing_audio) {
                 Switch(
                     checked = settings.disableWhenPlayingAudio,
                     onCheckedChange = { c ->
@@ -114,7 +112,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_enable_notification) {
+            SettingsItem(labelId = R.string.settings_item_enable_notification) {
                 Switch(
                     checked = settings.enableNotification,
                     onCheckedChange = { c ->
@@ -131,7 +129,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
             }
 
             if (settings.enableNotification) {
-                SettingSItem(labelId = R.string.settings_item_notification_ongoing) {
+                SettingsItem(labelId = R.string.settings_item_notification_ongoing) {
                     Switch(
                         checked = settings.notificationOngoing,
                         onCheckedChange = { c ->
@@ -140,23 +138,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                 }
             }
 
-            SettingSItem(labelId = R.string.settings_item_blur_radius) {
-                Slider(
-                    modifier = Modifier.padding(start = 16.dp),
-                    value = settings.blurRadius.toFloat(),
-                    valueRange = 0f..25f,
-                    steps = 25,
-                    onValueChange = { radius ->
-                        Log.d("radius.toInt()", radius.toInt().toString())
-                        viewModel.update(
-                            SettingsPreferencesKeys.BLUR_RADIUS,
-                            radius.toInt()
-                        )
-                    }
-                )
-            }
-
-            SettingSItem(labelId = R.string.settings_item_use_live_wallpaper) {
+            SettingsItem(labelId = R.string.settings_item_use_live_wallpaper) {
                 Switch(
                     checked = settings.useLiveWallpaper,
                     onCheckedChange = { c ->
@@ -167,7 +149,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
-            SettingSItem(labelId = R.string.settings_item_auto_check_update) {
+            SettingsItem(labelId = R.string.settings_item_auto_check_update) {
                 Switch(
                     checked = settings.autoCheckUpdate,
                     onCheckedChange = { c ->
@@ -186,12 +168,12 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
 }
 
 @Composable
-private fun SettingSItem(@StringRes labelId: Int, content: @Composable () -> Unit) {
-    SettingSItem(label = stringResource(id = labelId), content = content)
+private fun SettingsItem(@StringRes labelId: Int, content: @Composable () -> Unit) {
+    SettingsItem(label = stringResource(id = labelId), content = content)
 }
 
 @Composable
-private fun SettingSItem(label: String, content: @Composable () -> Unit) {
+private fun SettingsItem(label: String, content: @Composable () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,

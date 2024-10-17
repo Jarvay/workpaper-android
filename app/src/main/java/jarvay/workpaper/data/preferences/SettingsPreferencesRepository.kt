@@ -32,8 +32,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.disableWhenPlayingAudio,
                 useLiveWallpaper = preferences[SettingsPreferencesKeys.USE_LIVE_WALLPAPER]
                     ?: DEFAULT_SETTINGS.useLiveWallpaper,
-                blurRadius = preferences[SettingsPreferencesKeys.BLUR_RADIUS]
-                    ?: DEFAULT_SETTINGS.blurRadius,
+                defaultStyleId = preferences[SettingsPreferencesKeys.DEFAULT_STYLE_ID]
+                    ?: DEFAULT_SETTINGS.defaultStyleId,
                 forcedUsedRuleId = preferences[SettingsPreferencesKeys.FORCED_USED_RULE_ID]
                     ?: DEFAULT_SETTINGS.forcedUsedRuleId,
             )

@@ -12,8 +12,10 @@
     <string name="edit">编辑</string>
     <string name="delete">删除</string>
     <string name="symbol_colon">：</string>
+    <string name="select">选择</string>
     <string name="select_all">全选</string>
     <string name="download">下载</string>
+    <string name="action_empty">清空</string>
 
     <string name="tips_operation_success">操作成功</string>
     <string name="tips_network_not_available">网络连接不可用</string>
@@ -25,6 +27,7 @@
     <string name="tab_title_days">日期</string>
     <string name="tab_title_rules">计划</string>
     <string name="tab_title_albums">相册</string>
+    <string name="tab_title_styles">滤镜</string>
 
     <string name="drawer_menu_settings">设置</string>
     <string name="drawer_menu_check_update">检查更新</string>
@@ -46,6 +49,8 @@
     <string name="rule_change_while_unlock">解锁时更换壁纸</string>
     <string name="rule_interval">间隔</string>
     <string name="rule_random">随机切换</string>
+    <string name="rule_style">滤镜</string>
+    <string name="rule_no_style">禁用所有滤镜</string>
     <string name="rule_replace_global_blur">覆盖设置中的壁纸模糊</string>
     <string name="rule_blur_radius">壁纸模糊半径</string>
     <string name="rule_conflicts_tips">时间和已有计划冲突</string>
@@ -72,10 +77,28 @@
     <string name="rule_list_item_delete_tips">确定要删除该项吗？</string>
     <string name="rule_list_item_forced_used">强制生效</string>
     <string name="rule_list_item_cancel_forced_used">取消强制生效</string>
+    <string name="rule_list_item_style">滤镜</string>
     <string name="rule_forced_apply">强制生效</string>
     <string name="rule_current_rule">当前生效</string>
     <string name="rule_next_rule">即将生效</string>
     <string name="tips_please_stop_first">请先停止运行</string>
+
+    <string name="style_form_item_name">名称</string>
+    <string name="style_form_item_blur_radius">模糊半径</string>
+    <string name="style_form_item_noise">噪点</string>
+    <string name="style_form_item_brightness">亮度</string>
+    <string name="style_form_item_contrast">对比度</string>
+    <string name="style_form_item_saturation">饱和度</string>
+
+    <string name="style_list_item_name">名称</string>
+    <string name="style_list_item_blur_radius">模糊半径</string>
+    <string name="style_list_item_noise">噪点</string>
+    <string name="style_list_item_brightness">亮度</string>
+    <string name="style_list_item_contrast">对比度</string>
+    <string name="style_list_item_saturation">饱和度</string>
+    <string name="style_list_item_action_set_default">设为默认</string>
+    <string name="style_list_item_action_cancel_default">取消设为默认</string>
+    <string name="style_list_item_default">默认</string>
 
     <string name="settings_item_interval">壁纸更换间隔</string>
     <string name="settings_item_start_with_prev_rule">启动后应用上一个计划</string>

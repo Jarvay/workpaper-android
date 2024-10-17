@@ -9,9 +9,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
-import jarvay.workpaper.data.rule.RuleAlbums
-import jarvay.workpaper.data.rule.RuleAlbumsToSort
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.data.rule.RuleWithRelationToSort
 import jarvay.workpaper.others.NotificationHelper
 import jarvay.workpaper.others.prevRule
 import jarvay.workpaper.receiver.NextRuleReceiver
@@ -63,24 +62,18 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
         lifecycle.coroutineScope.launch(Dispatchers.Default) {
             val forcedRuleId: Long =
                 settingsPreferencesRepository.settingsPreferencesFlow.first().forcedUsedRuleId
-            val forcedRuleAlbums = ruleRepository.getRuleWithAlbums(forcedRuleId)
+            val forcedRuleAlbums = ruleRepository.findRuleById(forcedRuleId)
 
-            val rules = ruleRepository.allRules.first().map {
-                RuleAlbums(
-                    rule = it.key,
-                    albums = it.value
-                )
-            }
-
+            val list = ruleRepository.allRules.first()
 
             val prevRule = if (forcedRuleAlbums != null) {
-                RuleAlbumsToSort(
-                    ruleAlbums = forcedRuleAlbums,
+                RuleWithRelationToSort(
+                    ruleWithRelation = forcedRuleAlbums,
                     sortValue = 0,
                     day = 0
                 )
             } else {
-                prevRule(rules)
+                prevRule(list)
             }
 
             Log.d("prev rule", prevRule.toString())
@@ -88,7 +81,10 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
             val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (prevRule != null && settings.startWithPrevRule) {
                 val prevRuleIntent = Intent(this@WorkpaperService, RuleReceiver::class.java)
-                prevRuleIntent.putExtra(RuleReceiver.RULE_ID_KEY, prevRule.ruleAlbums.rule.ruleId)
+                prevRuleIntent.putExtra(
+                    RuleReceiver.RULE_ID_KEY,
+                    prevRule.ruleWithRelation.rule.ruleId
+                )
                 sendBroadcast(prevRuleIntent)
             } else {
                 val nextRuleIntent = Intent(this@WorkpaperService, NextRuleReceiver::class.java)
