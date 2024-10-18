@@ -36,6 +36,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.defaultStyleId,
                 forcedUsedRuleId = preferences[SettingsPreferencesKeys.FORCED_USED_RULE_ID]
                     ?: DEFAULT_SETTINGS.forcedUsedRuleId,
+                wallpaperScrollable = preferences[SettingsPreferencesKeys.WALLPAPER_SCROLLABLE]
+                    ?: DEFAULT_SETTINGS.wallpaperScrollable,
             )
         }.distinctUntilChanged { old, new ->
             old == new

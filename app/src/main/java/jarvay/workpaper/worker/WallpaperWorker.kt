@@ -21,7 +21,9 @@ import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.others.audioManager
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.blur
+import jarvay.workpaper.others.centerCrop
 import jarvay.workpaper.others.effect
+import jarvay.workpaper.others.getScreenSize
 import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.info
 import jarvay.workpaper.others.noise
@@ -77,13 +79,7 @@ class WallpaperWorker @AssistedInject constructor(
         Log.d("settings.useLiveWallpaper", settings.useLiveWallpaper.toString())
 
         bitmap?.let {
-            bitmap = it.scaleFixedRatio(
-                targetWidth = wallpaperSize.width,
-                targetHeight = wallpaperSize.height,
-                useMin = !settings.useLiveWallpaper,
-            )
             Log.d("Wallpaper bitmap", it.info())
-
 
             val defaultStyle = styleRepository.findById(settings.defaultStyleId)
             val ruleWithRelation = runBlocking {
@@ -108,8 +104,22 @@ class WallpaperWorker @AssistedInject constructor(
                 }
             }
 
+            bitmap = it.scaleFixedRatio(
+                targetWidth = wallpaperSize.width * if (settings.wallpaperScrollable) 2 else 1,
+                targetHeight = wallpaperSize.height,
+                useMin = !settings.useLiveWallpaper,
+            )
+
             val wallpaperManager = WallpaperManager.getInstance(applicationContext)
             if (!settings.useLiveWallpaper) {
+                if (settings.wallpaperScrollable) {
+                    wallpaperManager.setWallpaperOffsetSteps(
+                        0f,
+                        0f
+                    )
+                    wallpaperManager.suggestDesiredDimensions(bitmap!!.width, bitmap!!.height)
+                }
+
                 if (!settings.alsoSetLockWallpaper) {
                     Log.d(javaClass.simpleName, "set system wallpaper only")
                     wallpaperManager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_SYSTEM)
