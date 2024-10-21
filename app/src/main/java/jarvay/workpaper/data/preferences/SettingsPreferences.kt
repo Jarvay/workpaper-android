@@ -15,6 +15,7 @@ data class SettingsPreferences(
     var useLiveWallpaper: Boolean,
     var defaultStyleId: Long,
     var forcedUsedRuleId: Long,
+    var wallpaperScrollable: Boolean,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -33,6 +34,7 @@ data class SettingsPreferences(
         result = 31 * result + useLiveWallpaper.hashCode()
         result = 31 * result + defaultStyleId.hashCode()
         result = 31 * result + forcedUsedRuleId.hashCode()
+        result = 31 * result + wallpaperScrollable.hashCode()
         return result
     }
 }
@@ -49,6 +51,7 @@ data object SettingsPreferencesKeys {
     val USE_LIVE_WALLPAPER = booleanPreferencesKey("useLiveWallpaper")
     val DEFAULT_STYLE_ID = longPreferencesKey("defaultStyleId")
     val FORCED_USED_RULE_ID = longPreferencesKey("forcedUsedRuleId")
+    val WALLPAPER_SCROLLABLE = booleanPreferencesKey("wallpaperScrollable")
 }
 
 val DEFAULT_SETTINGS =
@@ -64,4 +67,5 @@ val DEFAULT_SETTINGS =
         useLiveWallpaper = false,
         defaultStyleId = -1,
         forcedUsedRuleId = -1,
+        wallpaperScrollable = false,
     )

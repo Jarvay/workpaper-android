@@ -324,7 +324,10 @@ fun RuleForm(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(id = R.string.rule_style), color = COLOR_FORM_LABEL)
+                        Text(
+                            text = stringResource(id = R.string.rule_style),
+                            color = COLOR_FORM_LABEL
+                        )
 
                         Text(
                             modifier = Modifier.padding(start = 8.dp),

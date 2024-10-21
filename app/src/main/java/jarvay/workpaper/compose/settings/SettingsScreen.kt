@@ -112,6 +112,14 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
+            SettingsItem(labelId = R.string.settings_item_allow_wallpaper_scrolling) {
+                Switch(
+                    checked = settings.wallpaperScrollable,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.WALLPAPER_SCROLLABLE, c)
+                    })
+            }
+
             SettingsItem(labelId = R.string.settings_item_enable_notification) {
                 Switch(
                     checked = settings.enableNotification,
