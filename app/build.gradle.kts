@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "jarvay.workpaper"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "jarvay.workpaper"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 12
         versionName = "1.3.0"
 
@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.media3.exoplayer)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.work.compiler)
@@ -97,6 +98,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
     implementation(libs.gson)
     implementation(libs.datastore.preferences)
 
@@ -108,4 +110,6 @@ dependencies {
     implementation(libs.androidx.glance.material)
 
     implementation(fileTree("libs"))
+
+    implementation(project(":gl-wallpaper"))
 }

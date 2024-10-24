@@ -50,8 +50,8 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
@@ -59,6 +59,7 @@ import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.getSize
+import jarvay.workpaper.others.wallpaperType
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 import kotlinx.coroutines.Dispatchers
@@ -131,17 +132,26 @@ fun AlbumDetailScreen(
                 uris
             }
 
-            val newUris = wallpapers.map { it.contentUri }.toMutableList()
+            val newWallpapers = mutableListOf<Wallpaper>()
             for (uri in splitUris) {
-                if (newUris.contains(uri.toString())) continue
+                if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
                 context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                 val permissions = context.contentResolver.persistedUriPermissions
                 if (permissions.any { it.uri == uri }) {
-                    newUris.add(uri.toString())
+                    val file = DocumentFile.fromSingleUri(context, uri)
+                    file?.let {
+                        Log.d("file", it.type.toString())
+                        newWallpapers.add(
+                            Wallpaper(
+                                contentUri = uri.toString(),
+                                type = wallpaperType(it.type ?: "")
+                            )
+                        )
+                    }
                 }
             }
 
-            viewModel.addWallpapers(newUris)
+            viewModel.addWallpapers(newWallpapers)
         }
     )
 
@@ -205,7 +215,13 @@ fun AlbumDetailScreen(
                                 Text(text = stringResource(id = R.string.album_add_images))
                             }, onClick = {
                                 actionsShow = false
-                                imagePickerLauncher.launch(arrayOf("image/*"))
+                                imagePickerLauncher.launch(
+                                    arrayOf(
+                                        "image/*",
+                                        "video/mp4",
+                                        "video/quicktime"
+                                    )
+                                )
                             })
 
                             DropdownMenuItem(text = {
@@ -334,7 +350,7 @@ private fun WallpaperList(
             }
 
             Box(
-                modifier = Modifier.animateItemPlacement()
+                modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
             ) {
                 Card(
                     modifier = Modifier

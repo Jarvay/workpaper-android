@@ -25,3 +25,5 @@ const val DEFAULT_WALLPAPER_CHANGE_INTERVAL = 15
 val STATE_IN_STATED = SharingStarted.WhileSubscribed(5000)
 
 val MAX_PERSISTED_URI_GRANTS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) 512 else 128
+
+val SUPPORTED_WALLPAPER_TYPES = listOf("image/*", "video/mp4", "video/quicktime")

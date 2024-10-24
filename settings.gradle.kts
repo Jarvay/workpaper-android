@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Workpaper"
 include(":app")
- 
+include(":gl-wallpaper")
