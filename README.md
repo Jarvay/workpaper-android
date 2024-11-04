@@ -1,3 +1,13 @@
+<a target="_blank" href="https://github.com/Jarvay/workpaper-android/actions/workflows/release.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/Jarvay/workpaper-android/release.yml?style=flat-square" alt="">
+</a>
+  <a href="https://github.com/Jarvay/workpaper-android/releases">
+    <img src="https://img.shields.io/github/downloads/Jarvay/workpaper-android/total.svg?style=flat-square" alt="">
+  </a>
+  <a href="https://github.com/Jarvay/workpaper-android/releases/latest">
+    <img src="https://img.shields.io/github/release/Jarvay/workpaper-android?style=flat-square" alt="">
+  </a>
+
 # 定时壁纸
 
 - 支持在指定时间更换壁纸
