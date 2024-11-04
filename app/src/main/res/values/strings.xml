@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Workpaper</string>
+    <string name="app_name_debug">WorkpaperDebug</string>
 
     <string name="permission_request_alarm">Request permission of alarm</string>
     <string name="permission_request_notification">Request permission of notification</string>
@@ -63,7 +64,7 @@
     <string name="album_wallpaper_delete_tips">Are you sure to delete selected wallpaper?</string>
     <string name="album_no_cover">No Cover</string>
     <string name="album_set_as_cover">Set as cover</string>
-    <string name="album_add_images">Add images</string>
+    <string name="album_add_images">Add wallpapers</string>
     <string name="album_add_folder">Add folder</string>
     <string name="album_limit_tips">Android limits %d permission for file(folder), %d used, %d leave, %d selected, exceeds limit after adding, please add folder instead of adding images.</string>
     <string name="album_add_wallpaper_folder_tips">If too many files are selected, it may take some time to wait</string>
@@ -111,6 +112,7 @@
     <string name="settings_item_use_live_wallpaper">Use live wallpaper</string>
     <string name="settings_item_blur_radius">Wallpaper blur radius</string>
     <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
+    <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>
 
     <string name="notify_will_change_at_about">Wallpaper will change at about %s</string>
     <string name="notify_next_rule_at_about">Will change to next plan at about %s</string>

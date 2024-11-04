@@ -48,7 +48,7 @@ class NotificationReceiver : BroadcastReceiver() {
 
             workpaper.getNextWallpaper()?.let {
                 val bitmapPair =
-                    notificationHelper.createPictures(it.contentUri) ?: return@launch
+                    notificationHelper.createPictures(it.wallpaper.contentUri) ?: return@launch
                 notificationBuilder.setBigPicture(
                     background = bitmapPair.first,
                     bitmap = bitmapPair.second,

@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "jarvay.workpaper"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "jarvay.workpaper"
-        minSdk = 24
-        targetSdk = 34
-        versionCode = 12
-        versionName = "1.3.0"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        versionCode = 13
+        versionName = "2.0.0-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -36,6 +36,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["APP_NAME"] = "@string/app_name"
+        }
+
+        debug {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["APP_NAME"] = "@string/app_name_debug"
         }
     }
     compileOptions {
@@ -64,6 +70,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.media3.exoplayer)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.work.compiler)
@@ -97,6 +104,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
     implementation(libs.gson)
     implementation(libs.datastore.preferences)
 

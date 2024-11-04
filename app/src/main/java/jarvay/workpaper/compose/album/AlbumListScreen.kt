@@ -1,7 +1,6 @@
 package jarvay.workpaper.compose.album
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -86,12 +85,13 @@ fun AlbumListScreen(
                     AlbumItem(
                         album = it.album,
                         wallpapers = it.wallpapers,
-                        modifier = Modifier.combinedClickable(onLongClick = {
+                        onLongClick = {
                             currentAlbumWithWallpapers = it
                             itemMenuExpanded = true
-                        }) {
-                            navController.navigate(Screen.AlbumDetail.createRoute(it.album.albumId))
-                        })
+                        },
+                    ) {
+                        navController.navigate(Screen.AlbumDetail.createRoute(it.album.albumId))
+                    }
 
                     DropdownMenu(
                         expanded = itemMenuExpanded,

@@ -10,12 +10,12 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.IntRange
 import com.google.android.renderscript.Toolkit
-import com.google.gson.Gson
 import java.util.Random
 import kotlin.math.max
 import kotlin.math.min
@@ -54,6 +54,12 @@ fun Bitmap.centerCrop(targetWidth: Int, targetHeight: Int): Bitmap {
 
 fun Bitmap.info(): String {
     return "width: $width, height: $height"
+}
+
+fun coverBitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
+    val retriever = MediaMetadataRetriever()
+    retriever.setDataSource(context, contentUri)
+    return retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
 }
 
 fun bitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
@@ -162,4 +168,14 @@ fun Bitmap.effect(
     canvas.drawBitmap(this, 0f, 0f, paint)
 
     return bitmap
+}
+
+fun Bitmap.setAlpha(alpha: Int): Bitmap {
+    val bm = Bitmap.createBitmap(width, height, config)
+    val canvas = Canvas(bm)
+    val paint = Paint()
+    paint.alpha = alpha
+    canvas.drawBitmap(this, 0f, 0f, paint)
+
+    return bm
 }

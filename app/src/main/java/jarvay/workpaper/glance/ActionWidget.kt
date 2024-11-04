@@ -25,6 +25,7 @@ import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.text.Text
 import dagger.hilt.EntryPoints
+import jarvay.workpaper.EntryPoint
 import jarvay.workpaper.R
 import jarvay.workpaper.receiver.GenWallpaperReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
@@ -56,7 +57,6 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             val workpaper =
                 EntryPoints.get(context.applicationContext, EntryPoint::class.java).workpaper()
             val bitmap by workpaper.nextWallpaperBitmap.collectAsState()
-            val settingWallpaper by workpaper.settingWallpaper.collectAsState(initial = false)
 
             if (bitmap == null) {
                 Placeholder()
@@ -66,7 +66,6 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
             val clickHelper = ClickHelper(
                 interval = 250,
                 onDouble = {
-                    if (settingWallpaper) return@ClickHelper
                     val i = Intent(context, WallpaperReceiver::class.java)
                     context.sendBroadcast(i)
                 }
