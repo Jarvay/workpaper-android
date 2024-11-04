@@ -13,6 +13,8 @@ import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperRepository
 import jarvay.workpaper.others.STATE_IN_STATED
+import jarvay.workpaper.others.SUPPORTED_WALLPAPER_TYPES_PREFIX
+import jarvay.workpaper.others.wallpaperType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -42,20 +44,17 @@ class AlbumDetailViewModel @Inject constructor(
         }
     }
 
-    fun addWallpapers(contentUris: List<String>) {
+    fun addWallpapers(wallpapers: List<Wallpaper>) {
         viewModelScope.launch {
-            val wallpapers = contentUris.map {
-                Wallpaper(albumId = albumId.toLong(), contentUri = it)
-            }
             wallpaperRepository.insert(wallpapers)
         }
     }
 
-    fun addWallpapersFromFolder(file: DocumentFile) {
-        val result = getImagesInDir(file)
-        val newUris = mutableListOf<String>()
-        newUris.addAll(result)
-        addWallpapers(newUris)
+    fun addWallpapersFromFolder(file: DocumentFile, albumId: Long) {
+        val result = getWallpapersInDir(file)
+        addWallpapers(result.map {
+            it.copy(albumId = albumId)
+        })
     }
 
     fun update(item: Album) {
@@ -64,17 +63,25 @@ class AlbumDetailViewModel @Inject constructor(
         }
     }
 
-    private fun getImagesInDir(
+    private fun getWallpapersInDir(
         documentFile: DocumentFile,
-        result: MutableList<String> = mutableListOf()
-    ): MutableList<String> {
+        result: MutableList<Wallpaper> = mutableListOf(),
+    ): MutableList<Wallpaper> {
         for (item in documentFile.listFiles()) {
             if (item.isDirectory) {
-                getImagesInDir(item, result)
+                getWallpapersInDir(item, result)
             } else if (item.isFile) {
                 val mimeType = item.type ?: continue
-                if (!mimeType.startsWith("image/")) continue
-                result.add(item.uri.toString())
+                val supported = SUPPORTED_WALLPAPER_TYPES_PREFIX.any {
+                    mimeType.startsWith(it)
+                }
+                if (!supported) continue
+                result.add(
+                    Wallpaper(
+                        contentUri = item.uri.toString(),
+                        type = wallpaperType(mimeType),
+                    )
+                )
             }
         }
 

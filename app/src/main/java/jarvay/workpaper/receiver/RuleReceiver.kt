@@ -15,6 +15,7 @@ import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
+import jarvay.workpaper.data.wallpaper.Wallpaper
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -45,9 +46,11 @@ class RuleReceiver : BroadcastReceiver() {
         if (ruleId > -1 && ruleWithRelation != null) {
             workpaper.cancelAlarm(type = AlarmType.REPEAT)
 
-            workpaper.wallpaperContentUris =
-                ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<String>>(mutableListOf()) { acc, album ->
-                    acc.addAll(album.wallpapers.map { it.contentUri })
+            workpaper.wallpapers =
+                ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<Wallpaper>>(
+                    mutableListOf()
+                ) { acc, album ->
+                    acc.addAll(album.wallpapers.map { it })
                     acc
                 }.apply {
                     if (ruleWithRelation.rule.random) shuffle()

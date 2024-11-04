@@ -183,7 +183,9 @@ private fun StyleFormItemSlider(
             )
 
             Text(
-                modifier = Modifier.padding(start = 4.dp).widthIn(24.dp),
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .widthIn(24.dp),
                 text = value.toString()
             )
         }

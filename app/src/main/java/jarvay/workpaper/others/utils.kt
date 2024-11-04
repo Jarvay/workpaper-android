@@ -21,6 +21,7 @@ import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.data.rule.RuleWithRelationToSort
+import jarvay.workpaper.data.wallpaper.WallpaperType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
@@ -109,7 +110,7 @@ fun showToast(context: Context, @StringRes strId: Int) {
     showToast(context, context.getString(strId))
 }
 
-fun getSize(context: Context, fileStrUri: String): Size? {
+fun getSize(context: Context, fileStrUri: String, wallpaperType: WallpaperType): Size? {
     try {
         context.contentResolver.openInputStream(fileStrUri.toUri()).use { inputStream ->
             val options = BitmapFactory.Options()
@@ -145,11 +146,14 @@ fun runningPreferencesFlow(dataStore: DataStore<Preferences>): Flow<RunningPrefe
         val lastIndex = preferences[RunningPreferencesKeys.LAST_INDEX] ?: -1
         val lastWallpaper = preferences[RunningPreferencesKeys.LAST_WALLPAPER] ?: ""
         val running = preferences[RunningPreferencesKeys.RUNNING] ?: false
+        val currentVideoContentUri =
+            preferences[RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI] ?: ""
 
         RunningPreferences(
             lastIndex = lastIndex,
             lastWallpaper = lastWallpaper,
             running = running,
+            currentVideoContentUri = currentVideoContentUri
         )
     }
 }
@@ -206,4 +210,12 @@ fun isToday(calendar: Calendar): Boolean {
 
 fun Context.audioManager(): AudioManager {
     return getSystemService(Context.AUDIO_SERVICE) as AudioManager
+}
+
+fun wallpaperType(type: String): WallpaperType {
+    return if (type.startsWith("video")) {
+        WallpaperType.VIDEO
+    } else {
+        WallpaperType.IMAGE
+    }
 }

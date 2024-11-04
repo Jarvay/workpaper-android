@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import jarvay.workpaper.request.RetrofitClient
 
 private const val WECHAT_IMG_URL = RetrofitClient.BASE_URL + "wechat.png"
