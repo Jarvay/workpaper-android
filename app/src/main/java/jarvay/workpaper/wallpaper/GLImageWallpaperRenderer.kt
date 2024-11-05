@@ -5,8 +5,6 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.util.Log
-import android.util.Size
-import com.google.gson.Gson
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.microedition.khronos.egl.EGLConfig
@@ -15,32 +13,32 @@ import javax.microedition.khronos.opengles.GL10
 
 class GLImageWallpaperRenderer : GLSurfaceView.Renderer, GLWallpaperRenderer() {
     private val textureHandles = IntArray(1)
+    private var textureHandle = 0
     var bitmap: Bitmap? = null
 
     private val vertices = FloatArray(20)
     private var vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder()).asFloatBuffer()
-    private var screenSize = Size(0, 0)
 
     override fun onSurfaceCreated(p0: GL10?, p1: EGLConfig?) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         initProgram()
         GLES20.glGenTextures(1, textureHandles, 0)
 
-        Log.d("textureHandles", Gson().toJson(textureHandles))
         Log.d(javaClass.simpleName, Thread.currentThread().name)
     }
 
     override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {
         Log.d("onSurfaceChanged", listOf(width, height).toString())
         GLES20.glViewport(0, 0, width, height)
-        screenSize = Size(width, height)
     }
 
     override fun onDrawFrame(p0: GL10?) {
-        Log.d("onDrawFrame", bitmap.toString())
-        if (bitmap == null) return
-        val textureHandle = loadBitmap(bitmap!!)
+        if (bitmap != null) {
+            textureHandle = loadBitmap(bitmap!!)
+            bitmap!!.recycle()
+            bitmap = null
+        }
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUseProgram(program);
 

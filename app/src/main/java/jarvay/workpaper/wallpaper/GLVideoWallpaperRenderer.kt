@@ -328,10 +328,6 @@ class GLVideoWallpaperRenderer : GLWallpaperRenderer(), GLSurfaceView.Renderer {
         // This is a 2D center crop, so we only need model matrix, no view and projection.
     }
 
-    private fun init() {
-
-    }
-
     override fun getFragmentShaderCode(): String {
         return FRAGMENT_SHADER_CODE
     }

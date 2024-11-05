@@ -98,6 +98,9 @@ class Workpaper @Inject constructor(
     fun start() {
         Log.d(javaClass.simpleName, "start")
 
+        val i = Intent(context, WorkpaperService::class.java)
+        context.startService(i)
+
         MainScope().launch {
             if (settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper) {
                 context.startActivity(
@@ -111,9 +114,6 @@ class Workpaper @Inject constructor(
                         )
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
-            } else {
-                val i = Intent(context, WorkpaperService::class.java)
-                context.startService(i)
             }
         }
     }
