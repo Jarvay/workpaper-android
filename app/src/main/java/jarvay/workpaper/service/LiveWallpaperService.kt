@@ -53,11 +53,18 @@ class LiveWallpaperService : WallpaperService() {
         private var surfaceView: GLWallpaperSurfaceView? = null
         private var renderer: WallpaperRenderer? = null
         private val player: MediaPlayer = MediaPlayer()
+        private var isVisible = false
+        private var showTransition = false
 
         init {
             player.apply {
                 setVolume(0f, 0f)
                 isLooping = true
+            }
+            MainScope().launch {
+                workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
+                    showTransition = it.liveWallpaperTransition
+                }
             }
         }
 
@@ -91,9 +98,6 @@ class LiveWallpaperService : WallpaperService() {
                 }
             }
 
-            val i = Intent(this@LiveWallpaperService, WorkpaperService::class.java)
-            startService(i)
-
             Log.d(javaClass.simpleName, "onCreate")
         }
 
@@ -106,12 +110,35 @@ class LiveWallpaperService : WallpaperService() {
 
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
-            if (renderer?.wallpaperType != WallpaperType.VIDEO) return
+            isVisible = visible
+            Log.d("onVisibilityChanged", visible.toString())
+            if (renderer == null) return
+
+            when (renderer!!.wallpaperType) {
+                WallpaperType.IMAGE -> {
+                    onImageVisibleChanged(visible)
+                }
+
+                WallpaperType.VIDEO -> {
+                    onVideoVisibleChanged(visible)
+                }
+            }
+        }
+
+        private fun onImageVisibleChanged(visible: Boolean) {
+            if (renderer == null) return
+            if (visible && showTransition) {
+                renderer!!.scaleTransition(1.4f)
+            }
+        }
+
+        private fun onVideoVisibleChanged(visible: Boolean) {
             if (visible) {
-                Log.d("onVisibilityChanged", "true")
+                if (showTransition) {
+                    renderer!!.scaleTransition(1.4f)
+                }
                 player.start()
             } else {
-                Log.d("onVisibilityChanged", "false")
                 player.pause()
             }
         }
@@ -138,14 +165,14 @@ class LiveWallpaperService : WallpaperService() {
             val originBitmap = loadBitmap(uri) ?: return
             val prevBitmap = loadBitmap(prevImageUri?.toUri())
 
-            var alpha = 50
+            var alpha = 55
             while (alpha <= 255) {
                 val alphaBitmap = bitmapWithTransition(prevBitmap, originBitmap, alpha)
 
                 renderer?.imageRenderer?.bitmap = alphaBitmap
                 surfaceView?.requestRender()
 
-                alpha += 5
+                alpha += 10
                 Thread.sleep(10)
             }
 
@@ -234,8 +261,10 @@ class LiveWallpaperService : WallpaperService() {
                 setVolume(0f, 0f)
                 isLooping = true
                 setDataSource(this@LiveWallpaperService, uri)
-                setOnPreparedListener {
-                    it.start()
+                if (isVisible) {
+                    setOnPreparedListener {
+                        it.start()
+                    }
                 }
                 prepareAsync()
             }
