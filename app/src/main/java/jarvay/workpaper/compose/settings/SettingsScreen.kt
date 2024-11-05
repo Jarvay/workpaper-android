@@ -160,6 +160,16 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     })
             }
 
+            if (settings.useLiveWallpaper) {
+                SettingsItem(labelId = R.string.settings_item_live_wallpaper_transition) {
+                    Switch(
+                        checked = settings.liveWallpaperTransition,
+                        onCheckedChange = { c ->
+                            viewModel.update(SettingsPreferencesKeys.LIVE_WALLPAPER_TRANSITION, c)
+                        })
+                }
+            }
+
             SettingsItem(labelId = R.string.settings_item_auto_check_update) {
                 Switch(
                     checked = settings.autoCheckUpdate,

@@ -54,11 +54,17 @@ class LiveWallpaperService : WallpaperService() {
         private var renderer: WallpaperRenderer? = null
         private val player: MediaPlayer = MediaPlayer()
         private var isVisible = false
+        private var showTransition = false
 
         init {
             player.apply {
                 setVolume(0f, 0f)
                 isLooping = true
+            }
+            MainScope().launch {
+                workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
+                    showTransition = it.liveWallpaperTransition
+                }
             }
         }
 
@@ -121,18 +127,18 @@ class LiveWallpaperService : WallpaperService() {
 
         private fun onImageVisibleChanged(visible: Boolean) {
             if (renderer == null) return
-            if (visible) {
+            if (visible && showTransition) {
                 renderer!!.scaleTransition(1.4f)
             }
         }
 
         private fun onVideoVisibleChanged(visible: Boolean) {
             if (visible) {
-                Log.d("onVisibilityChanged", "true")
-                renderer!!.scaleTransition(1.4f)
+                if (showTransition) {
+                    renderer!!.scaleTransition(1.4f)
+                }
                 player.start()
             } else {
-                Log.d("onVisibilityChanged", "false")
                 player.pause()
             }
         }

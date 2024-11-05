@@ -110,6 +110,7 @@
     <string name="settings_item_auto_check_update">Auto check update</string>
     <string name="settings_item_disabled_when_playing_audio">Do not change wallpaper when playing audio</string>
     <string name="settings_item_use_live_wallpaper">Use live wallpaper</string>
+    <string name="settings_item_live_wallpaper_transition">Live wallpaper transition</string>
     <string name="settings_item_blur_radius">Wallpaper blur radius</string>
     <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>

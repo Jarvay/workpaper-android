@@ -112,6 +112,7 @@
     <string name="settings_item_auto_check_update">自动检查更新</string>
     <string name="settings_item_disabled_when_playing_audio">播放音频时不更换壁纸</string>
     <string name="settings_item_use_live_wallpaper">以动态壁纸模式运行</string>
+    <string name="settings_item_live_wallpaper_transition">过渡动画</string>
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
 
     <string name="notify_will_change_at_about">预计在%s更换壁纸</string>
