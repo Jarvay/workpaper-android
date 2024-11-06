@@ -26,7 +26,6 @@ import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.info
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.NotificationReceiver
-import jarvay.workpaper.service.LiveWallpaperService
 import kotlinx.coroutines.flow.first
 import java.util.Calendar
 import javax.inject.Inject
@@ -73,7 +72,7 @@ class WallpaperWorker @AssistedInject constructor(
 
         var bitmap = bitmapFromContentUri(wallpaperUri, applicationContext)
 
-        val wallpaperSize = getWallpaperSize(applicationContext)
+        val wallpaperSize = getWallpaperSize()
 
         Log.d("settings.useLiveWallpaper", settings.useLiveWallpaper.toString())
 
@@ -97,11 +96,6 @@ class WallpaperWorker @AssistedInject constructor(
                     wallpaperManager.setBitmap(bitmap)
                 }
             } else {
-                val intent = Intent().apply {
-                    action = LiveWallpaperService.ACTION_UPDATE_IMAGE
-                    putExtra(LiveWallpaperService.EXTRA_IMAGE_CONTENT_URI, wallpaper.contentUri)
-                }
-                context.sendBroadcast(intent)
                 workpaper.imageUri.value = wallpaper.contentUri
             }
         }
@@ -120,12 +114,6 @@ class WallpaperWorker @AssistedInject constructor(
             RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI,
             wallpaper.contentUri
         )
-
-        val intent = Intent().apply {
-            action = LiveWallpaperService.ACTION_UPDATE_VIDEO
-            putExtra(LiveWallpaperService.EXTRA_VIDEO_CONTENT_URI, wallpaper.contentUri)
-        }
-        context.sendBroadcast(intent)
 
         workpaper.videoUri.value = wallpaper.contentUri
         Log.d("setVideoWallpaper", "setVideoWallpaper")

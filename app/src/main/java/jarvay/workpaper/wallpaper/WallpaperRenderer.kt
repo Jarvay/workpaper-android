@@ -8,22 +8,25 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.service.LiveWallpaperService
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class WallpaperRenderer @OptIn(UnstableApi::class) constructor
     (
-    private val surfaceView: LiveWallpaperService.LiveWallpaperEngine.GLWallpaperSurfaceView
+    private val surfaceView: LiveWallpaperService.LiveWallpaperEngine.GLWallpaperSurfaceView,
+    private val scope: CoroutineScope
 ) : GLSurfaceView.Renderer {
     val imageRenderer = GLImageWallpaperRenderer()
     var videoRenderer = GLVideoWallpaperRenderer()
     var wallpaperType = WallpaperType.IMAGE
 
-    protected var screenSize = Size(0, 0)
-    var scale = 1.0f
+    val surfaceSize = MutableStateFlow(Size(0, 0))
+    private var scale = 1.0f
 
     override fun onSurfaceCreated(gl10: GL10, p1: EGLConfig) {
         imageRenderer.onSurfaceCreated(gl10, p1)
@@ -31,17 +34,17 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
     }
 
     override fun onSurfaceChanged(gl10: GL10, width: Int, height: Int) {
-        screenSize = Size(width, height)
+        surfaceSize.value = Size(width, height)
         imageRenderer.onSurfaceChanged(gl10, width, height)
         videoRenderer.onSurfaceChanged(gl10, width, height)
     }
 
     override fun onDrawFrame(gl10: GL10) {
         if (scale != 1.0f) {
-            val scaleWidth = (screenSize.width * scale).toInt()
-            val scaleHeight = (screenSize.height * scale).toInt()
-            val offsetX = (scaleWidth - screenSize.width) / 2
-            val offsetY = (scaleHeight - screenSize.height) / 2
+            val scaleWidth = (surfaceSize.value.width * scale).toInt()
+            val scaleHeight = (surfaceSize.value.height * scale).toInt()
+            val offsetX = (scaleWidth - surfaceSize.value.width) / 2
+            val offsetY = (scaleHeight - surfaceSize.value.height) / 2
 
             GLES20.glViewport(
                 -offsetX,
@@ -65,13 +68,13 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
     }
 
     fun scaleTransition(@FloatRange(from = 1.0) scale: Float) {
-        MainScope().launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             var current = scale
             while (current > 1.0f) {
                 this@WallpaperRenderer.scale = current
                 surfaceView.requestRender()
                 current -= 0.01f
-                Thread.sleep(10)
+                delay(10)
             }
             this@WallpaperRenderer.scale = 1.0f
         }

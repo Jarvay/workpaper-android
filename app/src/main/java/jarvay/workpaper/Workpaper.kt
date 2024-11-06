@@ -65,14 +65,14 @@ class Workpaper @Inject constructor(
     @Inject
     lateinit var styleRepository: StyleRepository
 
-    val currentRuleId: MutableStateFlow<Long> = MutableStateFlow(-1)
+    val currentRuleId = MutableStateFlow<Long>(-1)
+    val nextRuleId = MutableStateFlow<Long>(-1)
     val currentRuleWithRelation = MutableStateFlow<RuleWithRelation?>(null)
-    var nextRuleWithRelation: MutableStateFlow<RuleWithRelation?> = MutableStateFlow(null)
 
     var nextWallpaper: MutableStateFlow<NextWallpaper?> = MutableStateFlow(null)
     var nextWallpaperTime: Long = 0
     var nextRuleTime: Long = 0
-    val nextWallpaperBitmap: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
+    val nextWallpaperBitmap = MutableStateFlow<Bitmap?>(null)
 
     var wallpapers: List<Wallpaper> = emptyList()
 
@@ -122,7 +122,7 @@ class Workpaper @Inject constructor(
         Log.d(javaClass.simpleName, "stop")
 
         currentRuleId.value = -1
-        nextRuleWithRelation.value = null
+        nextRuleId.value = -1
 
         imageUri.value = null
         videoUri.value = null
@@ -227,7 +227,15 @@ class Workpaper @Inject constructor(
 
         if (wallpapers.isEmpty()) return null
 
-        val nextIndex = nextIndex(index)
+        var nextIndex = nextIndex(index)
+        var wallpaper = wallpapers[nextIndex]
+
+        val useLiveWallpaper =
+            settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper
+        while (!useLiveWallpaper && wallpaper.type == WallpaperType.VIDEO) {
+            nextIndex = nextIndex(nextIndex)
+            wallpaper = wallpapers[nextIndex]
+        }
 
         return NextWallpaper(
             index = nextIndex,
