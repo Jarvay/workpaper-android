@@ -46,10 +46,10 @@ class RuleListViewModel @Inject constructor(
         STATE_IN_STATED,
         -1
     )
-    val nextRuleAlbums = workpaper.nextRuleWithRelation.stateIn(
+    val nextRuleId = workpaper.nextRuleId.stateIn(
         viewModelScope,
         STATE_IN_STATED,
-        null
+        -1
     )
 
     fun deleteRule(item: Rule) {

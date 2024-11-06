@@ -75,7 +75,7 @@ private fun RuleList(
     val listState = rememberLazyListState()
 
     val currentRuleId by viewModel.currentRuleId.collectAsStateWithLifecycle()
-    val nextRuleAlbums by viewModel.nextRuleAlbums.collectAsStateWithLifecycle()
+    val nextRuleId by viewModel.nextRuleId.collectAsStateWithLifecycle()
 
     val settingsPreferences by viewModel.settings.collectAsStateWithLifecycle()
 
@@ -95,7 +95,7 @@ private fun RuleList(
                 isForced = settingsPreferences.forcedUsedRuleId == rule.ruleId,
                 viewModel = viewModel,
                 isCurrent = currentRuleId == rule.ruleId,
-                isNext = nextRuleAlbums?.rule?.ruleId == rule.ruleId,
+                isNext = nextRuleId == rule.ruleId,
                 navController = navController,
             )
         }

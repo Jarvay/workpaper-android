@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -56,8 +57,10 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Size
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
@@ -66,7 +69,6 @@ import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.PICKER_WALLPAPER_TYPES
-import jarvay.workpaper.others.getSize
 import jarvay.workpaper.others.wallpaperType
 import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
 import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
@@ -331,9 +333,7 @@ private fun WallpaperList(
         modifier = Modifier.padding(top = 16.dp),
         columns = StaggeredGridCells.Fixed(2),
     ) {
-        items(items = wallpapers, key = { item ->
-            item.wallpaperId
-        }) {
+        items(items = wallpapers, key = { it.wallpaperId }) {
             WallpaperItem(
                 wallpaper = it,
                 album = album,
@@ -375,7 +375,8 @@ private fun WallpaperItem(
     val model = try {
         ImageRequest.Builder(context)
             .data(contentUri.toUri())
-            .size(256, 256)
+            .size(Size.ORIGINAL)
+            .crossfade(true)
             .build()
     } catch (e: Exception) {
         Log.w("AlbumDetailScreen", e.toString())
@@ -396,16 +397,25 @@ private fun WallpaperItem(
                 }
         ) {
             Box {
-                val size = getSize(context, contentUri, wallpaper.type) ?: return@Card
-                val floatWidth = size.width.toFloat()
-                val floatHeight = size.height.toFloat()
-
-                AsyncImage(
+                SubcomposeAsyncImage(
                     model = model,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        Icon(
+                            imageVector = when (wallpaper.type) {
+                                WallpaperType.IMAGE -> Icons.Default.Image
+                                WallpaperType.VIDEO -> Icons.Default.VideoFile
+                            },
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .aspectRatio(1.0f)
+                                .padding(4.dp)
+                        )
+                    },
                     modifier = Modifier
-                        .aspectRatio(floatWidth / floatHeight)
+                        .fillMaxSize()
                         .combinedClickable(
                             onLongClick = {
                                 dropMenuExpanded = true

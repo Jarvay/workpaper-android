@@ -69,7 +69,7 @@ class NextRuleReceiver : BroadcastReceiver() {
         Log.d("nextRule timeInMillis", calendar.timeInMillis.toString())
         Log.d("now timeInMillis", now.toString())
 
-        workpaper.nextRuleWithRelation.value = nextRule.ruleWithRelation
+        workpaper.nextRuleId.value = nextRule.ruleWithRelation.rule.ruleId
 
         val i = Intent(context, RuleReceiver::class.java)
         i.putExtra(RULE_ID_KEY, nextRule.ruleWithRelation.rule.ruleId)
