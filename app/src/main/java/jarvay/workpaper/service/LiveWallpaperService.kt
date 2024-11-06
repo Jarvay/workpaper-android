@@ -11,32 +11,47 @@ import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.service.wallpaper.WallpaperService
 import android.util.Log
+import android.util.Size
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.centerCrop
-import jarvay.workpaper.others.getScreenSize
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.wallpaper.WallpaperRenderer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class LiveWallpaperService : WallpaperService() {
+class LiveWallpaperService : WallpaperService(), LifecycleOwner {
     @Inject
     lateinit var workpaper: Workpaper
-
     private var prevImageUri: String? = null
+    private var surfaceSize = Size(0, 0)
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    override val lifecycle: Lifecycle
+        get() = lifecycleRegistry
+
+
+    override fun onCreate() {
+        super.onCreate()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    }
 
     @OptIn(UnstableApi::class)
     override fun onCreateEngine(): Engine {
@@ -45,11 +60,16 @@ class LiveWallpaperService : WallpaperService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         Log.d(javaClass.simpleName, "onDestroy")
     }
 
     @UnstableApi
-    inner class LiveWallpaperEngine : Engine() {
+    inner class LiveWallpaperEngine : Engine(), LifecycleOwner {
+        override val lifecycle: Lifecycle
+            get() = engineLifecycleRegistry
+        private val engineLifecycleRegistry = LifecycleRegistry(this)
+
         private var surfaceView: GLWallpaperSurfaceView? = null
         private var renderer: WallpaperRenderer? = null
         private val player: MediaPlayer = MediaPlayer()
@@ -61,7 +81,7 @@ class LiveWallpaperService : WallpaperService() {
                 setVolume(0f, 0f)
                 isLooping = true
             }
-            MainScope().launch {
+            lifecycleScope.launch {
                 workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
                     showTransition = it.liveWallpaperTransition
                 }
@@ -87,7 +107,9 @@ class LiveWallpaperService : WallpaperService() {
                 workpaper.imageUri.collect {
                     Log.d("imageUri collected", it.toString())
                     if (it == null) return@collect
-                    setImageBitmap(it.toUri())
+                    withContext(Dispatchers.IO) {
+                        setImageBitmap(it.toUri())
+                    }
                 }
             }
             MainScope().launch {
@@ -98,7 +120,13 @@ class LiveWallpaperService : WallpaperService() {
                 }
             }
 
+            engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
             Log.d(javaClass.simpleName, "onCreate")
+        }
+
+        override fun onDestroy() {
+            super.onDestroy()
+            engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         }
 
         override fun onTouchEvent(event: MotionEvent?) {
@@ -155,12 +183,11 @@ class LiveWallpaperService : WallpaperService() {
             destroySurfaceView()
         }
 
-        private fun setImageBitmap(uri: Uri) {
+        private suspend fun setImageBitmap(uri: Uri) {
             if (!surfaceHolder.surface.isValid) return
 
             renderer?.updateWallpaperType(WallpaperType.IMAGE)
             stopVideo()
-
 
             val originBitmap = loadBitmap(uri) ?: return
             val prevBitmap = loadBitmap(prevImageUri?.toUri())
@@ -173,7 +200,7 @@ class LiveWallpaperService : WallpaperService() {
                 surfaceView?.requestRender()
 
                 alpha += 10
-                Thread.sleep(10)
+                delay(10)
             }
 
             prevImageUri = uri.toString()
@@ -193,6 +220,7 @@ class LiveWallpaperService : WallpaperService() {
             val canvas = Canvas(result)
             val paint = Paint()
             if (backgroundBitmap != null) {
+                paint.alpha = 255 - alpha
                 canvas.drawBitmap(backgroundBitmap, 0f, 0f, paint)
             }
             paint.alpha = alpha
@@ -201,25 +229,24 @@ class LiveWallpaperService : WallpaperService() {
             return result
         }
 
-        private fun loadBitmap(uri: Uri?): Bitmap? {
+        private suspend fun loadBitmap(uri: Uri?): Bitmap? {
             if (uri == null) return null
 
-            val screenSize = getScreenSize(this@LiveWallpaperService)
+            Log.d("loadBitmap", surfaceSize.toString())
+            Log.d("surfaceView", listOf(surfaceView?.width, surfaceView?.height).toString())
 
             val originBitmap =
                 bitmapFromContentUri(uri, this@LiveWallpaperService)
                     ?: return null
             var bitmap = originBitmap.scaleFixedRatio(
-                targetWidth = screenSize.width,
-                targetHeight = screenSize.height,
+                targetWidth = surfaceSize.width,
+                targetHeight = surfaceSize.height,
                 useMin = false
             ).centerCrop(
-                targetWidth = screenSize.width,
-                targetHeight = screenSize.height
+                targetWidth = surfaceSize.width,
+                targetHeight = surfaceSize.height
             )
-            bitmap = runBlocking {
-                workpaper.handleBitmapStyle(bitmap)
-            }
+            bitmap = workpaper.handleBitmapStyle(bitmap)
 
             return bitmap
         }
@@ -229,7 +256,19 @@ class LiveWallpaperService : WallpaperService() {
 
             surfaceView = GLWallpaperSurfaceView(this@LiveWallpaperService)
 
-            renderer = renderer ?: WallpaperRenderer(surfaceView!!)
+            renderer = renderer ?: WallpaperRenderer(surfaceView!!, lifecycleScope)
+
+            if (surfaceSize.width == 0) {
+                lifecycleScope.launch {
+                    renderer!!.surfaceSize.collect {
+                        if (it.width > 0) {
+                            surfaceSize = Size(it.width, it.height)
+                            Log.d("surfaceSize collected", it.toString())
+                        }
+                    }
+                }
+            }
+
             val width = surfaceHolder.surfaceFrame.width()
             val height = surfaceHolder.surfaceFrame.height()
             renderer!!.videoRenderer.setScreenSize(width, height)
@@ -313,13 +352,5 @@ class LiveWallpaperService : WallpaperService() {
                 onDetachedFromWindow()
             }
         }
-    }
-
-    companion object {
-        const val ACTION_UPDATE_IMAGE = "action_update_image"
-        const val ACTION_UPDATE_VIDEO = "action_update_video"
-
-        const val EXTRA_IMAGE_CONTENT_URI = "extraImageContentUri"
-        const val EXTRA_VIDEO_CONTENT_URI = "extraVideoContentUri"
     }
 }
