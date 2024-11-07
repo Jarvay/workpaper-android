@@ -105,6 +105,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
+    implementation(libs.coil.network)
     implementation(libs.gson)
     implementation(libs.datastore.preferences)
 

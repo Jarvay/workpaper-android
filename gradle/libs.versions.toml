@@ -25,7 +25,7 @@ runtimeLivedata = "1.6.8"
 ksp = "2.0.10-1.0.24"
 room = "2.6.1"
 gson = "2.11.0"
-coil = "3.0.0-rc01"
+coil = "3.0.0"
 hiltCommon = "1.2.0"
 hiltWork = "1.2.0"
 datastorePreferences = "1.1.1"
@@ -69,6 +69,7 @@ androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
+coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
