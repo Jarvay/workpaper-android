@@ -105,7 +105,6 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
 
         lifecycle.coroutineScope.launch {
             workpaper.nextWallpaper.value = null
-            workpaper.nextWallpaperBitmap.value = null
             val intent = Intent(this@WorkpaperService, UpdateActionWidgetReceiver::class.java)
             sendBroadcast(intent)
         }
