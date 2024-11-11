@@ -40,19 +40,19 @@ class GLImageWallpaperRenderer : GLSurfaceView.Renderer, GLWallpaperRenderer() {
             bitmap = null
         }
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-        GLES20.glUseProgram(program);
+        GLES20.glUseProgram(program)
 
         vertexBuffer.position(0)
-        GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 20, vertexBuffer);
+        GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 20, vertexBuffer)
         GLES20.glEnableVertexAttribArray(0)
 
         vertexBuffer.position(3)
-        GLES20.glVertexAttribPointer(1, 2, GLES20.GL_FLOAT, false, 20, vertexBuffer);
+        GLES20.glVertexAttribPointer(1, 2, GLES20.GL_FLOAT, false, 20, vertexBuffer)
         GLES20.glEnableVertexAttribArray(1)
 
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle)
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4)
 
         GLES20.glDisableVertexAttribArray(0)
         GLES20.glDisableVertexAttribArray(1)

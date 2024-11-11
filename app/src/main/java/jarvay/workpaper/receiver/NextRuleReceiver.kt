@@ -63,7 +63,7 @@ class NextRuleReceiver : BroadcastReceiver() {
         val calendar = getCalendarWithRule(nextRule.ruleWithRelation.rule, nextRule.day)
         val now = Calendar.getInstance().timeInMillis
         if (calendar.timeInMillis <= now) {
-            calendar.add(Calendar.DATE, 7);
+            calendar.add(Calendar.DATE, 7)
         }
         Log.d("nextRule time", Date(calendar.timeInMillis).toString())
         Log.d("nextRule timeInMillis", calendar.timeInMillis.toString())

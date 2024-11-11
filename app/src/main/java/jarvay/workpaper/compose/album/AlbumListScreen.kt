@@ -1,6 +1,5 @@
 package jarvay.workpaper.compose.album
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +36,6 @@ import jarvay.workpaper.data.album.AlbumWithWallpapers
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumListScreen(
     navController: NavController,

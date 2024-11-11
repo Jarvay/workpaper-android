@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class RunningPreferencesRepository @Inject constructor(
-    val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>
 ) {
 
     val runningPreferencesFlow: Flow<RunningPreferences> =
