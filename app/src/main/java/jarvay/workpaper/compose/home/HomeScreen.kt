@@ -1,4 +1,4 @@
-package jarvay.workpaper.compose.home;
+package jarvay.workpaper.compose.home
 
 import android.app.AlarmManager
 import android.content.Context
@@ -10,7 +10,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -80,7 +79,6 @@ enum class WorkpaperPage(
     STYLES(R.string.tab_title_styles, Icons.Default.Style),
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
@@ -141,7 +139,6 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePagerScreen(
     pagerState: PagerState,

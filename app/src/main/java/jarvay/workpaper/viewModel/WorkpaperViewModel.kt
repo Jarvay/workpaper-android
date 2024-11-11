@@ -16,7 +16,7 @@ class WorkpaperViewModel @Inject constructor(
     val runningPreferencesRepository: RunningPreferencesRepository,
 ) : ViewModel() {
     @ApplicationContext
-    lateinit var context: Context;
+    lateinit var context: Context
 
     val runningPreferences = runningPreferencesRepository.runningPreferencesFlow.stateIn(
         viewModelScope,

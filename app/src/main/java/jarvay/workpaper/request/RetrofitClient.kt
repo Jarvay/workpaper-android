@@ -32,7 +32,7 @@ class RequestInterceptor(val context: Context) : Interceptor {
             return chain.proceed(chain.request())
         } catch (e: Exception) {
             Log.e("RetrofitClient request error", e.message ?: e.toString())
-            throw e;
+            throw e
         }
     }
 }

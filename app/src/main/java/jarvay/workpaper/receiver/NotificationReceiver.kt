@@ -10,8 +10,7 @@ import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.others.NotificationHelper
 import jarvay.workpaper.others.setBigPicture
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,13 +26,12 @@ class NotificationReceiver : BroadcastReceiver() {
     @Inject
     lateinit var notificationHelper: NotificationHelper
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d(javaClass.simpleName, "onReceive")
 
         if (context == null || intent == null) return
 
-        GlobalScope.launch {
+        MainScope().launch {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 

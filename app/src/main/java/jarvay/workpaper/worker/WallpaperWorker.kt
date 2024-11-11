@@ -16,8 +16,6 @@ import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
-import jarvay.workpaper.data.rule.RuleRepository
-import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.audioManager
@@ -37,12 +35,6 @@ class WallpaperWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
     @Inject
     lateinit var workpaper: Workpaper
-
-    @Inject
-    lateinit var ruleRepository: RuleRepository
-
-    @Inject
-    lateinit var styleRepository: StyleRepository
 
     @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository

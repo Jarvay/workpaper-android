@@ -16,9 +16,8 @@ import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,7 +32,6 @@ class RuleReceiver : BroadcastReceiver() {
     @Inject
     lateinit var workpaper: Workpaper
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
 
@@ -58,7 +56,7 @@ class RuleReceiver : BroadcastReceiver() {
 
 
             Log.d("defaultPreferencesRepository", runningPreferencesRepository.toString())
-            GlobalScope.launch(Dispatchers.IO) {
+            MainScope().launch(Dispatchers.IO) {
                 runningPreferencesRepository.update(RunningPreferencesKeys.LAST_INDEX, -1)
 
                 sendWallpaperBroadcast(context)

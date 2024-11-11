@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
@@ -18,12 +17,9 @@ import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
-import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.blur
-import jarvay.workpaper.others.coverBitmapFromContentUri
 import jarvay.workpaper.others.effect
 import jarvay.workpaper.others.noise
-import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.receiver.UpdateActionWidgetReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
@@ -72,7 +68,6 @@ class Workpaper @Inject constructor(
     var nextWallpaper: MutableStateFlow<NextWallpaper?> = MutableStateFlow(null)
     var nextWallpaperTime: Long = 0
     var nextRuleTime: Long = 0
-    val nextWallpaperBitmap = MutableStateFlow<Bitmap?>(null)
 
     var wallpapers: List<Wallpaper> = emptyList()
 
@@ -136,7 +131,6 @@ class Workpaper @Inject constructor(
         }
 
         nextWallpaper.value = null
-        nextWallpaperBitmap.value = null
         val i = Intent(context, UpdateActionWidgetReceiver::class.java)
         context.sendBroadcast(i)
 
@@ -196,20 +190,8 @@ class Workpaper @Inject constructor(
         if (nextWallpaper.value?.wallpaper == next.wallpaper) return
         nextWallpaper.value = next
 
-        var bitmap = when (next.wallpaper.type) {
-            WallpaperType.IMAGE -> bitmapFromContentUri(next.wallpaper.contentUri.toUri(), context)
-            WallpaperType.VIDEO -> coverBitmapFromContentUri(
-                next.wallpaper.contentUri.toUri(),
-                context
-            )
-        }
-        if (bitmap != null) {
-            bitmap = bitmap.scaleFixedRatio(320, 320)
-            nextWallpaperBitmap.value = bitmap
-
-            val intent = Intent(context, UpdateActionWidgetReceiver::class.java)
-            context.sendBroadcast(intent)
-        }
+        val intent = Intent(context, UpdateActionWidgetReceiver::class.java)
+        context.sendBroadcast(intent)
     }
 
     suspend fun generateNextWallpaper(

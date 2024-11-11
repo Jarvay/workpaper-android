@@ -81,7 +81,7 @@ class NotificationHelper @Inject constructor(
         var title: String
 
         val changeByTiming = runBlocking {
-            workpaper.currentRuleWithRelation?.first()?.rule?.changeByTiming
+            workpaper.currentRuleWithRelation.first()?.rule?.changeByTiming
         }
         if (changeByTiming == true) {
             title = context.getString(

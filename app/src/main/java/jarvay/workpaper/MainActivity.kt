@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
     private val downloadCompleteReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent == null || context == null) return
-            val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
             if (id == apkDownloadId) {
                 val uri = getUriByDownloadId(this@MainActivity, id)
                 installApk(uri = uri, context = this@MainActivity)

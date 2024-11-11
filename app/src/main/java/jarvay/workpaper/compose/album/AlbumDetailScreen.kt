@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -116,6 +117,8 @@ fun AlbumDetailScreen(
     var limitTipsContent by remember {
         mutableStateOf("")
     }
+
+    val listState = rememberLazyStaggeredGridState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
@@ -296,7 +299,8 @@ fun AlbumDetailScreen(
                 wallpapers = wallpapers,
                 checkedState = checkedState,
                 selecting = selecting,
-                viewModel = viewModel
+                viewModel = viewModel,
+                listState = listState,
             ) { checked, uri ->
                 checkedState =
                     updateCheckedState(checked, uri, checkedState)
@@ -324,9 +328,10 @@ private fun WallpaperList(
     checkedState: Set<Long>,
     selecting: Boolean,
     viewModel: AlbumDetailViewModel,
+    listState: LazyStaggeredGridState,
     onItemCheckedChange: (Boolean, Long) -> Unit = { _: Boolean, _: Long -> }
 ) {
-    val listState = rememberLazyStaggeredGridState()
+
 
     LazyVerticalStaggeredGrid(
         state = listState,
