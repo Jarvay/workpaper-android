@@ -1,7 +1,9 @@
 package jarvay.workpaper.compose.settings
 
+import android.app.ActivityManager
 import android.app.NotificationManager
 import android.content.Context
+import android.service.wallpaper.WallpaperService.ACTIVITY_SERVICE
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -150,11 +152,30 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                 Switch(
                     checked = settings.useLiveWallpaper,
                     onCheckedChange = { c ->
+                        val activityManager = context.getSystemService(
+                            ACTIVITY_SERVICE
+                        ) as ActivityManager
+                        val configInfo = activityManager.deviceConfigurationInfo
+                        if (configInfo.reqGlEsVersion < 0x20000) {
+                            simpleSnackbar.show(R.string.settings_opengles2_not_supported)
+                            return@Switch
+                        }
+
                         viewModel.update(SettingsPreferencesKeys.USE_LIVE_WALLPAPER, c)
                         if (c) {
                             simpleSnackbar.show(R.string.settings_live_wallpaper_tips)
                         }
                     })
+            }
+
+            if (settings.useLiveWallpaper) {
+                SettingsItem(labelId = R.string.settings_item_live_wallpaper_transition) {
+                    Switch(
+                        checked = settings.liveWallpaperTransition,
+                        onCheckedChange = { c ->
+                            viewModel.update(SettingsPreferencesKeys.LIVE_WALLPAPER_TRANSITION, c)
+                        })
+                }
             }
 
             SettingsItem(labelId = R.string.settings_item_auto_check_update) {

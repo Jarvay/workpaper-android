@@ -1,3 +1,13 @@
+<a target="_blank" href="https://github.com/Jarvay/workpaper-android/actions/workflows/release.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/Jarvay/workpaper-android/release.yml?style=flat-square" alt="">
+</a>
+  <a href="https://github.com/Jarvay/workpaper-android/releases">
+    <img src="https://img.shields.io/github/downloads/Jarvay/workpaper-android/total.svg?style=flat-square" alt="">
+  </a>
+  <a href="https://github.com/Jarvay/workpaper-android/releases/latest">
+    <img src="https://img.shields.io/github/release/Jarvay/workpaper-android?style=flat-square" alt="">
+  </a>
+
 # 定时壁纸
 
 - 支持在指定时间更换壁纸
@@ -12,6 +22,8 @@
    - 选择在哪天使用这个计划
    - 选择计划的时间，比如前面你选了周一到周五，这里选择了9:30，那么将会在周一到周五的9:30切换到这个计划
    - 选择相册，可以多选
+   - 禁用所有滤镜：开启则不使用任何滤镜
+   - 滤镜：如果设置了则使用计划的滤镜，否则使用默认滤镜
    - 随机切换：如果打开则随机显示相册内的图片
    - 定时更换壁纸：开启后可以设置定时更换的间隔
    - 解锁时更换壁纸：开启后会在手机解锁后更换壁纸
@@ -29,7 +41,7 @@
 - 启用动态颜色：默认关闭，只是应用内部颜色
 - 启用通知：默认关闭，开启后会显示通知，可以在通知中切换下一张壁纸
   - 常驻通知：默认关闭，开启后安卓14以下通知不会被清除
-- 以动态壁纸模式运行：字面意思，暂不支持真的动态壁纸
+- 以动态壁纸模式运行：视频暂只支持mov和mp4，双击桌面可以切换下一张壁纸（部分系统可能不生效，如澎湃OS），如果没启用将会跳过相册中的视频壁纸
 - 自动检查更新：默认关闭，开启后打开应用会自动检查更新
 
 ## 小部件

@@ -20,8 +20,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @AndroidEntryPoint
+@Singleton
 class WorkpaperService @Inject constructor() : LifecycleService() {
     @Inject
     lateinit var ruleRepository: RuleRepository
@@ -59,7 +61,9 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        lifecycle.coroutineScope.launch(Dispatchers.Default) {
+        lifecycle.coroutineScope.launch {
+            if (workpaper.currentRuleId.value > -1) return@launch
+
             val forcedRuleId: Long =
                 settingsPreferencesRepository.settingsPreferencesFlow.first().forcedUsedRuleId
             val forcedRuleAlbums = ruleRepository.findRuleById(forcedRuleId)
@@ -101,7 +105,6 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
 
         lifecycle.coroutineScope.launch {
             workpaper.nextWallpaper.value = null
-            workpaper.nextWallpaperBitmap.value = null
             val intent = Intent(this@WorkpaperService, UpdateActionWidgetReceiver::class.java)
             sendBroadcast(intent)
         }

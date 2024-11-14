@@ -7,13 +7,17 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -21,7 +25,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
@@ -42,6 +48,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -50,15 +58,21 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Size
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.wallpaper.Wallpaper
+import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
-import jarvay.workpaper.others.getSize
+import jarvay.workpaper.others.PICKER_WALLPAPER_TYPES
+import jarvay.workpaper.others.wallpaperType
+import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
+import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 import kotlinx.coroutines.Dispatchers
@@ -104,6 +118,8 @@ fun AlbumDetailScreen(
         mutableStateOf("")
     }
 
+    val listState = rememberLazyStaggeredGridState()
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
         onResult = { uris: List<Uri> ->
@@ -131,17 +147,27 @@ fun AlbumDetailScreen(
                 uris
             }
 
-            val newUris = wallpapers.map { it.contentUri }.toMutableList()
+            val newWallpapers = mutableListOf<Wallpaper>()
             for (uri in splitUris) {
-                if (newUris.contains(uri.toString())) continue
+                if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
                 context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                 val permissions = context.contentResolver.persistedUriPermissions
                 if (permissions.any { it.uri == uri }) {
-                    newUris.add(uri.toString())
+                    val file = DocumentFile.fromSingleUri(context, uri)
+                    file?.let {
+                        Log.d("file", it.type.toString())
+                        newWallpapers.add(
+                            Wallpaper(
+                                contentUri = uri.toString(),
+                                type = wallpaperType(it.type ?: ""),
+                                albumId = album.albumId
+                            )
+                        )
+                    }
                 }
             }
 
-            viewModel.addWallpapers(newUris)
+            viewModel.addWallpapers(newWallpapers)
         }
     )
 
@@ -157,7 +183,7 @@ fun AlbumDetailScreen(
                     context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                     val documentFile = DocumentFile.fromTreeUri(context, uri)
                         ?: return@launch
-                    viewModel.addWallpapersFromFolder(documentFile)
+                    viewModel.addWallpapersFromFolder(documentFile, albumId = album.albumId)
                 }
                 viewModel.loading.value = false
             }
@@ -205,7 +231,7 @@ fun AlbumDetailScreen(
                                 Text(text = stringResource(id = R.string.album_add_images))
                             }, onClick = {
                                 actionsShow = false
-                                imagePickerLauncher.launch(arrayOf("image/*"))
+                                imagePickerLauncher.launch(PICKER_WALLPAPER_TYPES.toTypedArray())
                             })
 
                             DropdownMenuItem(text = {
@@ -273,7 +299,8 @@ fun AlbumDetailScreen(
                 wallpapers = wallpapers,
                 checkedState = checkedState,
                 selecting = selecting,
-                viewModel = viewModel
+                viewModel = viewModel,
+                listState = listState,
             ) { checked, uri ->
                 checkedState =
                     updateCheckedState(checked, uri, checkedState)
@@ -294,7 +321,6 @@ fun AlbumDetailScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun WallpaperList(
     album: Album,
@@ -302,93 +328,163 @@ private fun WallpaperList(
     checkedState: Set<Long>,
     selecting: Boolean,
     viewModel: AlbumDetailViewModel,
+    listState: LazyStaggeredGridState,
     onItemCheckedChange: (Boolean, Long) -> Unit = { _: Boolean, _: Long -> }
 ) {
-    val context = LocalContext.current
 
-    val simpleSnackbar = LocalSimpleSnackbar.current
-    val listState = rememberLazyStaggeredGridState()
-
-    var currentWallpaper by remember {
-        mutableStateOf<Wallpaper?>(null)
-    }
 
     LazyVerticalStaggeredGrid(
         state = listState,
         modifier = Modifier.padding(top = 16.dp),
         columns = StaggeredGridCells.Fixed(2),
     ) {
-        items(items = wallpapers, key = { item ->
-            item.wallpaperId
-        }) {
-            val contentUri = it.contentUri
-
-            val model = try {
-                ImageRequest.Builder(context)
-                    .data(contentUri.toUri())
-                    .size(256, 256)
-                    .build()
-            } catch (e: Exception) {
-                Log.w("AlbumDetailScreen", e.toString())
-                null
-            }
-
-            Box(
-                modifier = Modifier.animateItemPlacement()
+        items(items = wallpapers, key = { it.wallpaperId }) {
+            WallpaperItem(
+                wallpaper = it,
+                album = album,
+                viewModel = viewModel,
+                selecting = selecting,
+                checkedState = checkedState,
+                onItemCheckedChange = onItemCheckedChange
             ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .apply {
-                            if (model == null) {
-                                height(256.dp)
-                            }
-                        }
-                ) {
-                    val size = getSize(context, contentUri) ?: return@Card
-                    val floatWidth = size.width.toFloat()
-                    val floatHeight = size.height.toFloat()
-
-                    AsyncImage(
-                        model = model,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .aspectRatio(floatWidth / floatHeight)
-                            .combinedClickable(onLongClick = {
-                                currentWallpaper = it
-                            }) {
-                                if (selecting) {
-                                    val checked = !checkedState.contains(it.wallpaperId)
-                                    onItemCheckedChange(checked, it.wallpaperId)
-                                }
-                            }
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = currentWallpaper == it,
-                    onDismissRequest = { currentWallpaper = null }) {
-                    DropdownMenuItem(
-                        text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
-                        onClick = {
-                            viewModel.update(album.copy(coverUri = contentUri))
-                            currentWallpaper = null
-                            simpleSnackbar.show(R.string.tips_operation_success)
-                        }
-                    )
-                }
-
                 if (selecting) {
-                    Checkbox(
-                        checked = checkedState.contains(it.wallpaperId),
-                        onCheckedChange = { checked ->
-                            onItemCheckedChange(checked, it.wallpaperId)
-                        },
-                        modifier = Modifier.align(Alignment.TopEnd)
-                    )
+                    val checked = !checkedState.contains(it.wallpaperId)
+                    onItemCheckedChange(checked, it.wallpaperId)
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WallpaperItem(
+    modifier: Modifier = Modifier,
+    wallpaper: Wallpaper,
+    album: Album,
+    viewModel: AlbumDetailViewModel,
+    selecting: Boolean,
+    checkedState: Set<Long>,
+    onItemCheckedChange: (Boolean, Long) -> Unit,
+    onClick: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val simpleSnackbar = LocalSimpleSnackbar.current
+
+    val contentUri = wallpaper.contentUri
+
+    var dropMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    val model = try {
+        ImageRequest.Builder(context)
+            .data(contentUri.toUri())
+            .size(Size.ORIGINAL)
+            .crossfade(true)
+            .build()
+    } catch (e: Exception) {
+        Log.w("AlbumDetailScreen", e.toString())
+        null
+    }
+
+    Box(
+        modifier = modifier
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .apply {
+                    if (model == null) {
+                        height(256.dp)
+                    }
+                }
+        ) {
+            Box {
+                SubcomposeAsyncImage(
+                    model = model,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    loading = {
+                        Icon(
+                            imageVector = when (wallpaper.type) {
+                                WallpaperType.IMAGE -> Icons.Default.Image
+                                WallpaperType.VIDEO -> Icons.Default.VideoFile
+                            },
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .aspectRatio(1.0f)
+                                .padding(4.dp)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .combinedClickable(
+                            onLongClick = {
+                                dropMenuExpanded = true
+                            },
+                            onClick = onClick
+                        )
+                )
+
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .background(color = Color.White.copy(alpha = 0.5F))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(4.dp)
+                    ) {
+                        when (wallpaper.type) {
+                            WallpaperType.IMAGE -> Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = null,
+                                tint = COLOR_BADGE_ORANGE
+                            )
+
+                            WallpaperType.VIDEO -> Icon(
+                                imageVector = Icons.Default.VideoFile,
+                                contentDescription = null,
+                                tint = COLOR_BADGE_GREEN
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        DropdownMenu(
+            expanded = dropMenuExpanded,
+            onDismissRequest = { dropMenuExpanded = false }) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
+                onClick = {
+                    viewModel.update(album.copy(coverUri = contentUri))
+                    dropMenuExpanded = false
+                    simpleSnackbar.show(R.string.tips_operation_success)
+                }
+            )
+
+            DropdownMenuItem(
+                text = { Text(text = stringResource(id = R.string.delete)) },
+                onClick = {
+                    viewModel.deleteWallpapers(listOf(wallpaper.wallpaperId))
+                    dropMenuExpanded = false
+                    simpleSnackbar.show(R.string.tips_operation_success)
+                }
+            )
+        }
+
+        if (selecting) {
+            Checkbox(
+                checked = checkedState.contains(wallpaper.wallpaperId),
+                onCheckedChange = { checked ->
+                    onItemCheckedChange(checked, wallpaper.wallpaperId)
+                },
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
         }
     }
 }

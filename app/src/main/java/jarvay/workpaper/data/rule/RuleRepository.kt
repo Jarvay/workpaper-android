@@ -19,7 +19,7 @@ class RuleRepository @Inject constructor(
     @Inject
     lateinit var ruleAlbumRelationDao: RuleAlbumRelationDao
 
-    val allRules = ruleDao.findAllFlow();
+    val allRules = ruleDao.findAllFlow()
 
     fun getRuleFlow(ruleId: Long) = ruleDao.findByIdFlow(ruleId)
 

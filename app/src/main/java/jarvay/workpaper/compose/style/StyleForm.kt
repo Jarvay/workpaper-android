@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.HorizontalRule
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.components.CustomIconButton
 import jarvay.workpaper.data.style.Style
 import jarvay.workpaper.ui.theme.COLOR_FORM_LABEL
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
@@ -114,7 +117,7 @@ fun StyleForm(
                 onValueChange = {
                     style = style.copy(brightness = it)
                 },
-                valueRange = 0f..100f
+                valueRange = -100f..200f
             )
 
             StyleFormItemSlider(
@@ -123,7 +126,7 @@ fun StyleForm(
                 onValueChange = {
                     style = style.copy(contrast = it)
                 },
-                valueRange = 0f..100f
+                valueRange = -100f..200f
             )
 
             StyleFormItemSlider(
@@ -132,7 +135,7 @@ fun StyleForm(
                 onValueChange = {
                     style = style.copy(saturation = it)
                 },
-                valueRange = 0f..100f
+                valueRange = -100f..200f
             )
         }
     }
@@ -171,6 +174,12 @@ private fun StyleFormItemSlider(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            CustomIconButton(onClick = {
+                onValueChange(value - 1)
+            }, enabled = value > valueRange.start.toInt()) {
+                Icon(imageVector = Icons.Default.HorizontalRule, contentDescription = null)
+            }
+
             Slider(
                 modifier = Modifier
                     .weight(1f),
@@ -182,10 +191,16 @@ private fun StyleFormItemSlider(
                 valueRange = valueRange
             )
 
+            CustomIconButton(onClick = {
+                onValueChange(value + 1)
+            }, enabled = value < valueRange.endInclusive.toInt()) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = null)
+            }
+
             Text(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .widthIn(24.dp),
+                    .widthIn(32.dp),
                 text = value.toString()
             )
         }

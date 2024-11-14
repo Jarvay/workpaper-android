@@ -27,10 +27,11 @@ import jarvay.workpaper.data.wallpaper.WallpaperDao
         Wallpaper::class,
         Style::class,
     ],
-    version = 4,
+    version = 5,
     autoMigrations = [
         AutoMigration(from = 2, to = 3),
-        AutoMigration(from = 3, to = 4, spec = AppDatabase.AutoMigration_3_4::class),
+        AutoMigration(from = 3, to = 4, spec = AppDatabase.AutoMigration3To4::class),
+        AutoMigration(from = 4, to = 5),
     ]
 )
 @TypeConverters(Converters::class)
@@ -79,5 +80,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     @DeleteColumn("rules", "blurRadius")
     @DeleteColumn("rules", "replaceGlobalBlur")
-    class AutoMigration_3_4 : AutoMigrationSpec
+    class AutoMigration3To4 : AutoMigrationSpec
 }

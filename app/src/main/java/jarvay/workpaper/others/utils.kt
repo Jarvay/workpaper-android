@@ -4,7 +4,7 @@ import android.app.DownloadManager
 import android.app.DownloadManager.Request
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
+import android.content.res.Resources
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Environment
@@ -12,7 +12,6 @@ import android.util.Log
 import android.util.Size
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import jarvay.workpaper.R
@@ -21,6 +20,7 @@ import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.data.rule.RuleWithRelationToSort
+import jarvay.workpaper.data.wallpaper.WallpaperType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
@@ -109,27 +109,13 @@ fun showToast(context: Context, @StringRes strId: Int) {
     showToast(context, context.getString(strId))
 }
 
-fun getSize(context: Context, fileStrUri: String): Size? {
-    try {
-        context.contentResolver.openInputStream(fileStrUri.toUri()).use { inputStream ->
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = true
-            BitmapFactory.decodeStream(inputStream, null, options)
-            return Size(options.outWidth, options.outHeight)
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        return null
-    }
-}
-
-fun getScreenSize(context: Context): Size {
-    val dm = context.resources.displayMetrics
+fun getScreenSize(): Size {
+    val dm = Resources.getSystem().displayMetrics
     return Size(dm.widthPixels, dm.heightPixels)
 }
 
-fun getWallpaperSize(context: Context): Size {
-    val screenSize = getScreenSize(context)
+fun getWallpaperSize(): Size {
+    val screenSize = getScreenSize()
     val ratio = screenSize.width.toFloat() / screenSize.height.toFloat()
     return if (screenSize.width > MAX_WALLPAPER_WIDTH) {
         Size(MAX_WALLPAPER_WIDTH, (MAX_WALLPAPER_WIDTH / ratio).toInt())
@@ -145,11 +131,14 @@ fun runningPreferencesFlow(dataStore: DataStore<Preferences>): Flow<RunningPrefe
         val lastIndex = preferences[RunningPreferencesKeys.LAST_INDEX] ?: -1
         val lastWallpaper = preferences[RunningPreferencesKeys.LAST_WALLPAPER] ?: ""
         val running = preferences[RunningPreferencesKeys.RUNNING] ?: false
+        val currentVideoContentUri =
+            preferences[RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI] ?: ""
 
         RunningPreferences(
             lastIndex = lastIndex,
             lastWallpaper = lastWallpaper,
             running = running,
+            currentVideoContentUri = currentVideoContentUri
         )
     }
 }
@@ -206,4 +195,12 @@ fun isToday(calendar: Calendar): Boolean {
 
 fun Context.audioManager(): AudioManager {
     return getSystemService(Context.AUDIO_SERVICE) as AudioManager
+}
+
+fun wallpaperType(type: String): WallpaperType {
+    return if (type.startsWith("video")) {
+        WallpaperType.VIDEO
+    } else {
+        WallpaperType.IMAGE
+    }
 }

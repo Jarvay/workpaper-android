@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -253,55 +255,49 @@ fun RuleForm(
                 }
             }
 
-            Box(modifier = Modifier) {
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    modifier = defaultModifier,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    FlowRow(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        maxItemsInEachRow = 3
+            FlowRow(
+                modifier = Modifier.padding(top = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp, Alignment.Bottom),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                maxItemsInEachRow = 3
+            ) {
+                val itemModifier = Modifier
+                    .width(100.dp)
+                    .height(100.dp)
+                    .weight(0.3f)
+                    .aspectRatio(1f)
+                    .fillMaxSize()
+                    .fillMaxRowHeight(1f)
+
+                selectedAlbums.forEach {
+                    AlbumItem(
+                        album = it.album,
+                        wallpapers = it.wallpapers,
+                        modifier = itemModifier
                     ) {
-                        selectedAlbums.forEach {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.weight(0.3f)
-                            ) {
-                                AlbumItem(
-                                    album = it.album,
-                                    wallpapers = it.wallpapers,
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    navController.navigate(Screen.AlbumDetail.createRoute(it.album.albumId))
-                                }
-                            }
-                        }
-
-                        Card(
-                            modifier = Modifier
-                                .weight(0.3f)
-                                .aspectRatio(1F),
-                            onClick = {
-                                albumModalSheetShow = true
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AddPhotoAlternate,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxSize(),
-                                tint = Color.White
-                            )
-                        }
-
-                        val placeholderCount = 3 - (selectedAlbums.size % 3)
-                        repeat(placeholderCount) {
-                            Column(modifier = Modifier.weight(0.3f)) {}
-                        }
+                        navController.navigate(Screen.AlbumDetail.createRoute(it.album.albumId))
                     }
+                }
+
+                Card(
+                    modifier = itemModifier,
+                    onClick = {
+                        albumModalSheetShow = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddPhotoAlternate,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxSize(),
+                        tint = Color.White
+                    )
+                }
+
+                val placeholderCount = 3 - (selectedAlbums.size % 3)
+                repeat(placeholderCount - 1) {
+                    Column(modifier = itemModifier) {}
                 }
             }
 

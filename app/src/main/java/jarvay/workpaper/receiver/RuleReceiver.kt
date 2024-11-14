@@ -15,9 +15,9 @@ import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
-import kotlinx.coroutines.DelicateCoroutinesApi
+import jarvay.workpaper.data.wallpaper.Wallpaper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,7 +32,6 @@ class RuleReceiver : BroadcastReceiver() {
     @Inject
     lateinit var workpaper: Workpaper
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
 
@@ -45,9 +44,11 @@ class RuleReceiver : BroadcastReceiver() {
         if (ruleId > -1 && ruleWithRelation != null) {
             workpaper.cancelAlarm(type = AlarmType.REPEAT)
 
-            workpaper.wallpaperContentUris =
-                ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<String>>(mutableListOf()) { acc, album ->
-                    acc.addAll(album.wallpapers.map { it.contentUri })
+            workpaper.wallpapers =
+                ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<Wallpaper>>(
+                    mutableListOf()
+                ) { acc, album ->
+                    acc.addAll(album.wallpapers.map { it })
                     acc
                 }.apply {
                     if (ruleWithRelation.rule.random) shuffle()
@@ -55,7 +56,7 @@ class RuleReceiver : BroadcastReceiver() {
 
 
             Log.d("defaultPreferencesRepository", runningPreferencesRepository.toString())
-            GlobalScope.launch(Dispatchers.IO) {
+            MainScope().launch(Dispatchers.IO) {
                 runningPreferencesRepository.update(RunningPreferencesKeys.LAST_INDEX, -1)
 
                 sendWallpaperBroadcast(context)

@@ -16,21 +16,15 @@ import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
-import jarvay.workpaper.data.rule.RuleRepository
-import jarvay.workpaper.data.style.StyleRepository
+import jarvay.workpaper.data.wallpaper.Wallpaper
+import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.audioManager
 import jarvay.workpaper.others.bitmapFromContentUri
-import jarvay.workpaper.others.blur
-import jarvay.workpaper.others.centerCrop
-import jarvay.workpaper.others.effect
-import jarvay.workpaper.others.getScreenSize
 import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.info
-import jarvay.workpaper.others.noise
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.NotificationReceiver
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -43,94 +37,48 @@ class WallpaperWorker @AssistedInject constructor(
     lateinit var workpaper: Workpaper
 
     @Inject
-    lateinit var ruleRepository: RuleRepository
-
-    @Inject
-    lateinit var styleRepository: StyleRepository
-
-    @Inject
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
     @Inject
     lateinit var settingPreferencesRepository: SettingsPreferencesRepository
 
-    private suspend fun setWallpaper(wallpaper: String, settings: SettingsPreferences) {
-        workpaper.settingWallpaper.value = true
+    private suspend fun setImageWallpaper(
+        wallpaper: Wallpaper,
+        settings: SettingsPreferences
+    ): Boolean {
         Log.d(
             "context.audioManager().isMusicActive",
             (context.audioManager().isMusicActive).toString()
         )
         if (context.audioManager().isMusicActive && settings.disableWhenPlayingAudio) {
-            return
+            return false
         }
 
         val lastWallpaper =
             runningPreferencesRepository.runningPreferencesFlow.first().lastWallpaper
-        if (lastWallpaper == wallpaper && !settings.useLiveWallpaper) return
+        if (lastWallpaper == wallpaper.contentUri && !settings.useLiveWallpaper) return false
 
         Log.d(javaClass.simpleName, settings.toString())
 
-        val wallpaperUri = wallpaper.toUri()
+        val wallpaperUri = wallpaper.contentUri.toUri()
 
         var bitmap = bitmapFromContentUri(wallpaperUri, applicationContext)
 
-        val wallpaperSize = getWallpaperSize(applicationContext)
+        val wallpaperSize = getWallpaperSize()
 
         Log.d("settings.useLiveWallpaper", settings.useLiveWallpaper.toString())
 
         bitmap?.let {
-            Log.d("Wallpaper bitmap", it.info())
-
-            val defaultStyle = styleRepository.findById(settings.defaultStyleId)
-            val ruleWithRelation = runBlocking {
-                workpaper.currentRuleWithRelation.first()
-            }
-            if (ruleWithRelation == null) return
-
-            if (!ruleWithRelation.rule.noStyle) {
-                val style = defaultStyle ?: ruleWithRelation.style
-                style?.let {
-                    if (style.blurRadius > 0) {
-                        bitmap = bitmap!!.blur(style.blurRadius)
-                    }
-                    if (style.noisePercent > 0) {
-                        bitmap = bitmap!!.noise(style.noisePercent)
-                    }
-                    bitmap = bitmap!!.effect(
-                        brightness = style.brightness,
-                        contrast = style.contrast,
-                        saturation = style.saturation
-                    )
-                }
-            }
-
             bitmap = it.scaleFixedRatio(
-                targetWidth = wallpaperSize.width * if (settings.wallpaperScrollable) 2 else 1,
+                targetWidth = wallpaperSize.width,
                 targetHeight = wallpaperSize.height,
                 useMin = !settings.useLiveWallpaper,
             )
+            Log.d("Wallpaper bitmap", it.info())
 
             val wallpaperManager = WallpaperManager.getInstance(applicationContext)
             if (!settings.useLiveWallpaper) {
-                if (settings.wallpaperScrollable) {
-                    val screenSize = getScreenSize(context)
-                    val targetRatio = (screenSize.width * 2).toFloat() / screenSize.height.toFloat()
-                    val currentRatio = bitmap!!.width.toFloat() / bitmap!!.height.toFloat()
-                    if (currentRatio > targetRatio) {
-                        val targetHeight =
-                            if (bitmap!!.height > screenSize.height) screenSize.height else bitmap!!.height
-                        val targetWidth = (targetHeight * targetRatio).toInt()
-                        bitmap = bitmap!!.centerCrop(
-                            targetWidth = targetWidth,
-                            targetHeight = targetHeight
-                        )
-                    }
-
-                    wallpaperManager.setWallpaperOffsetSteps(
-                        0f,
-                        0f
-                    )
-                }
+                bitmap = workpaper.handleBitmapStyle(bitmap!!)
 
                 if (!settings.alsoSetLockWallpaper) {
                     Log.d(javaClass.simpleName, "set system wallpaper only")
@@ -140,13 +88,28 @@ class WallpaperWorker @AssistedInject constructor(
                     wallpaperManager.setBitmap(bitmap)
                 }
             } else {
-                while (!workpaper.liveWallpaperEngineCreated) {
-                    Thread.sleep(100)
-                }
-                workpaper.currentBitmap.value = bitmap
+                workpaper.imageUri.value = wallpaper.contentUri
             }
         }
-        workpaper.settingWallpaper.value = false
+
+        return true
+    }
+
+    private suspend fun setVideoWallpaper(wallpaper: Wallpaper) {
+        val currentContentUri =
+            runningPreferencesRepository.runningPreferencesFlow.first().currentVideoContentUri
+        if (wallpaper.contentUri == currentContentUri) {
+            return
+        }
+
+        runningPreferencesRepository.update(
+            RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI,
+            wallpaper.contentUri
+        )
+
+        workpaper.videoUri.value = wallpaper.contentUri
+        Log.d("setVideoWallpaper", "setVideoWallpaper")
+        return
     }
 
     private fun sendNotification() {
@@ -156,12 +119,8 @@ class WallpaperWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        Log.d(javaClass.simpleName, "start")
+        Log.d(javaClass.simpleName, "WallpaperWorker start")
         Log.d(javaClass.simpleName, Thread.currentThread().name)
-
-        if (workpaper.settingWallpaper.value) {
-            return Result.failure()
-        }
 
         val runningPreferences: RunningPreferences =
             runningPreferencesRepository.runningPreferencesFlow.first()
@@ -170,9 +129,17 @@ class WallpaperWorker @AssistedInject constructor(
 
         Log.d(javaClass.simpleName, runningPreferences.toString())
 
-        val ruleWithRelation = workpaper.currentRuleWithRelation.first() ?: return Result.failure()
+        val ruleWithRelation = workpaper.currentRuleWithRelation.first()
+        if (ruleWithRelation == null) {
+            Log.d(javaClass.simpleName, "Current rule is null")
+            return Result.failure()
+        }
 
-        val nextWallpaper = workpaper.getNextWallpaper() ?: return Result.failure()
+        val nextWallpaper = workpaper.getNextWallpaper()
+        if (nextWallpaper == null) {
+            Log.d(javaClass.simpleName, "Next wallpaper is null")
+            return Result.failure()
+        }
 
         workpaper.apply {
             generateNextWallpaper()?.let {
@@ -180,11 +147,34 @@ class WallpaperWorker @AssistedInject constructor(
             }
         }
 
-        setWallpaper(wallpaper = nextWallpaper.contentUri, settings = settings)
+        val success: Boolean
+        when (nextWallpaper.wallpaper.type) {
+            WallpaperType.IMAGE -> {
+                runningPreferencesRepository.update(
+                    RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI,
+                    ""
+                )
+                success = setImageWallpaper(
+                    wallpaper = nextWallpaper.wallpaper,
+                    settings = settings
+                )
+            }
+
+            WallpaperType.VIDEO -> {
+                success = if (settings.useLiveWallpaper) {
+                    setVideoWallpaper(wallpaper = nextWallpaper.wallpaper)
+                    true
+                } else false
+            }
+        }
+
+        if (!success) {
+            return Result.failure()
+        }
 
         runningPreferencesRepository.apply {
             update(RunningPreferencesKeys.LAST_INDEX, nextWallpaper.index)
-            update(RunningPreferencesKeys.LAST_WALLPAPER, nextWallpaper.contentUri)
+            update(RunningPreferencesKeys.LAST_WALLPAPER, nextWallpaper.wallpaper.contentUri)
         }
 
         if (!nextWallpaper.isManual && ruleWithRelation.rule.changeByTiming) {
