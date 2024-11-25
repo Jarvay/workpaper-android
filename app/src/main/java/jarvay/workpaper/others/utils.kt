@@ -2,6 +2,7 @@ package jarvay.workpaper.others
 
 import android.app.DownloadManager
 import android.app.DownloadManager.Request
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
@@ -202,5 +203,20 @@ fun wallpaperType(type: String): WallpaperType {
         WallpaperType.VIDEO
     } else {
         WallpaperType.IMAGE
+    }
+}
+
+fun wechatComponentName(): ComponentName {
+    return ComponentName("com.tencent.mm", "com.tencent.mm.ui.LauncherUI")
+}
+
+fun wechatIntent(toScan: Boolean = false): Intent {
+    return Intent().apply {
+        component = wechatComponentName()
+        if (toScan) {
+            putExtra("LauncherUI.Shortcut.LaunchType", "launch_type_scan_qrcode")
+        }
+        action = "android.intent.action.VIEW"
+        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
     }
 }

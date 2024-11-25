@@ -38,6 +38,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.defaultStyleId,
                 forcedUsedRuleId = preferences[SettingsPreferencesKeys.FORCED_USED_RULE_ID]
                     ?: DEFAULT_SETTINGS.forcedUsedRuleId,
+                doubleTapEvent = preferences[SettingsPreferencesKeys.DOUBLE_TAP_EVENT]
+                    ?: DEFAULT_SETTINGS.doubleTapEvent,
             )
         }.distinctUntilChanged { old, new ->
             old == new
