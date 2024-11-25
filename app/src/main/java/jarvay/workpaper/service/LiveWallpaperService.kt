@@ -1,5 +1,6 @@
 package jarvay.workpaper.service
 
+import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -25,9 +26,11 @@ import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
+import jarvay.workpaper.others.GestureEvent
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.centerCrop
 import jarvay.workpaper.others.scaleFixedRatio
+import jarvay.workpaper.others.wechatIntent
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.wallpaper.WallpaperRenderer
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +39,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class LiveWallpaperService : WallpaperService(), LifecycleOwner {
@@ -75,6 +79,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private val player: MediaPlayer = MediaPlayer()
         private var isVisible = false
         private var showTransition = false
+        private var doubleTapEvent: GestureEvent = GestureEvent.NONE
 
         init {
             player.apply {
@@ -84,6 +89,11 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             lifecycleScope.launch {
                 workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
                     showTransition = it.liveWallpaperTransition
+                    doubleTapEvent = try {
+                        GestureEvent.valueOf(it.doubleTapEvent)
+                    } catch (e: Exception) {
+                        GestureEvent.NONE
+                    }
                 }
             }
         }
@@ -92,8 +102,40 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             override fun onDoubleTap(e: MotionEvent): Boolean {
                 val result = super.onDoubleTap(e)
                 Log.d(javaClass.simpleName, "onDoubleTap")
-                val intent = Intent(this@LiveWallpaperService, WallpaperReceiver::class.java)
-                sendBroadcast(intent)
+
+                when (doubleTapEvent) {
+                    GestureEvent.NONE -> {
+
+                    }
+
+                    GestureEvent.CHANGE_WALLPAPER -> {
+                        val intent =
+                            Intent(this@LiveWallpaperService, WallpaperReceiver::class.java)
+                        sendBroadcast(intent)
+                    }
+
+                    GestureEvent.LOCK_SCREEN -> {
+                        val devicePolicyManager =
+                            getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                        devicePolicyManager.lockNow()
+                    }
+
+                    GestureEvent.OPEN_WECHAT -> {
+                        startActivity(wechatIntent())
+                    }
+
+                    GestureEvent.OPEN_WECHAT_SCAN -> {
+                        startActivity(wechatIntent(toScan = true))
+                    }
+
+                    GestureEvent.OPEN_ALIPAY_SCAN -> {
+                        val uri = Uri.parse("alipayqr://platformapi/startapp?saId=10000007")
+                        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        startActivity(intent)
+                    }
+                }
 
                 return result
             }

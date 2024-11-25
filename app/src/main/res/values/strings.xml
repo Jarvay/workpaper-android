@@ -5,6 +5,7 @@
     <string name="permission_request_alarm">Request permission of alarm</string>
     <string name="permission_request_notification">Request permission of notification</string>
     <string name="permission_read_storage">Request permission of reading storage</string>
+    <string name="permission_request_device_admin">Request permission of device admin. If the screen is locked in this way, the subsequent unlocking will not be able to use fingerprint unlocking</string>
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -111,9 +112,17 @@
     <string name="settings_item_disabled_when_playing_audio">Do not change wallpaper when playing audio</string>
     <string name="settings_item_use_live_wallpaper">Use live wallpaper</string>
     <string name="settings_item_live_wallpaper_transition">Live wallpaper transition</string>
+    <string name="settings_item_live_wallpaper_double_tap">On Double Tap</string>
     <string name="settings_item_blur_radius">Wallpaper blur radius</string>
     <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>
+
+    <string name="gesture_event_none">None</string>
+    <string name="gesture_event_lock_screen">Lock screen</string>
+    <string name="gesture_event_change_wallpaper">Change wallpaper</string>
+    <string name="gesture_event_open_wechat">Open Wechat</string>
+    <string name="gesture_event_open_wechat_scan">Wechat scan</string>
+    <string name="gesture_event_open_alipay_scan">Alipay scan</string>
 
     <string name="notify_will_change_at_about">Wallpaper will change at about %s</string>
     <string name="notify_next_rule_at_about">Will change to next plan at about %s</string>

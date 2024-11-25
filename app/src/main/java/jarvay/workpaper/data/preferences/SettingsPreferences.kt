@@ -2,6 +2,8 @@ package jarvay.workpaper.data.preferences
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import jarvay.workpaper.others.GestureEvent
 
 data class SettingsPreferences(
     var startWithPrevRule: Boolean,
@@ -16,6 +18,7 @@ data class SettingsPreferences(
     var liveWallpaperTransition: Boolean,
     var defaultStyleId: Long,
     var forcedUsedRuleId: Long,
+    var doubleTapEvent: String,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -35,6 +38,7 @@ data class SettingsPreferences(
         result = 31 * result + liveWallpaperTransition.hashCode()
         result = 31 * result + defaultStyleId.hashCode()
         result = 31 * result + forcedUsedRuleId.hashCode()
+        result = 31 * result + doubleTapEvent.hashCode()
         return result
     }
 }
@@ -52,6 +56,7 @@ data object SettingsPreferencesKeys {
     val LIVE_WALLPAPER_TRANSITION = booleanPreferencesKey("liveWallpaperTransition")
     val DEFAULT_STYLE_ID = longPreferencesKey("defaultStyleId")
     val FORCED_USED_RULE_ID = longPreferencesKey("forcedUsedRuleId")
+    val DOUBLE_TAP_EVENT = stringPreferencesKey("doubleTapEvent")
 }
 
 val DEFAULT_SETTINGS =
@@ -68,4 +73,5 @@ val DEFAULT_SETTINGS =
         liveWallpaperTransition = false,
         defaultStyleId = -1,
         forcedUsedRuleId = -1,
+        doubleTapEvent = GestureEvent.CHANGE_WALLPAPER.name
     )
