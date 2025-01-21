@@ -19,6 +19,7 @@ data class SettingsPreferences(
     var defaultStyleId: Long,
     var forcedUsedRuleId: Long,
     var doubleTapEvent: String,
+    var enableLog: Boolean,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -39,8 +40,10 @@ data class SettingsPreferences(
         result = 31 * result + defaultStyleId.hashCode()
         result = 31 * result + forcedUsedRuleId.hashCode()
         result = 31 * result + doubleTapEvent.hashCode()
+        result = 31 * result + enableLog.hashCode()
         return result
     }
+
 }
 
 data object SettingsPreferencesKeys {
@@ -57,6 +60,7 @@ data object SettingsPreferencesKeys {
     val DEFAULT_STYLE_ID = longPreferencesKey("defaultStyleId")
     val FORCED_USED_RULE_ID = longPreferencesKey("forcedUsedRuleId")
     val DOUBLE_TAP_EVENT = stringPreferencesKey("doubleTapEvent")
+    val ENABLE_LOG = booleanPreferencesKey("enableLog")
 }
 
 val DEFAULT_SETTINGS =
@@ -73,5 +77,6 @@ val DEFAULT_SETTINGS =
         liveWallpaperTransition = false,
         defaultStyleId = -1,
         forcedUsedRuleId = -1,
-        doubleTapEvent = GestureEvent.CHANGE_WALLPAPER.name
+        doubleTapEvent = GestureEvent.CHANGE_WALLPAPER.name,
+        enableLog = false,
     )

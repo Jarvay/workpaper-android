@@ -1,6 +1,5 @@
 package jarvay.workpaper.compose.album
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +34,6 @@ fun AlbumUpdateDialog(
                 }
             },
             onConfirm = { newName ->
-                Log.d("album", album.toString())
                 album?.let {
                     if (viewModel.exists(newName, album.albumId)) {
                         errorMessage = context.getString(R.string.album_name_exists)

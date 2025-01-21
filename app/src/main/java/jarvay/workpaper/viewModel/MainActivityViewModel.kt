@@ -1,10 +1,10 @@
 package jarvay.workpaper.viewModel
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.BuildConfig
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
@@ -35,7 +35,6 @@ class MainActivityViewModel @Inject constructor(
     val checkingUpdate = MutableLiveData(false)
 
     init {
-        Log.d(javaClass.simpleName, "init")
         viewModelScope.launch {
             val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (settings.autoCheckUpdate) {
@@ -49,17 +48,8 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val result = retrofitClient.updateService.data()
-                Log.d(javaClass.simpleName, listOf("checkUpdate", result).joinToString(", "))
-
                 val latest = result.latestVersion
 
-                Log.d(
-                    "BuildConfig.VERSION_CODE < latestVersion.versionCode",
-                    (BuildConfig.VERSION_CODE < latest.versionCode).toString()
-                )
-
-                Log.d("BuildConfig.VERSION_CODE", BuildConfig.VERSION_CODE.toString())
-                Log.d("latest.versionCode", latest.versionCode.toString())
                 var hasNewVersion = false
                 if (BuildConfig.VERSION_CODE < latest.versionCode) {
                     latestVersion.value = latest
@@ -70,7 +60,7 @@ class MainActivityViewModel @Inject constructor(
                 onResult(hasNewVersion)
             } catch (e: Exception) {
                 checkingUpdate.value = false
-                Log.d("checkUpdate failed", e.toString())
+                LogUtils.i(javaClass.simpleName, "checkUpdate failed", e.toString())
                 onError()
             }
         }

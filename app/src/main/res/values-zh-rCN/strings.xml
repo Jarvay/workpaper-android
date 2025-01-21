@@ -116,6 +116,7 @@
     <string name="settings_item_live_wallpaper_double_tap">双击壁纸执行</string>
     <string name="settings_item_live_wallpaper_transition">过渡动画</string>
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
+    <string name="settings_item_enable_log">保存日志</string>
 
     <string name="gesture_event_none">无操作</string>
     <string name="gesture_event_lock_screen">锁屏</string>

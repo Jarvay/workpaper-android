@@ -19,6 +19,7 @@ hiltNavigationCompose = "1.2.0"
 retrofit = "2.11.0"
 roomCommon = "2.6.1"
 roomKtx = "2.6.1"
+utilcodex = "1.31.1"
 work = "2.9.1"
 lifecycle = "2.8.4"
 runtimeLivedata = "1.6.8"
@@ -80,6 +81,7 @@ androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-s
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3Exoplayer" }
+utilcodex = { module = "com.blankj:utilcodex", version.ref = "utilcodex" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

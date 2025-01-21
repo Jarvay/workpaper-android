@@ -9,12 +9,12 @@ import android.content.res.Resources
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Environment
-import android.util.Log
 import android.util.Size
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
 import jarvay.workpaper.data.preferences.RunningPreferences
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
@@ -64,10 +64,7 @@ fun findRule(
         }
     }
 
-    val list = rules.apply {
-        Log.d("rules", rules.toString())
-    }
-    return finder(list)
+    return finder(rules)
 }
 
 fun currentMillis(): Long {
@@ -157,11 +154,8 @@ fun download(url: String, context: Context): Long {
         )
     }
 
-    Log.d("request", request.toString())
-
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     val id = downloadManager.enqueue(request)
-    Log.d("download id", id.toString())
     return id
 }
 
@@ -182,7 +176,7 @@ fun installApk(uri: Uri?, context: Context) {
         try {
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e("install apk failed", e.toString())
+            LogUtils.e("install apk failed", e.toString())
         }
     }
 }

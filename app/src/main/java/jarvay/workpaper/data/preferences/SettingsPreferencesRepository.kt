@@ -40,6 +40,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.forcedUsedRuleId,
                 doubleTapEvent = preferences[SettingsPreferencesKeys.DOUBLE_TAP_EVENT]
                     ?: DEFAULT_SETTINGS.doubleTapEvent,
+                enableLog = preferences[SettingsPreferencesKeys.ENABLE_LOG]
+                    ?: DEFAULT_SETTINGS.enableLog,
             )
         }.distinctUntilChanged { old, new ->
             old == new

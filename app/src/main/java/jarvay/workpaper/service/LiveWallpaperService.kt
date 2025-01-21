@@ -1,8 +1,10 @@
 package jarvay.workpaper.service
 
 import android.app.admin.DevicePolicyManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -11,18 +13,19 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.opengl.GLSurfaceView
 import android.service.wallpaper.WallpaperService
-import android.util.Log
 import android.util.Size
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import androidx.annotation.OptIn
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
@@ -51,10 +54,36 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
 
+    private var isScreenOn = true
+
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent == null || context == null) return
+
+            if (intent.action == Intent.ACTION_SCREEN_ON) {
+                isScreenOn = true
+            }
+            if (intent.action == Intent.ACTION_SCREEN_OFF) {
+                isScreenOn = false
+            }
+        }
+    }
+
 
     override fun onCreate() {
         super.onCreate()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+
+        val intentFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
+        }
+        ContextCompat.registerReceiver(
+            this,
+            screenStateReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_EXPORTED
+        )
     }
 
     @OptIn(UnstableApi::class)
@@ -65,7 +94,8 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
     override fun onDestroy() {
         super.onDestroy()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        Log.d(javaClass.simpleName, "onDestroy")
+
+        unregisterReceiver(screenStateReceiver)
     }
 
     @UnstableApi
@@ -101,7 +131,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private val gestureListener = object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
                 val result = super.onDoubleTap(e)
-                Log.d(javaClass.simpleName, "onDoubleTap")
 
                 when (doubleTapEvent) {
                     GestureEvent.NONE -> {
@@ -147,8 +176,13 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
             MainScope().launch {
                 workpaper.imageUri.collect {
-                    Log.d("imageUri collected", it.toString())
                     if (it == null) return@collect
+                    LogUtils.i(
+                        this@LiveWallpaperEngine.javaClass.simpleName,
+                        "On image uri",
+                        it.toString()
+                    )
+
                     withContext(Dispatchers.IO) {
                         setImageBitmap(it.toUri())
                     }
@@ -156,14 +190,18 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             }
             MainScope().launch {
                 workpaper.videoUri.collect {
-                    Log.d("videoUri collected", it.toString())
                     if (it == null) return@collect
+                    LogUtils.i(
+                        this@LiveWallpaperEngine.javaClass.simpleName,
+                        "On video uri",
+                        it.toString()
+                    )
+
                     startVideo(it.toUri())
                 }
             }
 
             engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-            Log.d(javaClass.simpleName, "onCreate")
         }
 
         override fun onDestroy() {
@@ -172,7 +210,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         }
 
         override fun onTouchEvent(event: MotionEvent?) {
-            Log.d("onTouchEvent", event.toString())
             super.onTouchEvent(event)
             if (event == null) return
             gestureDetector.onTouchEvent(event)
@@ -181,7 +218,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
             isVisible = visible
-            Log.d("onVisibilityChanged", visible.toString())
             if (renderer == null) return
 
             when (renderer!!.wallpaperType) {
@@ -216,7 +252,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         override fun onSurfaceCreated(holder: SurfaceHolder) {
             super.onSurfaceCreated(holder)
             initSurfaceView()
-            Log.d("onSurfaceCreated", "onSurfaceCreated")
         }
 
         override fun onSurfaceDestroyed(holder: SurfaceHolder?) {
@@ -274,9 +309,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private suspend fun loadBitmap(uri: Uri?): Bitmap? {
             if (uri == null) return null
 
-            Log.d("loadBitmap", surfaceSize.toString())
-            Log.d("surfaceView", listOf(surfaceView?.width, surfaceView?.height).toString())
-
             val originBitmap =
                 bitmapFromContentUri(uri, this@LiveWallpaperService)
                     ?: return null
@@ -305,7 +337,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                     renderer!!.surfaceSize.collect {
                         if (it.width > 0) {
                             surfaceSize = Size(it.width, it.height)
-                            Log.d("surfaceSize collected", it.toString())
                         }
                     }
                 }
@@ -332,6 +363,12 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private fun startVideo(uri: Uri) {
             if (renderer == null) return
 
+            LogUtils.i(
+                this@LiveWallpaperEngine.javaClass.simpleName,
+                "fun startVideo",
+                "isVisible=$isVisible, isScreenOn=$isScreenOn"
+            )
+
             renderer!!.videoRenderer.setSourcePlayer(player)
             renderer!!.updateWallpaperType(WallpaperType.VIDEO)
 
@@ -342,9 +379,10 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 setVolume(0f, 0f)
                 isLooping = true
                 setDataSource(this@LiveWallpaperService, uri)
-                if (isVisible) {
+                if (isVisible && isScreenOn) {
                     setOnPreparedListener {
                         it.start()
+                        LogUtils.i(javaClass.simpleName, "player started")
                     }
                 }
                 prepareAsync()

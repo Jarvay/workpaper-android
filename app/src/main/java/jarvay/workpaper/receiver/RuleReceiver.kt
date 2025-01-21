@@ -6,7 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
-import android.util.Log
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
@@ -36,33 +36,33 @@ class RuleReceiver : BroadcastReceiver() {
         if (context == null || intent == null) return
 
         val ruleId = intent.getLongExtra(RULE_ID_KEY, -1)
-        Log.d(javaClass.simpleName, ruleId.toString())
         val ruleWithRelation = ruleRepository.findRuleById(ruleId)
+
+        if (ruleWithRelation == null) {
+            LogUtils.i(javaClass.simpleName, "Can not find rule where id=$ruleId")
+            return
+        }
 
         workpaper.currentRuleId.value = ruleId
 
-        if (ruleId > -1 && ruleWithRelation != null) {
-            workpaper.cancelAlarm(type = AlarmType.REPEAT)
+        workpaper.cancelAlarm(type = AlarmType.REPEAT)
 
-            workpaper.wallpapers =
-                ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<Wallpaper>>(
-                    mutableListOf()
-                ) { acc, album ->
-                    acc.addAll(album.wallpapers.map { it })
-                    acc
-                }.apply {
-                    if (ruleWithRelation.rule.random) shuffle()
-                }
+        workpaper.wallpapers =
+            ruleWithRelation.albums.fold<AlbumWithWallpapers, MutableList<Wallpaper>>(
+                mutableListOf()
+            ) { acc, album ->
+                acc.addAll(album.wallpapers.map { it })
+                acc
+            }.apply {
+                if (ruleWithRelation.rule.random) shuffle()
+            }
 
+        MainScope().launch(Dispatchers.IO) {
+            runningPreferencesRepository.update(RunningPreferencesKeys.LAST_INDEX, -1)
 
-            Log.d("defaultPreferencesRepository", runningPreferencesRepository.toString())
-            MainScope().launch(Dispatchers.IO) {
-                runningPreferencesRepository.update(RunningPreferencesKeys.LAST_INDEX, -1)
-
-                sendWallpaperBroadcast(context)
-                if (ruleWithRelation.rule.changeByTiming) {
-                    startRepeatAlarm(context, ruleWithRelation.rule)
-                }
+            sendWallpaperBroadcast(context)
+            if (ruleWithRelation.rule.changeByTiming) {
+                startRepeatAlarm(context, ruleWithRelation.rule)
             }
         }
 
@@ -91,9 +91,8 @@ class RuleReceiver : BroadcastReceiver() {
                 interval.toLong(),
                 pendingIntent
             )
-            Log.d("alarmManager.setRepeating", interval.toString())
         } catch (e: SecurityException) {
-            Log.e(javaClass.simpleName, e.toString())
+            LogUtils.e(javaClass.simpleName, "Can not set wallpaper alarm", e.toString())
         }
     }
 

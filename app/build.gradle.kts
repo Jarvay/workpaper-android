@@ -15,7 +15,7 @@ android {
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 16
-        versionName = "2.2.0"
+        versionName = "2.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -115,6 +115,8 @@ dependencies {
     implementation(libs.androidx.glance.glance.appwidget2)
     implementation(libs.glance.material3)
     implementation(libs.androidx.glance.material)
+
+    implementation(libs.utilcodex)
 
     implementation(fileTree("libs"))
 }

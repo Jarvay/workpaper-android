@@ -4,7 +4,6 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
@@ -27,8 +26,6 @@ class NotificationReceiver : BroadcastReceiver() {
     lateinit var notificationHelper: NotificationHelper
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d(javaClass.simpleName, "onReceive")
-
         if (context == null || intent == null) return
 
         MainScope().launch {

@@ -1,6 +1,5 @@
 package jarvay.workpaper.data.rule
 
-import android.util.Log
 import androidx.annotation.WorkerThread
 import androidx.room.withTransaction
 import jarvay.workpaper.data.AppDatabase
@@ -39,7 +38,6 @@ class RuleRepository @Inject constructor(
     suspend fun insert(item: Rule) {
         appDatabase.withTransaction {
             val ruleId = ruleDao.insert(item)
-            Log.d("ruleId", ruleId.toString())
 
             val ruleAlbumRelations = item.albumIds.map {
                 RuleAlbumRelation(
@@ -54,7 +52,6 @@ class RuleRepository @Inject constructor(
 
     @WorkerThread
     suspend fun update(item: Rule) {
-        Log.d(javaClass.simpleName, item.toString())
         appDatabase.withTransaction {
             ruleDao.update(item)
             ruleAlbumRelationDao.deleteByRuleId(item.ruleId)
