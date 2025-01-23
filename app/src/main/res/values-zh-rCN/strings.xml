@@ -114,7 +114,7 @@
     <string name="settings_item_disabled_when_playing_audio">播放音频时不更换壁纸</string>
     <string name="settings_item_use_live_wallpaper">以动态壁纸模式运行</string>
     <string name="settings_item_live_wallpaper_double_tap">双击壁纸执行</string>
-    <string name="settings_item_live_wallpaper_transition">过渡动画</string>
+    <string name="settings_item_video_wallpaper_reset_on_screen_off">熄屏后重置视频进度</string>
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
     <string name="settings_item_enable_log">保存日志</string>
 

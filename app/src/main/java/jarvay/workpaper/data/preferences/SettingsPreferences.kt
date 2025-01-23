@@ -15,7 +15,7 @@ data class SettingsPreferences(
     var enableDynamicColor: Boolean,
     var disableWhenPlayingAudio: Boolean,
     var useLiveWallpaper: Boolean,
-    var liveWallpaperTransition: Boolean,
+    var videoResetProgressOnScreenOff: Boolean,
     var defaultStyleId: Long,
     var forcedUsedRuleId: Long,
     var doubleTapEvent: String,
@@ -36,7 +36,7 @@ data class SettingsPreferences(
         result = 31 * result + enableDynamicColor.hashCode()
         result = 31 * result + disableWhenPlayingAudio.hashCode()
         result = 31 * result + useLiveWallpaper.hashCode()
-        result = 31 * result + liveWallpaperTransition.hashCode()
+        result = 31 * result + videoResetProgressOnScreenOff.hashCode()
         result = 31 * result + defaultStyleId.hashCode()
         result = 31 * result + forcedUsedRuleId.hashCode()
         result = 31 * result + doubleTapEvent.hashCode()
@@ -56,7 +56,7 @@ data object SettingsPreferencesKeys {
     val AUTO_CHECK_UPDATE = booleanPreferencesKey("autoCheckUpdate")
     val DISABLE_WHEN_PLAYING_AUDIO = booleanPreferencesKey("disableWhenPlayingAudio")
     val USE_LIVE_WALLPAPER = booleanPreferencesKey("useLiveWallpaper")
-    val LIVE_WALLPAPER_TRANSITION = booleanPreferencesKey("liveWallpaperTransition")
+    val VIDEO_RESET_PROGRESS_ON_SCREEN_OFF = booleanPreferencesKey("videoResetProgressOnScreenOff")
     val DEFAULT_STYLE_ID = longPreferencesKey("defaultStyleId")
     val FORCED_USED_RULE_ID = longPreferencesKey("forcedUsedRuleId")
     val DOUBLE_TAP_EVENT = stringPreferencesKey("doubleTapEvent")
@@ -74,7 +74,7 @@ val DEFAULT_SETTINGS =
         enableDynamicColor = false,
         disableWhenPlayingAudio = false,
         useLiveWallpaper = false,
-        liveWallpaperTransition = false,
+        videoResetProgressOnScreenOff = false,
         defaultStyleId = -1,
         forcedUsedRuleId = -1,
         doubleTapEvent = GestureEvent.CHANGE_WALLPAPER.name,

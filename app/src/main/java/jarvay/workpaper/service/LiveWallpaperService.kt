@@ -54,36 +54,10 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
 
-    private var isScreenOn = true
-
-    private val screenStateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent == null || context == null) return
-
-            if (intent.action == Intent.ACTION_SCREEN_ON) {
-                isScreenOn = true
-            }
-            if (intent.action == Intent.ACTION_SCREEN_OFF) {
-                isScreenOn = false
-            }
-        }
-    }
-
 
     override fun onCreate() {
         super.onCreate()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-
-        val intentFilter = IntentFilter().apply {
-            addAction(Intent.ACTION_SCREEN_ON)
-            addAction(Intent.ACTION_SCREEN_OFF)
-        }
-        ContextCompat.registerReceiver(
-            this,
-            screenStateReceiver,
-            intentFilter,
-            ContextCompat.RECEIVER_EXPORTED
-        )
     }
 
     @OptIn(UnstableApi::class)
@@ -94,8 +68,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
     override fun onDestroy() {
         super.onDestroy()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-
-        unregisterReceiver(screenStateReceiver)
     }
 
     @UnstableApi
@@ -108,21 +80,24 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private var renderer: WallpaperRenderer? = null
         private val player: MediaPlayer = MediaPlayer()
         private var isVisible = false
-        private var showTransition = false
+        private var resetOnScreenOff = false
         private var doubleTapEvent: GestureEvent = GestureEvent.NONE
+        private var isScreenOn = true
 
-        init {
-            player.apply {
-                setVolume(0f, 0f)
-                isLooping = true
-            }
-            lifecycleScope.launch {
-                workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
-                    showTransition = it.liveWallpaperTransition
-                    doubleTapEvent = try {
-                        GestureEvent.valueOf(it.doubleTapEvent)
-                    } catch (e: Exception) {
-                        GestureEvent.NONE
+        private val screenStateReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent == null || context == null) return
+
+                if (intent.action == Intent.ACTION_SCREEN_ON) {
+                    isScreenOn = true
+                }
+                if (intent.action == Intent.ACTION_SCREEN_OFF) {
+                    isScreenOn = false
+                    if (player.isPlaying) {
+                        player.pause()
+                    }
+                    if (resetOnScreenOff) {
+                        player.seekTo(0);
                     }
                 }
             }
@@ -171,8 +146,36 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         }
         private val gestureDetector = GestureDetector(this@LiveWallpaperService, gestureListener)
 
+        init {
+            player.apply {
+                setVolume(0f, 0f)
+                isLooping = true
+            }
+            lifecycleScope.launch {
+                workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
+                    resetOnScreenOff = it.videoResetProgressOnScreenOff
+                    doubleTapEvent = try {
+                        GestureEvent.valueOf(it.doubleTapEvent)
+                    } catch (e: Exception) {
+                        GestureEvent.NONE
+                    }
+                }
+            }
+        }
+
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
+
+            val intentFilter = IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_SCREEN_OFF)
+            }
+            ContextCompat.registerReceiver(
+                this@LiveWallpaperService,
+                screenStateReceiver,
+                intentFilter,
+                ContextCompat.RECEIVER_EXPORTED
+            )
 
             MainScope().launch {
                 workpaper.imageUri.collect {
@@ -207,6 +210,8 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         override fun onDestroy() {
             super.onDestroy()
             engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+
+            unregisterReceiver(screenStateReceiver)
         }
 
         override fun onTouchEvent(event: MotionEvent?) {
@@ -233,16 +238,10 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         private fun onImageVisibleChanged(visible: Boolean) {
             if (renderer == null) return
-            if (visible && showTransition) {
-                renderer!!.scaleTransition(1.4f)
-            }
         }
 
         private fun onVideoVisibleChanged(visible: Boolean) {
             if (visible) {
-                if (showTransition) {
-                    renderer!!.scaleTransition(1.4f)
-                }
                 player.start()
             } else {
                 player.pause()
