@@ -5,13 +5,17 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.HiltAndroidApp
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
+import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.receiver.UnlockReceiver
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
+
 
 @HiltAndroidApp
 class MainApplication : Application(), Configuration.Provider {
@@ -22,6 +26,9 @@ class MainApplication : Application(), Configuration.Provider {
     lateinit var runningPreferencesRepository: RunningPreferencesRepository
 
     @Inject
+    lateinit var settingsPreferencesRepository: SettingsPreferencesRepository
+
+    @Inject
     lateinit var workpaper: Workpaper
 
     override val workManagerConfiguration: Configuration
@@ -30,8 +37,28 @@ class MainApplication : Application(), Configuration.Provider {
             .setMinimumLoggingLevel(if (BuildConfig.DEBUG) android.util.Log.DEBUG else android.util.Log.ERROR)
             .build()
 
+    private fun initLogUtils() {
+        LogUtils.getConfig().apply {
+            saveDays = 7
+            setConsoleSwitch(true)
+            isLog2FileSwitch = runBlocking {
+                settingsPreferencesRepository.settingsPreferencesFlow.first().enableLog
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
+
+        MainScope().launch {
+            settingsPreferencesRepository.settingsPreferencesFlow.collect {
+                LogUtils.getConfig().apply {
+                    isLog2FileSwitch = it.enableLog
+                }
+            }
+        }
+
+        initLogUtils()
 
         val unlockReceiver = UnlockReceiver()
         val unlockFilter = IntentFilter().apply {

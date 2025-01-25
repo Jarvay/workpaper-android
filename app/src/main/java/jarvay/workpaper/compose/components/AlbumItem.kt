@@ -1,6 +1,5 @@
 package jarvay.workpaper.compose.components
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -23,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.wallpaper.Wallpaper
@@ -44,7 +44,7 @@ fun AlbumItem(
         ImageRequest.Builder(context).data(cover).size(256, 256)
             .build()
     } catch (e: Exception) {
-        Log.w("AlbumItem", e.toString())
+        LogUtils.e("AlbumItem", "Load album cover failed", e.toString())
         null
     }
 

@@ -1,6 +1,5 @@
 package jarvay.workpaper.data
 
-import android.util.Log
 import androidx.core.database.getLongOrNull
 import androidx.core.database.getStringOrNull
 import androidx.room.migration.Migration
@@ -30,7 +29,6 @@ val Migration_1_2 = object : Migration(1, 2) {
             }
         }
         val values = wallpapers.joinToString(separator = ",")
-        Log.d(javaClass.simpleName, "INSERT INTO wallpapers(albumId, contentUri) VALUES $values;")
         db.execSQL("INSERT INTO wallpapers(`albumId`, `contentUri`) VALUES $values;")
 
         db.execSQL("ALTER TABLE albums DROP COLUMN wallpaperUris")

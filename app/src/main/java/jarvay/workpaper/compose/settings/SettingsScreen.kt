@@ -7,7 +7,6 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.service.wallpaper.WallpaperService.ACTIVITY_SERVICE
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,7 +77,6 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
     val deviceAdminLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { result: ActivityResult ->
-            Log.d("deviceAdminLauncher", result.toString())
             if (result.resultCode == Activity.RESULT_OK) {
                 viewModel.update(
                     SettingsPreferencesKeys.DOUBLE_TAP_EVENT,
@@ -197,11 +195,14 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
             }
 
             if (settings.useLiveWallpaper) {
-                SettingsItem(labelId = R.string.settings_item_live_wallpaper_transition) {
+                SettingsItem(labelId = R.string.settings_item_video_wallpaper_reset_on_screen_off) {
                     Switch(
-                        checked = settings.liveWallpaperTransition,
+                        checked = settings.videoResetProgressOnScreenOff,
                         onCheckedChange = { c ->
-                            viewModel.update(SettingsPreferencesKeys.LIVE_WALLPAPER_TRANSITION, c)
+                            viewModel.update(
+                                SettingsPreferencesKeys.VIDEO_RESET_PROGRESS_ON_SCREEN_OFF,
+                                c
+                            )
                         })
                 }
 
@@ -264,6 +265,14 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                 }
             }
 
+            SettingsItem(labelId = R.string.settings_item_enable_log) {
+                Switch(
+                    checked = settings.enableLog,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.ENABLE_LOG, c)
+                    })
+            }
+
             SettingsItem(labelId = R.string.settings_item_auto_check_update) {
                 Switch(
                     checked = settings.autoCheckUpdate,
@@ -284,7 +293,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
             text = stringResource(id = R.string.permission_request_device_admin),
             show = deviceAdminDialogShow,
             onDismissRequest = { deviceAdminDialogShow = false }) {
-                deviceAdminLauncher.launch(deviceAdminIntent(context))
+            deviceAdminLauncher.launch(deviceAdminIntent(context))
         }
     }
 }

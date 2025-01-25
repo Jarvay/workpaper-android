@@ -2,7 +2,7 @@ package jarvay.workpaper.request
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.util.Log
+import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
 import jarvay.workpaper.others.Global
 import kotlinx.coroutines.launch
@@ -31,7 +31,7 @@ class RequestInterceptor(val context: Context) : Interceptor {
         try {
             return chain.proceed(chain.request())
         } catch (e: Exception) {
-            Log.e("RetrofitClient request error", e.message ?: e.toString())
+            LogUtils.e("RetrofitClient request error", e.message ?: e.toString())
             throw e
         }
     }
@@ -41,7 +41,7 @@ class RequestInterceptor(val context: Context) : Interceptor {
 class RetrofitClient(context: Context) {
     companion object {
         const val BASE_URL =
-            "https://ghp.ci/https://raw.githubusercontent.com/Jarvay/workpaper-android-release/main/"
+            "https://ghfast.top/https://raw.githubusercontent.com/Jarvay/workpaper-android-release/main/"
     }
 
     private val okHttpClient = OkHttpClient.Builder()

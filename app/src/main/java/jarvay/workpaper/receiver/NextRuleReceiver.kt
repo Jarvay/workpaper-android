@@ -6,7 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.icu.util.Calendar
-import android.util.Log
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.AlarmType
 import jarvay.workpaper.Workpaper
@@ -20,7 +20,6 @@ import jarvay.workpaper.others.nextRule
 import jarvay.workpaper.receiver.RuleReceiver.Companion.RULE_ID_KEY
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import java.util.Date
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -41,6 +40,8 @@ class NextRuleReceiver : BroadcastReceiver() {
     lateinit var workpaper: Workpaper
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        if (intent == null || context == null) return
+
         val forcedRuleId: Long = runBlocking {
             settingsPreferencesRepository.settingsPreferencesFlow.first().forcedUsedRuleId
         }
@@ -56,18 +57,17 @@ class NextRuleReceiver : BroadcastReceiver() {
         } else {
             nextRule(list)
         }
-        Log.d("nextRule", nextRule.toString())
 
-        if (intent == null || context == null || nextRule == null) return
+        if (nextRule == null) {
+            LogUtils.i(javaClass.simpleName, "Next rule is null")
+            return
+        }
 
         val calendar = getCalendarWithRule(nextRule.ruleWithRelation.rule, nextRule.day)
         val now = Calendar.getInstance().timeInMillis
         if (calendar.timeInMillis <= now) {
             calendar.add(Calendar.DATE, 7)
         }
-        Log.d("nextRule time", Date(calendar.timeInMillis).toString())
-        Log.d("nextRule timeInMillis", calendar.timeInMillis.toString())
-        Log.d("now timeInMillis", now.toString())
 
         workpaper.nextRuleId.value = nextRule.ruleWithRelation.rule.ruleId
 
@@ -88,9 +88,9 @@ class NextRuleReceiver : BroadcastReceiver() {
                 calendar.timeInMillis,
                 pendingIntent
             )
-            Log.d("Added next rule to alarm", nextRule.toString())
+            LogUtils.i(javaClass.simpleName, "Rule alarm added", calendar)
         } catch (e: SecurityException) {
-            Log.e(javaClass.simpleName, e.toString())
+            LogUtils.e(javaClass.simpleName, "Failed to set alarm", e.toString())
         }
 
         workpaper.nextRuleTime = calendar.timeInMillis

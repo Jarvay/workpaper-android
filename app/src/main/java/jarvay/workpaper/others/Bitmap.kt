@@ -13,8 +13,8 @@ import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.annotation.IntRange
+import com.blankj.utilcode.util.LogUtils
 import com.google.android.renderscript.Toolkit
 import java.util.Random
 import kotlin.math.max
@@ -73,7 +73,7 @@ fun bitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
                     BitmapFactory.decodeStream(inputStream, null, options)
                 }
         } catch (e: Exception) {
-            Log.w("bitmapFromContentUri", e.toString())
+            LogUtils.w("bitmapFromContentUri", "Load bitmap failed", e.toString())
             e.printStackTrace()
             null
         }

@@ -2,7 +2,6 @@ package jarvay.workpaper.compose.album
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,6 +61,7 @@ import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
+import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
@@ -155,7 +155,6 @@ fun AlbumDetailScreen(
                 if (permissions.any { it.uri == uri }) {
                     val file = DocumentFile.fromSingleUri(context, uri)
                     file?.let {
-                        Log.d("file", it.type.toString())
                         newWallpapers.add(
                             Wallpaper(
                                 contentUri = uri.toString(),
@@ -384,7 +383,7 @@ private fun WallpaperItem(
             .crossfade(true)
             .build()
     } catch (e: Exception) {
-        Log.w("AlbumDetailScreen", e.toString())
+        LogUtils.e("AlbumDetailScreen", "Load wallpaper failed", e.toString())
         null
     }
 

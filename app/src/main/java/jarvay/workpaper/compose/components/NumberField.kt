@@ -1,6 +1,5 @@
 package jarvay.workpaper.compose.components
 
-import android.util.Log
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -40,7 +39,6 @@ fun NumberField(
     }
 
     val onChange: (Int) -> Unit = { newValue ->
-        Log.d("onChange", newValue.toString())
         var result = newValue
 
         min?.let {
