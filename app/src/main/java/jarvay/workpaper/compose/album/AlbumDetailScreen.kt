@@ -76,6 +76,7 @@ import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,25 +149,27 @@ fun AlbumDetailScreen(
             }
 
             val newWallpapers = mutableListOf<Wallpaper>()
-            for (uri in splitUris) {
-                if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
-                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                val permissions = context.contentResolver.persistedUriPermissions
-                if (permissions.any { it.uri == uri }) {
-                    val file = DocumentFile.fromSingleUri(context, uri)
-                    file?.let {
-                        newWallpapers.add(
-                            Wallpaper(
-                                contentUri = uri.toString(),
-                                type = wallpaperType(it.type ?: ""),
-                                albumId = album.albumId
+            MainScope().launch {
+                for (uri in splitUris) {
+                    if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
+                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                    val permissions = context.contentResolver.persistedUriPermissions
+                    if (permissions.any { it.uri == uri }) {
+                        val file = DocumentFile.fromSingleUri(context, uri)
+                        file?.let {
+                            newWallpapers.add(
+                                Wallpaper(
+                                    contentUri = uri.toString(),
+                                    type = wallpaperType(it.type ?: ""),
+                                    albumId = album.albumId
+                                )
                             )
-                        )
+                        }
                     }
                 }
-            }
 
-            viewModel.addWallpapers(newWallpapers)
+                viewModel.addWallpapers(newWallpapers)
+            }
         }
     )
 
@@ -174,7 +177,7 @@ fun AlbumDetailScreen(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri: Uri? ->
             simpleSnackbar.show(R.string.album_add_wallpaper_folder_tips)
-            scope.launch(Dispatchers.IO) {
+            MainScope().launch(Dispatchers.IO) {
                 viewModel.loading.value = true
                 val takeFlags: Int =
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
