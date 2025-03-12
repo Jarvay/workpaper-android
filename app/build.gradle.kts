@@ -14,8 +14,8 @@ android {
         applicationId = "jarvay.workpaper"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 15
-        versionName = "2.1.0"
+        versionCode = 18
+        versionName = "2.4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -115,6 +115,8 @@ dependencies {
     implementation(libs.androidx.glance.glance.appwidget2)
     implementation(libs.glance.material3)
     implementation(libs.androidx.glance.material)
+
+    implementation(libs.utilcodex)
 
     implementation(fileTree("libs"))
 }

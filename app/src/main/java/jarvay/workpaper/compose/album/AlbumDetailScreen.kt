@@ -2,7 +2,6 @@ package jarvay.workpaper.compose.album
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -62,6 +61,7 @@ import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
+import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
@@ -76,6 +76,7 @@ import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,26 +149,27 @@ fun AlbumDetailScreen(
             }
 
             val newWallpapers = mutableListOf<Wallpaper>()
-            for (uri in splitUris) {
-                if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
-                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                val permissions = context.contentResolver.persistedUriPermissions
-                if (permissions.any { it.uri == uri }) {
-                    val file = DocumentFile.fromSingleUri(context, uri)
-                    file?.let {
-                        Log.d("file", it.type.toString())
-                        newWallpapers.add(
-                            Wallpaper(
-                                contentUri = uri.toString(),
-                                type = wallpaperType(it.type ?: ""),
-                                albumId = album.albumId
+            MainScope().launch {
+                for (uri in splitUris) {
+                    if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
+                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                    val permissions = context.contentResolver.persistedUriPermissions
+                    if (permissions.any { it.uri == uri }) {
+                        val file = DocumentFile.fromSingleUri(context, uri)
+                        file?.let {
+                            newWallpapers.add(
+                                Wallpaper(
+                                    contentUri = uri.toString(),
+                                    type = wallpaperType(it.type ?: ""),
+                                    albumId = album.albumId
+                                )
                             )
-                        )
+                        }
                     }
                 }
-            }
 
-            viewModel.addWallpapers(newWallpapers)
+                viewModel.addWallpapers(newWallpapers)
+            }
         }
     )
 
@@ -175,7 +177,7 @@ fun AlbumDetailScreen(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri: Uri? ->
             simpleSnackbar.show(R.string.album_add_wallpaper_folder_tips)
-            scope.launch(Dispatchers.IO) {
+            MainScope().launch(Dispatchers.IO) {
                 viewModel.loading.value = true
                 val takeFlags: Int =
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -384,7 +386,7 @@ private fun WallpaperItem(
             .crossfade(true)
             .build()
     } catch (e: Exception) {
-        Log.w("AlbumDetailScreen", e.toString())
+        LogUtils.e("AlbumDetailScreen", "Load wallpaper failed", e.toString())
         null
     }
 

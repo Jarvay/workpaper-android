@@ -15,6 +15,7 @@ import jarvay.workpaper.data.wallpaper.WallpaperRepository
 import jarvay.workpaper.others.STATE_IN_STATED
 import jarvay.workpaper.others.SUPPORTED_WALLPAPER_TYPES_PREFIX
 import jarvay.workpaper.others.wallpaperType
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ class AlbumDetailViewModel @Inject constructor(
     }
 
     fun addWallpapers(wallpapers: List<Wallpaper>) {
-        viewModelScope.launch {
+        MainScope().launch {
             wallpaperRepository.insert(wallpapers)
         }
     }

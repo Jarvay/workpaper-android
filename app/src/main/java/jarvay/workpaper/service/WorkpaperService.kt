@@ -2,7 +2,6 @@ package jarvay.workpaper.service
 
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.coroutineScope
 import dagger.hilt.android.AndroidEntryPoint
@@ -43,8 +42,6 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
 
-        Log.d(javaClass.simpleName, Thread.currentThread().name)
-
         lifecycle.coroutineScope.launch(Dispatchers.Default) {
             val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (settings.enableNotification) {
@@ -80,8 +77,6 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
                 prevRule(list)
             }
 
-            Log.d("prev rule", prevRule.toString())
-
             val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (prevRule != null && settings.startWithPrevRule) {
                 val prevRuleIntent = Intent(this@WorkpaperService, RuleReceiver::class.java)
@@ -101,7 +96,6 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("onDestroy", javaClass.simpleName)
 
         lifecycle.coroutineScope.launch {
             workpaper.nextWallpaper.value = null
@@ -112,7 +106,5 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-
-        Log.d("onTaskRemoved", javaClass.simpleName)
     }
 }

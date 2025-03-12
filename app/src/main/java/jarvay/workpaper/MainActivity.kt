@@ -1,19 +1,17 @@
 package jarvay.workpaper
 
-import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.compose.WorkpaperApp
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
@@ -39,7 +37,6 @@ class MainActivity : ComponentActivity() {
 
     private val downloadStartReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d(javaClass.simpleName, "downloadStartReceiver")
             if (context == null || intent == null) return
             val id = intent.getLongExtra(APK_DOWNLOAD_ID_KEY, -1)
             if (id > -1) {
@@ -68,8 +65,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         viewModel.settings.observe(this) {
-            Log.d("settings update", it.toString())
-
             val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.let { manager ->
                 manager.appTasks.forEach { task ->
@@ -79,7 +74,6 @@ class MainActivity : ComponentActivity() {
         }
 
         viewModel.settings.observe(this) {
-            Log.d(javaClass.simpleName, "setContent")
             setContent {
                 WorkpaperTheme(
                     dynamicColor = it.enableDynamicColor
@@ -90,26 +84,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun registerDownloadStartListener() {
         val intentFilter = IntentFilter(ACTION_APK_DOWNLOAD_ID)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(downloadStartReceiver, intentFilter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(downloadStartReceiver, intentFilter)
-        }
+        ContextCompat.registerReceiver(
+            this,
+            downloadStartReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_EXPORTED
+        )
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun registerDownloadCompleteListener() {
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(downloadCompleteReceiver, intentFilter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(downloadCompleteReceiver, intentFilter)
-        }
+        ContextCompat.registerReceiver(
+            this,
+            downloadCompleteReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_EXPORTED
+        )
     }
 
     override fun onDestroy() {

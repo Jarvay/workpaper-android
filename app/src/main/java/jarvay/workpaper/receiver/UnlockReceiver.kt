@@ -3,7 +3,7 @@ package jarvay.workpaper.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
@@ -22,12 +22,6 @@ class UnlockReceiver : BroadcastReceiver() {
     lateinit var workpaper: Workpaper
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d(
-            javaClass.simpleName,
-            listOf("onReceive", intent.toString(), intent?.action).joinToString(", ")
-        )
-        Log.d(javaClass.simpleName, Thread.currentThread().name)
-
         if (context == null || intent == null) return
 
         val action = intent.action
@@ -36,7 +30,12 @@ class UnlockReceiver : BroadcastReceiver() {
         MainScope().launch(Dispatchers.Default) {
             if (!workpaper.isRunning()) return@launch
 
-            val ruleAlbums = workpaper.currentRuleWithRelation.first() ?: return@launch
+            val ruleAlbums = workpaper.currentRuleWithRelation.first()
+
+            if (ruleAlbums === null) {
+                LogUtils.i(javaClass.simpleName, "Current rule is null, skip")
+                return@launch
+            }
 
             if (ruleAlbums.rule.changeWhileUnlock) {
                 val i = Intent(context, WallpaperReceiver::class.java)

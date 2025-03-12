@@ -5,6 +5,7 @@
     <string name="permission_request_alarm">需要获取闹钟权限</string>
     <string name="permission_request_notification">需要获取通知权限</string>
     <string name="permission_read_storage">需要获取读取存储的权限</string>
+    <string name="permission_request_device_admin">需要获取设备管理权限，如果通过这种方式锁屏，此后的一次解锁可能不能使用指纹解锁</string>
 
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
@@ -112,9 +113,19 @@
     <string name="settings_item_auto_check_update">自动检查更新</string>
     <string name="settings_item_disabled_when_playing_audio">播放音频时不更换壁纸</string>
     <string name="settings_item_use_live_wallpaper">以动态壁纸模式运行</string>
+    <string name="settings_item_live_wallpaper_double_tap">双击壁纸执行</string>
+    <string name="settings_item_video_wallpaper_reset_on_screen_off">熄屏后重置视频进度</string>
     <string name="settings_item_allow_wallpaper_scrolling">允许壁纸滚动</string>
     <string name="settings_item_live_wallpaper_transition">过渡动画</string>
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
+    <string name="settings_item_enable_log">保存日志</string>
+
+    <string name="gesture_event_none">无操作</string>
+    <string name="gesture_event_lock_screen">锁屏</string>
+    <string name="gesture_event_change_wallpaper">更换壁纸</string>
+    <string name="gesture_event_open_wechat">打开微信</string>
+    <string name="gesture_event_open_wechat_scan">微信扫一扫</string>
+    <string name="gesture_event_open_alipay_scan">支付宝扫一扫</string>
 
     <string name="notify_will_change_at_about">预计在%s更换壁纸</string>
     <string name="notify_next_rule_at_about">下一计划将在%s生效</string>

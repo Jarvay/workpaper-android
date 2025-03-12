@@ -3,10 +3,10 @@ package jarvay.workpaper.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.worker.WallpaperWorker
@@ -22,14 +22,16 @@ class WallpaperReceiver : BroadcastReceiver() {
     lateinit var workpaper: Workpaper
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d(javaClass.simpleName, intent.toString())
-
         if (context == null || intent == null) return
 
         MainScope().launch {
             val isChangeByManual = intent.getBooleanExtra(FLAG_CHANGE_BY_MANUAL, false)
             if (isChangeByManual) {
-                val next = workpaper.getNextWallpaper() ?: return@launch
+                val next = workpaper.getNextWallpaper()
+                if (next == null) {
+                    LogUtils.w(javaClass.simpleName, "Next wallpaper is null")
+                    return@launch
+                }
                 workpaper.setNextWallpaper(next.copy(isManual = true))
             }
 
@@ -39,7 +41,7 @@ class WallpaperReceiver : BroadcastReceiver() {
                     workManager.getWorkInfoByIdFlow(workpaper.lastWallpaperWorkerId!!).first()
                 }
                 if (!lastWorkInfo.state.isFinished) {
-                    Log.d(javaClass.simpleName, "Last worker not finished, skip")
+                    LogUtils.i(javaClass.simpleName, "Last work not finished, skip")
                     return@launch
                 }
             }
@@ -48,7 +50,7 @@ class WallpaperReceiver : BroadcastReceiver() {
                 .build()
             workpaper.lastWallpaperWorkerId = wallpaperWorkRequest.id
             WorkManager.getInstance(context).enqueue(wallpaperWorkRequest)
-            Log.d("WallpaperWork enqueue", wallpaperWorkRequest.toString())
+            LogUtils.i(javaClass.simpleName, "WallpaperWork enqueue")
         }
     }
 

@@ -3,7 +3,6 @@ package jarvay.workpaper.compose.home
 import android.app.AlarmManager
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -194,7 +193,6 @@ private fun checkPermissions(context: Context, onRequestPermission: () -> Unit):
         val alarmManager: AlarmManager =
             context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         hasPermission = alarmManager.canScheduleExactAlarms()
-        Log.d("checkPermissions", hasPermission.toString())
 
         if (!hasPermission) {
             onRequestPermission()

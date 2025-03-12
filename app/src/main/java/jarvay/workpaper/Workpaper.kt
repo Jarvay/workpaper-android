@@ -7,7 +7,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
@@ -91,8 +90,6 @@ class Workpaper @Inject constructor(
     }
 
     fun start() {
-        Log.d(javaClass.simpleName, "start")
-
         val i = Intent(context, WorkpaperService::class.java)
         context.startService(i)
 
@@ -114,8 +111,6 @@ class Workpaper @Inject constructor(
     }
 
     suspend fun stop() {
-        Log.d(javaClass.simpleName, "stop")
-
         currentRuleId.value = -1
         nextRuleId.value = -1
 
@@ -169,8 +164,6 @@ class Workpaper @Inject constructor(
     }
 
     fun cancelAlarm(type: AlarmType) {
-        Log.d("cancelAlarm", type.toString())
-
         val pendingIntent = getPendingIntent(type)
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.cancel(pendingIntent)
@@ -199,9 +192,6 @@ class Workpaper @Inject constructor(
         isManual: Boolean = false,
         ruleId: Long? = null
     ): NextWallpaper? {
-        val runningPreferences = runningPreferencesRepository.runningPreferencesFlow.first()
-
-        Log.d(javaClass.simpleName, runningPreferences.toString())
         val index = startIndex ?: nextWallpaper.value?.index ?: -1
         val tmpRuleId = ruleId ?: this.currentRuleId.value
 

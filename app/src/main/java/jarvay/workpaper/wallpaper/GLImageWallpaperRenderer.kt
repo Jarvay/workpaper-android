@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
-import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.microedition.khronos.egl.EGLConfig
@@ -24,12 +23,9 @@ class GLImageWallpaperRenderer : GLSurfaceView.Renderer, GLWallpaperRenderer() {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         initProgram()
         GLES20.glGenTextures(1, textureHandles, 0)
-
-        Log.d(javaClass.simpleName, Thread.currentThread().name)
     }
 
     override fun onSurfaceChanged(gl10: GL10?, width: Int, height: Int) {
-        Log.d("onSurfaceChanged", listOf(width, height).toString())
         GLES20.glViewport(0, 0, width, height)
     }
 
