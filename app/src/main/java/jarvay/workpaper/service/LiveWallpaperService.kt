@@ -83,6 +83,18 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private var resetOnScreenOff = false
         private var doubleTapEvent: GestureEvent = GestureEvent.NONE
         private var isScreenOn = true
+        private var wallpaperScrollable: Boolean = false
+        private var bitmap: Bitmap? = null
+
+        init {
+            setTouchEventsEnabled(true)
+
+            MainScope().launch {
+                workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
+                    wallpaperScrollable = it.wallpaperScrollable
+                }
+            }
+        }
 
         private val screenStateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -259,6 +271,61 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             destroySurfaceView()
         }
 
+        override fun onOffsetsChanged(
+            xOffset: Float,
+            yOffset: Float,
+            xOffsetStep: Float,
+            yOffsetStep: Float,
+            xPixelOffset: Int,
+            yPixelOffset: Int
+        ) {
+            super.onOffsetsChanged(
+                xOffset,
+                yOffset,
+                xOffsetStep,
+                yOffsetStep,
+                xPixelOffset,
+                yPixelOffset
+            )
+            if (renderer?.wallpaperType !== WallpaperType.IMAGE) return
+
+            if (bitmap != null && wallpaperScrollable) {
+                updateBitmapOffset(xOffset)
+            }
+        }
+
+        private fun canScroll(): Boolean {
+            if (bitmap == null) return false
+
+            val bitmapRatio = bitmap!!.width.toFloat() / bitmap!!.height.toFloat()
+            return bitmapRatio > 1
+        }
+
+        private fun updateBitmapOffset(xOffset: Float) {
+            if (!canScroll()) {
+                return
+            }
+
+            MainScope().launch(Dispatchers.IO) {
+                val x = ((bitmap!!.width - surfaceSize.width).toFloat() * xOffset).toInt()
+
+                if (x + surfaceSize.width > bitmap!!.width) {
+                    return@launch
+                }
+
+                val newBitmap = Bitmap.createBitmap(
+                    bitmap!!,
+                    x,
+                    0,
+                    surfaceSize.width,
+                    surfaceSize.height
+                )
+
+                renderer?.imageRenderer?.bitmap = newBitmap
+                surfaceView?.requestRender()
+            }
+        }
+
         private suspend fun setImageBitmap(uri: Uri) {
             if (!surfaceHolder.surface.isValid) return
 
@@ -311,6 +378,8 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             val originBitmap =
                 bitmapFromContentUri(uri, this@LiveWallpaperService)
                     ?: return null
+            bitmap = originBitmap
+
             var bitmap = originBitmap.scaleFixedRatio(
                 targetWidth = surfaceSize.width,
                 targetHeight = surfaceSize.height,
