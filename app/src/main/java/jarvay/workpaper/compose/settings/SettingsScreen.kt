@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -64,6 +66,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
     var notificationDialogShow by remember {
         mutableStateOf(false)
     }
+    val scrollState = rememberScrollState()
 
     val simpleSnackbar = LocalSimpleSnackbar.current
 
@@ -103,6 +106,7 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
     ) {
         Column(
             modifier = Modifier
+                .verticalScroll(scrollState)
                 .padding(it)
                 .fillMaxWidth()
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
