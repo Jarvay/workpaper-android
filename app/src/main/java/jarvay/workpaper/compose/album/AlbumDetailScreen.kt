@@ -5,6 +5,11 @@ import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -26,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -43,11 +49,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -63,6 +69,7 @@ import coil3.request.crossfade
 import coil3.size.Size
 import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.Screen
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.Album
@@ -86,15 +93,18 @@ fun AlbumDetailScreen(
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val simpleSnackbar = LocalSimpleSnackbar.current
 
-    val albumWithWallpapers by viewModel.album.collectAsStateWithLifecycle()
+    val albumWithWallpapers by viewModel.albumWithWallpapers.collectAsStateWithLifecycle()
     if (albumWithWallpapers == null) return
 
     val album = albumWithWallpapers!!.album
     val wallpapers = albumWithWallpapers!!.wallpapers
+
+
+    val isRelatedMode = album.dirs?.isNotEmpty() ?: false
+    val canRelateDir = wallpapers.isEmpty() || isRelatedMode
 
     val loading by viewModel.loading.collectAsStateWithLifecycle(initialValue = false)
 
@@ -229,19 +239,30 @@ fun AlbumDetailScreen(
                         expanded = actionsShow,
                         onDismissRequest = { actionsShow = false }) {
                         if (!selecting) {
-                            DropdownMenuItem(text = {
-                                Text(text = stringResource(id = R.string.album_add_images))
-                            }, onClick = {
-                                actionsShow = false
-                                imagePickerLauncher.launch(PICKER_WALLPAPER_TYPES.toTypedArray())
-                            })
+                            if (!isRelatedMode) {
+                                DropdownMenuItem(text = {
+                                    Text(text = stringResource(id = R.string.album_add_images))
+                                }, onClick = {
+                                    actionsShow = false
+                                    imagePickerLauncher.launch(PICKER_WALLPAPER_TYPES.toTypedArray())
+                                })
 
-                            DropdownMenuItem(text = {
-                                Text(text = stringResource(id = R.string.album_add_folder))
-                            }, onClick = {
-                                actionsShow = false
-                                folderPickerLauncher.launch(null)
-                            })
+                                DropdownMenuItem(text = {
+                                    Text(text = stringResource(id = R.string.album_add_folder))
+                                }, onClick = {
+                                    actionsShow = false
+                                    folderPickerLauncher.launch(null)
+                                })
+                            }
+
+                            if (canRelateDir) {
+                                DropdownMenuItem(text = {
+                                    Text(text = stringResource(id = R.string.album_relate_folders))
+                                }, onClick = {
+                                    actionsShow = false
+                                    navController.navigate(Screen.DirsRelation.createRoute(albumId = album.albumId))
+                                })
+                            }
 
                             DropdownMenuItem(
                                 text = {
@@ -281,9 +302,34 @@ fun AlbumDetailScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                actionsShow = true
+                if (isRelatedMode) {
+                    viewModel.updateWallpapersByDirs(context)
+                } else {
+                    actionsShow = true
+                }
             }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.add))
+                if (isRelatedMode) {
+                    val infiniteTransition =
+                        rememberInfiniteTransition(label = "infinite transition")
+                    val rotate by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 360f,
+                        animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Restart),
+                        label = "rotate"
+                    )
+
+                    Icon(
+                        modifier = Modifier.graphicsLayer {
+                            if (loading) {
+                                rotationZ = rotate
+                            }
+                        },
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = stringResource(id = R.string.add)
+                    )
+                } else {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.add))
+                }
             }
         },
     ) { padding ->

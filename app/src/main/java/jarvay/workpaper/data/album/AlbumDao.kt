@@ -25,11 +25,19 @@ interface AlbumDao {
 
     @Query(
         """
+        SELECT * FROM albums WHERE id = :id
+        """
+    )
+    fun findAlbumFlowById(id: Long): Flow<Album>
+
+    @Query(
+        """
         SELECT * FROM albums 
         WHERE albums.id = :id
     """
     )
     fun findById(id: Long): AlbumWithWallpapers?
+
 
     @Query("SELECT EXISTS (SELECT * FROM albums WHERE name=:name )")
     fun existsByName(name: String): Boolean

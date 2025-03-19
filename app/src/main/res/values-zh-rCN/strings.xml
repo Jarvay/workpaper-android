@@ -66,6 +66,8 @@
     <string name="album_set_as_cover">设为封面</string>
     <string name="album_add_images">添加壁纸</string>
     <string name="album_add_folder">添加文件夹</string>
+    <string name="album_relate_folders">关联文件夹</string>
+    <string name="album_related_folder_delete_tips">确定要删除所选项吗？</string>
     <string name="album_limit_tips">安卓限制%d个文件(夹)授权，已授权%d，剩余%d，已选择%d， 添加后将超出限制，请使用添加文件夹功能。</string>
     <string name="album_add_wallpaper_folder_tips">如果选择的文件数量过多可能需要等待一段时间</string>
     <string name="settings_live_wallpaper_tips">在一些设备上你可能需要手动打开动态壁纸的权限</string>

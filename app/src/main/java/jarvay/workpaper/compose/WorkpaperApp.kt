@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import jarvay.workpaper.compose.album.AlbumDetailScreen
+import jarvay.workpaper.compose.album.DirsRelationScreen
 import jarvay.workpaper.compose.components.LocalMainActivityModel
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.LocalSnackbarHostState
@@ -90,6 +91,9 @@ fun WorkpaperNavHost(
 
         composable(route = Screen.AlbumDetail.route) {
             AlbumDetailScreen(navController = navController)
+        }
+        composable(route = Screen.DirsRelation.route) {
+            DirsRelationScreen(navController = navController)
         }
 
         composable(route = Screen.Sponsor.route) {

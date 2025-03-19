@@ -22,6 +22,10 @@ sealed class Screen(
         fun createRoute(albumId: Long) = "album/detail/${albumId}"
     }
 
+    data object DirsRelation : Screen(route = "album/relation/{albumId}") {
+        fun createRoute(albumId: Long) = "album/relation/${albumId}"
+    }
+
     data object Settings : Screen(route = "settings")
 
     data object Sponsor : Screen(route = "sponsor")
