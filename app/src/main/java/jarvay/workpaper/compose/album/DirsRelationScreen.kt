@@ -99,7 +99,9 @@ fun DirsRelationScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = SCREEN_HORIZONTAL_PADDING)
+                .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            userScrollEnabled = true
         ) {
             items(items = dirs, key = { it }) {
                 DirItem(

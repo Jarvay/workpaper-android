@@ -14,8 +14,8 @@ android {
         applicationId = "jarvay.workpaper"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 21
-        versionName = "2.6.0-beta"
+        versionCode = 22
+        versionName = "2.6.1-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
