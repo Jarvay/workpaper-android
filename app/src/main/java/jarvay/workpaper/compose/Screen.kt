@@ -27,6 +27,7 @@ sealed class Screen(
     }
 
     data object Settings : Screen(route = "settings")
+    data object LiveWallpaperSettings : Screen(route = "settings/liveWallpaper")
 
     data object Sponsor : Screen(route = "sponsor")
 }

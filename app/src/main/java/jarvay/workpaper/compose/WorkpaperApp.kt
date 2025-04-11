@@ -23,6 +23,7 @@ import jarvay.workpaper.compose.components.UpgradeDialog
 import jarvay.workpaper.compose.home.HomeScreen
 import jarvay.workpaper.compose.rule.RuleCreateScreen
 import jarvay.workpaper.compose.rule.RuleUpdateScreen
+import jarvay.workpaper.compose.settings.LiveWallpaperSettingsScreen
 import jarvay.workpaper.compose.settings.SettingsScreen
 import jarvay.workpaper.compose.sponsor.SponsorScreen
 import jarvay.workpaper.compose.style.StyleCreateScreen
@@ -80,6 +81,9 @@ fun WorkpaperNavHost(
 
         composable(route = Screen.Settings.route) {
             SettingsScreen(navController = navController)
+        }
+        composable(route = Screen.LiveWallpaperSettings.route) {
+            LiveWallpaperSettingsScreen(navController = navController)
         }
 
         composable(route = Screen.RuleCreate.route) {
