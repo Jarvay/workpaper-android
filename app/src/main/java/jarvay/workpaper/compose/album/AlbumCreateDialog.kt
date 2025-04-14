@@ -36,7 +36,7 @@ fun AlbumCreateDialog(
                 if (viewModel.existsByName(it)) {
                     errorMessage = context.getString(R.string.album_name_exists)
                 } else {
-                    viewModel.insert(Album(name = it))
+                    viewModel.insert(Album(name = it, dirs = emptyList()))
                     onDismissRequest()
                 }
             }

@@ -10,7 +10,13 @@ class Converters {
     fun strListToString(data: List<String>?): String = gson.toJson(data)
 
     @TypeConverter
-    fun stringToStrList(data: String) = gson.fromJson(data, Array<String>::class.java).toList()
+    fun stringToStrList(data: String?): List<String> {
+        return try {
+            gson.fromJson(data, Array<String>::class.java).toList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     @TypeConverter
     fun intListToString(data: List<Int>?): String = gson.toJson(data)
