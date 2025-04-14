@@ -8,7 +8,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository

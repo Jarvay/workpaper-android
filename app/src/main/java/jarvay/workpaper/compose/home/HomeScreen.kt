@@ -127,7 +127,7 @@ fun HomeScreen(
             HomePagerScreen(
                 pagerState = pagerState,
                 pages = pages,
-                Modifier.padding(top = contentPadding.calculateTopPadding(), bottom = 16.dp),
+                Modifier.padding(top = contentPadding.calculateTopPadding()),
                 navController = navController
             )
         }

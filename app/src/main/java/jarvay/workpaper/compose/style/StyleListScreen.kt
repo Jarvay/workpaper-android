@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.style
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,9 +14,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Badge
-import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,9 +41,11 @@ import jarvay.workpaper.data.style.Style
 import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
 import jarvay.workpaper.ui.theme.COLOR_LIST_LABEL
 import jarvay.workpaper.ui.theme.COLOR_WHITE
+import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.StyleListViewModel
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun StyleListScreen(
     navController: NavController,
@@ -51,15 +55,22 @@ fun StyleListScreen(
 
     val styles by viewModel.allStyles.collectAsStateWithLifecycle()
 
-    Scaffold { paddingValues ->
+    Scaffold { _ ->
         LazyColumn(
             modifier = Modifier
-                .padding(paddingValues)
-                .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
-            state = listState
+                .padding(
+                    horizontal = SCREEN_HORIZONTAL_PADDING,
+                    vertical = HOME_SCREEN_PAGER_VERTICAL_PADDING / 2
+                ),
+            state = listState,
         ) {
             items(styles, key = { it.styleId }) {
-                StyleItem(style = it, viewModel = viewModel, navController = navController)
+                StyleItem(
+                    modifier = Modifier,
+                    style = it,
+                    viewModel = viewModel,
+                    navController = navController
+                )
             }
         }
     }
@@ -84,98 +95,107 @@ private fun StyleItem(
 
     val settings by viewModel.settings.collectAsStateWithLifecycle()
 
-    Card(modifier = modifier.fillMaxSize()) {
-        Box {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .combinedClickable(onLongClick = {
-                        expanded = true
-                    }) {
-                        navController.navigate(Screen.StyleUpdate.createRoute(style.styleId))
-                    }
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                StyleInfoItem(
-                    label = stringResource(id = R.string.style_list_item_name),
-                    contentText = style.name
-                )
+    Row(
+        modifier = Modifier.padding(vertical = HOME_SCREEN_PAGER_VERTICAL_PADDING / 2)
+    ) {
+        ElevatedCard(
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 4.dp
+            ),
+            modifier = modifier.fillMaxSize()
+        ) {
+            Box {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .combinedClickable(onLongClick = {
+                            expanded = true
+                        }) {
+                            navController.navigate(Screen.StyleUpdate.createRoute(style.styleId))
+                        }
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    StyleInfoItem(
+                        label = stringResource(id = R.string.style_list_item_name),
+                        contentText = style.name
+                    )
 
-                StyleInfoItem(
-                    label = stringResource(id = R.string.style_list_item_blur_radius),
-                    contentText = style.blurRadius.toString()
-                )
+                    StyleInfoItem(
+                        label = stringResource(id = R.string.style_list_item_blur_radius),
+                        contentText = style.blurRadius.toString()
+                    )
 
-                StyleInfoItem(
-                    label = stringResource(id = R.string.style_list_item_noise),
-                    contentText = style.noisePercent.toString()
-                )
+                    StyleInfoItem(
+                        label = stringResource(id = R.string.style_list_item_noise),
+                        contentText = style.noisePercent.toString()
+                    )
 
-                StyleInfoItem(
-                    label = stringResource(id = R.string.style_list_item_brightness),
-                    contentText = style.brightness.toString()
-                )
+                    StyleInfoItem(
+                        label = stringResource(id = R.string.style_list_item_brightness),
+                        contentText = style.brightness.toString()
+                    )
 
-                StyleInfoItem(
-                    label = stringResource(id = R.string.style_list_item_contrast),
-                    contentText = style.contrast.toString()
-                )
+                    StyleInfoItem(
+                        label = stringResource(id = R.string.style_list_item_contrast),
+                        contentText = style.contrast.toString()
+                    )
 
-                StyleInfoItem(
-                    label = stringResource(id = R.string.style_list_item_saturation),
-                    contentText = style.saturation.toString()
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                if (settings.defaultStyleId == style.styleId) {
-                    Badge(containerColor = COLOR_BADGE_GREEN) {
-                        Text(
-                            text = stringResource(id = R.string.style_list_item_default),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = COLOR_WHITE
-                        )
-                    }
-                }
-            }
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                if (settings.defaultStyleId != style.styleId) {
-                    DropdownMenuItem(text = {
-                        Text(text = stringResource(id = R.string.style_list_item_action_set_default))
-                    }, onClick = {
-                        viewModel.updateSettingsItem(
-                            SettingsPreferencesKeys.DEFAULT_STYLE_ID,
-                            style.styleId
-                        )
-                        expanded = false
-                    })
-                } else {
-                    DropdownMenuItem(text = {
-                        Text(text = stringResource(id = R.string.style_list_item_action_cancel_default))
-                    }, onClick = {
-                        viewModel.updateSettingsItem(
-                            SettingsPreferencesKeys.DEFAULT_STYLE_ID,
-                            -1
-                        )
-                        expanded = false
-                    })
+                    StyleInfoItem(
+                        label = stringResource(id = R.string.style_list_item_saturation),
+                        contentText = style.saturation.toString()
+                    )
                 }
 
-                DropdownMenuItem(text = {
-                    Text(text = stringResource(id = R.string.delete))
-                }, onClick = {
-                    deleteDialogShow = true
-                    expanded = false
-                })
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    if (settings.defaultStyleId == style.styleId) {
+                        Badge(containerColor = COLOR_BADGE_GREEN) {
+                            Text(
+                                text = stringResource(id = R.string.style_list_item_default),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = COLOR_WHITE
+                            )
+                        }
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    if (settings.defaultStyleId != style.styleId) {
+                        DropdownMenuItem(text = {
+                            Text(text = stringResource(id = R.string.style_list_item_action_set_default))
+                        }, onClick = {
+                            viewModel.updateSettingsItem(
+                                SettingsPreferencesKeys.DEFAULT_STYLE_ID,
+                                style.styleId
+                            )
+                            expanded = false
+                        })
+                    } else {
+                        DropdownMenuItem(text = {
+                            Text(text = stringResource(id = R.string.style_list_item_action_cancel_default))
+                        }, onClick = {
+                            viewModel.updateSettingsItem(
+                                SettingsPreferencesKeys.DEFAULT_STYLE_ID,
+                                -1
+                            )
+                            expanded = false
+                        })
+                    }
+
+                    DropdownMenuItem(text = {
+                        Text(text = stringResource(id = R.string.delete))
+                    }, onClick = {
+                        deleteDialogShow = true
+                        expanded = false
+                    })
+                }
             }
         }
     }
