@@ -11,7 +11,8 @@ class AlbumRepository @Inject constructor(
 
     val allAlbums = albumDao.findAll()
 
-    fun getAlbum(albumId: Long) = albumDao.findFlowById(albumId)
+    fun getAlbumWithWallpapers(albumId: Long) = albumDao.findFlowById(albumId)
+    fun getAlbum(albumId: Long) = albumDao.findAlbumFlowById(albumId)
 
     fun existsByName(name: String): Boolean {
         return albumDao.existsByName(name)

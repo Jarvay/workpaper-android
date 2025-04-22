@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.documentfile.provider.DocumentFile
 import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
 import jarvay.workpaper.data.preferences.RunningPreferences
@@ -213,4 +214,21 @@ fun wechatIntent(toScan: Boolean = false): Intent {
         action = "android.intent.action.VIEW"
         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
     }
+}
+
+fun Context.getOneWallpaperInDir(uri: Uri): DocumentFile? {
+    val documentFile = DocumentFile.fromTreeUri(this, uri) ?: return null
+    for (item in documentFile.listFiles()) {
+        if (item.isFile) {
+            val mimeType = item.type ?: continue
+            val supported = SUPPORTED_WALLPAPER_TYPES_PREFIX.any {
+                mimeType.startsWith(it)
+            }
+            if (!supported) continue
+
+            return item
+        }
+    }
+
+    return null
 }

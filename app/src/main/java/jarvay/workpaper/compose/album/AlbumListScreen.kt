@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.album
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,9 +34,11 @@ import jarvay.workpaper.compose.components.LocalMainActivityModel
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.AlbumWithWallpapers
+import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AlbumListScreen(
     navController: NavController,
@@ -63,23 +66,22 @@ fun AlbumListScreen(
     }
 
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+    Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
         LazyVerticalGrid(
             state = lazyListState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(vertical = HOME_SCREEN_PAGER_VERTICAL_PADDING / 2)
                 .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
             columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(albums, key = { it.album.albumId }) {
                 var itemMenuExpanded by remember {
                     mutableStateOf(false)
                 }
 
-                Box {
+                Box(modifier = Modifier.padding(vertical = HOME_SCREEN_PAGER_VERTICAL_PADDING / 2)) {
                     AlbumItem(
                         album = it.album,
                         wallpapers = it.wallpapers,

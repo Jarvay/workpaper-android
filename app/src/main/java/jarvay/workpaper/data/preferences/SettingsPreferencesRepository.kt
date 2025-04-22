@@ -42,6 +42,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.doubleTapEvent,
                 enableLog = preferences[SettingsPreferencesKeys.ENABLE_LOG]
                     ?: DEFAULT_SETTINGS.enableLog,
+                wallpaperScrollable = preferences[SettingsPreferencesKeys.WALLPAPER_SCROLLABLE]
+                    ?: DEFAULT_SETTINGS.wallpaperScrollable,
             )
         }.distinctUntilChanged { old, new ->
             old == new

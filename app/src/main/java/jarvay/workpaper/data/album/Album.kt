@@ -11,4 +11,6 @@ data class Album(
     val albumId: Long = 0,
     val name: String,
     val coverUri: String? = null,
+    @ColumnInfo(defaultValue = "null")
+    val dirs: List<String>? = null,
 )

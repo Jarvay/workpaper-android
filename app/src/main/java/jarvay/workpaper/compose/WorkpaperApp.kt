@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import jarvay.workpaper.compose.album.AlbumDetailScreen
+import jarvay.workpaper.compose.album.DirsRelationScreen
 import jarvay.workpaper.compose.components.LocalMainActivityModel
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.LocalSnackbarHostState
@@ -22,6 +23,7 @@ import jarvay.workpaper.compose.components.UpgradeDialog
 import jarvay.workpaper.compose.home.HomeScreen
 import jarvay.workpaper.compose.rule.RuleCreateScreen
 import jarvay.workpaper.compose.rule.RuleUpdateScreen
+import jarvay.workpaper.compose.settings.LiveWallpaperSettingsScreen
 import jarvay.workpaper.compose.settings.SettingsScreen
 import jarvay.workpaper.compose.sponsor.SponsorScreen
 import jarvay.workpaper.compose.style.StyleCreateScreen
@@ -80,6 +82,9 @@ fun WorkpaperNavHost(
         composable(route = Screen.Settings.route) {
             SettingsScreen(navController = navController)
         }
+        composable(route = Screen.LiveWallpaperSettings.route) {
+            LiveWallpaperSettingsScreen(navController = navController)
+        }
 
         composable(route = Screen.RuleCreate.route) {
             RuleCreateScreen(navController = navController)
@@ -90,6 +95,9 @@ fun WorkpaperNavHost(
 
         composable(route = Screen.AlbumDetail.route) {
             AlbumDetailScreen(navController = navController)
+        }
+        composable(route = Screen.DirsRelation.route) {
+            DirsRelationScreen(navController = navController)
         }
 
         composable(route = Screen.Sponsor.route) {

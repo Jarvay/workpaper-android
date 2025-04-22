@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.home
 
+import android.util.Log
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -47,6 +48,8 @@ fun DrawerContent(
     val scope = rememberCoroutineScope()
 
     val checkingUpdate by mainActivityViewModel.checkingUpdate.observeAsState(initial = false)
+
+    Log.d("BuildConfig.VERSION_NAME", BuildConfig.VERSION_NAME)
 
     Column(
         modifier = Modifier

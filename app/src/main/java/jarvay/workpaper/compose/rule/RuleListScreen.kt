@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.rule
 
+import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -13,9 +14,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Badge
-import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,10 +46,12 @@ import jarvay.workpaper.others.formatTime
 import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
 import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.COLOR_LIST_LABEL
+import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.RuleListViewModel
 import kotlinx.coroutines.launch
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun RuleListScreen(
     navController: NavController,
@@ -55,9 +59,8 @@ fun RuleListScreen(
 ) {
     val ruleWithRelationList by viewModel.allRules.collectAsStateWithLifecycle()
 
-    Scaffold { paddingValues ->
+    Scaffold { _ ->
         RuleList(
-            modifier = Modifier.padding(paddingValues),
             ruleWithRelationList = ruleWithRelationList,
             viewModel = viewModel,
             navController = navController,
@@ -67,7 +70,7 @@ fun RuleListScreen(
 
 @Composable
 private fun RuleList(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     ruleWithRelationList: List<RuleWithRelation>,
     viewModel: RuleListViewModel,
     navController: NavController,
@@ -82,11 +85,13 @@ private fun RuleList(
     LazyColumn(
         state = listState,
         modifier = modifier
+            .padding(vertical = HOME_SCREEN_PAGER_VERTICAL_PADDING / 2)
             .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
         userScrollEnabled = true
     ) {
-        items(items = ruleWithRelationList, key = { item -> item.rule.ruleId }) {
+        items(
+            items = ruleWithRelationList,
+            key = { item -> item.rule.ruleId }) {
             val rule = it.rule
 
             RuleItem(
@@ -128,137 +133,144 @@ private fun RuleItem(
     val runningPreferences by viewModel.runningPreferences.collectAsStateWithLifecycle()
     val running = runningPreferences?.running == true
 
-    Card(
-        modifier = modifier
-            .fillMaxSize()
+    Row(
+        modifier = Modifier.padding(vertical = HOME_SCREEN_PAGER_VERTICAL_PADDING / 2)
     ) {
-        Box {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .combinedClickable(onLongClick = {
-                        expanded = true
-                    }) {
-                        navController.navigate(Screen.RuleUpdate.createRoute(rule.ruleId))
-                    }
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                val startTime = formatTime(rule.startHour, rule.startMinute)
-                RuleInfoItem(
-                    labelId = R.string.rule_list_item_time,
-                    value = startTime
-                )
-
-                RuleInfoItem(
-                    labelId = R.string.rule_list_item_days,
-                    value = rule.days.toIntArray().apply {
-                        sort()
-                    }.toList().mapNotNull { day ->
-                        val option = dayOptions.find { opt -> opt.value == day }
-                        if (option != null) stringResource(option.labelId) else null
-                    }.joinToString(separator = ",")
-                )
-
-                RuleInfoItem(
-                    labelId = R.string.rule_list_item_album,
-                    value = albums.joinToString(separator = ", ") { item -> item.album.name }
-                )
-
-                if (ruleWithRelation.style != null) {
-                    RuleInfoItem(
-                        labelId = R.string.rule_list_item_style,
-                        value = ruleWithRelation.style.name
-                    )
-                }
-
-                if (rule.random) {
-                    Text(text = stringResource(id = R.string.rule_list_item_random))
-                }
-
-                Row(
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ElevatedCard(
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 4.dp
+            ),
+            modifier = modifier
+                .fillMaxSize()
+        ) {
+            Box {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .combinedClickable(onLongClick = {
+                            expanded = true
+                        }) {
+                            navController.navigate(Screen.RuleUpdate.createRoute(rule.ruleId))
+                        }
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    if (rule.changeByTiming) {
-                        Text(
-                            text = stringResource(
-                                id = R.string.rule_list_item_interval,
-                                rule.interval
-                            )
+                    val startTime = formatTime(rule.startHour, rule.startMinute)
+                    RuleInfoItem(
+                        labelId = R.string.rule_list_item_time,
+                        value = startTime
+                    )
+
+                    RuleInfoItem(
+                        labelId = R.string.rule_list_item_days,
+                        value = rule.days.toIntArray().apply {
+                            sort()
+                        }.toList().mapNotNull { day ->
+                            val option = dayOptions.find { opt -> opt.value == day }
+                            if (option != null) stringResource(option.labelId) else null
+                        }.joinToString(separator = ",")
+                    )
+
+                    RuleInfoItem(
+                        labelId = R.string.rule_list_item_album,
+                        value = albums.joinToString(separator = ", ") { item -> item.album.name }
+                    )
+
+                    if (ruleWithRelation.style != null) {
+                        RuleInfoItem(
+                            labelId = R.string.rule_list_item_style,
+                            value = ruleWithRelation.style.name
                         )
                     }
 
-                    if (rule.changeWhileUnlock) {
-                        Text(
-                            text = stringResource(
-                                id = R.string.rule_list_item_change_when_unlock
-                            )
-                        )
+                    if (rule.random) {
+                        Text(text = stringResource(id = R.string.rule_list_item_random))
                     }
-                }
-            }
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = stringResource(
-                                id = if (isForced) {
-                                    R.string.rule_list_item_cancel_forced_used
-                                } else {
-                                    R.string.rule_list_item_forced_used
-                                }
-                            )
-                        )
-                    },
-                    onClick = {
-                        if (isForced) {
-                            viewModel.updateSettingsItem(
-                                SettingsPreferencesKeys.FORCED_USED_RULE_ID,
-                                DEFAULT_SETTINGS.forcedUsedRuleId
-                            )
-                        } else {
-                            viewModel.updateSettingsItem(
-                                SettingsPreferencesKeys.FORCED_USED_RULE_ID,
-                                rule.ruleId
+                    Row(
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (rule.changeByTiming) {
+                            Text(
+                                text = stringResource(
+                                    id = R.string.rule_list_item_interval,
+                                    rule.interval
+                                )
                             )
                         }
-                        expanded = false
 
-                        if (running) {
-                            viewModel.apply {
-                                viewModelScope.launch {
-                                    workpaper.restart()
+                        if (rule.changeWhileUnlock) {
+                            Text(
+                                text = stringResource(
+                                    id = R.string.rule_list_item_change_when_unlock
+                                )
+                            )
+                        }
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(
+                                    id = if (isForced) {
+                                        R.string.rule_list_item_cancel_forced_used
+                                    } else {
+                                        R.string.rule_list_item_forced_used
+                                    }
+                                )
+                            )
+                        },
+                        onClick = {
+                            if (isForced) {
+                                viewModel.updateSettingsItem(
+                                    SettingsPreferencesKeys.FORCED_USED_RULE_ID,
+                                    DEFAULT_SETTINGS.forcedUsedRuleId
+                                )
+                            } else {
+                                viewModel.updateSettingsItem(
+                                    SettingsPreferencesKeys.FORCED_USED_RULE_ID,
+                                    rule.ruleId
+                                )
+                            }
+                            expanded = false
+
+                            if (running) {
+                                viewModel.apply {
+                                    viewModelScope.launch {
+                                        workpaper.restart()
+                                    }
                                 }
                             }
                         }
-                    }
+                    )
+
+                    DropdownMenuItem(text = {
+                        Text(text = stringResource(id = R.string.delete))
+                    }, onClick = {
+                        if (running) {
+                            simpleSnackbar.show(R.string.tips_please_stop_first)
+                            return@DropdownMenuItem
+                        }
+
+                        deleteDialogShow = true
+                        expanded = false
+                    })
+                }
+
+                RuleItemBadges(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    isForced = isForced,
+                    isRunning = running,
+                    isCurrent = isCurrent,
+                    isNext = isNext,
                 )
-
-                DropdownMenuItem(text = {
-                    Text(text = stringResource(id = R.string.delete))
-                }, onClick = {
-                    if (running) {
-                        simpleSnackbar.show(R.string.tips_please_stop_first)
-                        return@DropdownMenuItem
-                    }
-
-                    deleteDialogShow = true
-                    expanded = false
-                })
             }
-
-            RuleItemBadges(
-                modifier = Modifier.align(Alignment.TopEnd),
-                isForced = isForced,
-                isRunning = running,
-                isCurrent = isCurrent,
-                isNext = isNext,
-            )
         }
     }
 

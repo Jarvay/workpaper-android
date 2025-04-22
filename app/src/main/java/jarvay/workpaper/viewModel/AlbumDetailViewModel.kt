@@ -3,6 +3,7 @@ package jarvay.workpaper.viewModel
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -15,6 +16,8 @@ import jarvay.workpaper.data.wallpaper.WallpaperRepository
 import jarvay.workpaper.others.STATE_IN_STATED
 import jarvay.workpaper.others.SUPPORTED_WALLPAPER_TYPES_PREFIX
 import jarvay.workpaper.others.wallpaperType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -28,6 +31,11 @@ class AlbumDetailViewModel @Inject constructor(
 ) : ViewModel() {
     private val albumId: String = savedStateHandle.get<String>(ALBUM_ID_SAVED_STATE_KEY)!!
 
+    val albumWithWallpapers = repository.getAlbumWithWallpapers(albumId = albumId.toLong()).stateIn(
+        viewModelScope,
+        STATE_IN_STATED,
+        null
+    )
     val album = repository.getAlbum(albumId = albumId.toLong()).stateIn(
         viewModelScope,
         STATE_IN_STATED,
@@ -37,7 +45,7 @@ class AlbumDetailViewModel @Inject constructor(
     val loading = MutableStateFlow(false)
 
     fun deleteWallpapers(wallpaperIds: List<Long>) {
-        if (album.value != null) {
+        if (albumWithWallpapers.value != null) {
             viewModelScope.launch {
                 wallpaperRepository.delete(wallpaperIds)
             }
@@ -45,7 +53,7 @@ class AlbumDetailViewModel @Inject constructor(
     }
 
     fun addWallpapers(wallpapers: List<Wallpaper>) {
-        viewModelScope.launch {
+        MainScope().launch {
             wallpaperRepository.insert(wallpapers)
         }
     }
@@ -57,9 +65,65 @@ class AlbumDetailViewModel @Inject constructor(
         })
     }
 
+    fun updateWallpapersByDirs(context: Context) {
+        albumWithWallpapers.value?.album?.let {
+            val dirs = it.dirs ?: emptyList()
+            if (dirs.isEmpty()) return
+
+            MainScope().launch(Dispatchers.IO) {
+                loading.value = true
+                val wallpapers = albumWithWallpapers.value?.wallpapers ?: emptyList()
+                val newWallpapers = emptyList<Wallpaper>().toMutableList()
+                for (dir in dirs) {
+                    val documentFile = DocumentFile.fromTreeUri(context, dir.toUri()) ?: continue
+                    newWallpapers.addAll(getWallpapersInDir(documentFile))
+                }
+
+                val toDeleteIds = emptyList<Long>().toMutableList()
+                wallpapers.forEach { old ->
+                    val shouldDelete =
+                        newWallpapers.none { new -> new.contentUri == old.contentUri }
+                    if (shouldDelete) {
+                        toDeleteIds.add(old.wallpaperId)
+                    }
+                }
+                deleteWallpapers(toDeleteIds)
+
+                val toAddList = emptyList<Wallpaper>().toMutableList()
+                newWallpapers.forEach { new ->
+                    val shouldAdd = wallpapers.none { old -> old.contentUri == new.contentUri }
+                    if (shouldAdd) {
+                        toAddList.add(new)
+                    }
+                }
+                addWallpapers(toAddList.map { toAdd -> toAdd.copy(albumId = albumId.toLong()) })
+
+                loading.value = false
+            }
+        }
+    }
+
     fun update(item: Album) {
         viewModelScope.launch {
             repository.update(item)
+        }
+    }
+
+    fun addDir(uri: String) {
+        album.value?.let {
+            val dirs = (it.dirs ?: emptyList()).toMutableList()
+            if (!dirs.contains(uri)) {
+                dirs.add(uri)
+            }
+            update(it.copy(dirs = dirs))
+        }
+    }
+
+    fun removeDir(uri: String) {
+        album.value?.let {
+            val dirs = (it.dirs ?: emptyList()).toMutableList()
+            dirs.remove(uri)
+            update(it.copy(dirs = dirs))
         }
     }
 

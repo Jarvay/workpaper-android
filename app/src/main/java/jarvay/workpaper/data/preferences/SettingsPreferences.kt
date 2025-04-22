@@ -20,6 +20,7 @@ data class SettingsPreferences(
     var forcedUsedRuleId: Long,
     var doubleTapEvent: String,
     var enableLog: Boolean,
+    var wallpaperScrollable: Boolean,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -41,9 +42,9 @@ data class SettingsPreferences(
         result = 31 * result + forcedUsedRuleId.hashCode()
         result = 31 * result + doubleTapEvent.hashCode()
         result = 31 * result + enableLog.hashCode()
+        result = 31 * result + wallpaperScrollable.hashCode()
         return result
     }
-
 }
 
 data object SettingsPreferencesKeys {
@@ -61,6 +62,7 @@ data object SettingsPreferencesKeys {
     val FORCED_USED_RULE_ID = longPreferencesKey("forcedUsedRuleId")
     val DOUBLE_TAP_EVENT = stringPreferencesKey("doubleTapEvent")
     val ENABLE_LOG = booleanPreferencesKey("enableLog")
+    val WALLPAPER_SCROLLABLE = booleanPreferencesKey("wallpaperScrollable")
 }
 
 val DEFAULT_SETTINGS =
@@ -79,4 +81,5 @@ val DEFAULT_SETTINGS =
         forcedUsedRuleId = -1,
         doubleTapEvent = GestureEvent.CHANGE_WALLPAPER.name,
         enableLog = false,
+        wallpaperScrollable = false,
     )

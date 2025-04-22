@@ -66,6 +66,8 @@
     <string name="album_set_as_cover">设为封面</string>
     <string name="album_add_images">添加壁纸</string>
     <string name="album_add_folder">添加文件夹</string>
+    <string name="album_relate_folders">关联文件夹</string>
+    <string name="album_related_folder_delete_tips">确定要删除所选项吗？</string>
     <string name="album_limit_tips">安卓限制%d个文件(夹)授权，已授权%d，剩余%d，已选择%d， 添加后将超出限制，请使用添加文件夹功能。</string>
     <string name="album_add_wallpaper_folder_tips">如果选择的文件数量过多可能需要等待一段时间</string>
     <string name="settings_live_wallpaper_tips">在一些设备上你可能需要手动打开动态壁纸的权限</string>
@@ -113,8 +115,11 @@
     <string name="settings_item_auto_check_update">自动检查更新</string>
     <string name="settings_item_disabled_when_playing_audio">播放音频时不更换壁纸</string>
     <string name="settings_item_use_live_wallpaper">以动态壁纸模式运行</string>
+    <string name="settings_item_settings_of_live_wallpaper">动态壁纸设置</string>
     <string name="settings_item_live_wallpaper_double_tap">双击壁纸执行</string>
     <string name="settings_item_video_wallpaper_reset_on_screen_off">熄屏后重置视频进度</string>
+    <string name="settings_item_allow_wallpaper_scrolling">允许壁纸滚动</string>
+    <string name="settings_item_live_wallpaper_transition">过渡动画</string>
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
     <string name="settings_item_enable_log">保存日志</string>
 

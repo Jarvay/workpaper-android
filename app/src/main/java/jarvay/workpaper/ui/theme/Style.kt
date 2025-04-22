@@ -2,7 +2,9 @@ package jarvay.workpaper.ui.theme
 
 import androidx.compose.ui.unit.dp
 
-val SCREEN_HORIZONTAL_PADDING = 24.dp
+val SCREEN_HORIZONTAL_PADDING = 12.dp
+
+val HOME_SCREEN_PAGER_VERTICAL_PADDING = 12.dp
 
 val LIST_ITEM_VERTICAL_PADDING = 8.dp
 val LIST_ITEM_HORIZONTAL_PADDING = 8.dp
