@@ -62,15 +62,18 @@ fun coverBitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
     return retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
 }
 
-fun bitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
+fun bitmapFromContentUri(
+    contentUri: Uri,
+    context: Context,
+    options: BitmapFactory.Options = BitmapFactory.Options()
+): Bitmap? {
     fun fromStream(): Bitmap? {
         return try {
             context.contentResolver.openInputStream(contentUri)
                 ?.use { inputStream ->
-                    val options = BitmapFactory.Options().apply {
+                    BitmapFactory.decodeStream(inputStream, null, options.apply {
                         inMutable = true
-                    }
-                    BitmapFactory.decodeStream(inputStream, null, options)
+                    })
                 }
         } catch (e: Exception) {
             LogUtils.w("bitmapFromContentUri", "Load bitmap failed", e.toString())

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory.Options
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.media.MediaMetadataRetriever
@@ -79,7 +80,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private var surfaceView: GLWallpaperSurfaceView? = null
         private var renderer: WallpaperRenderer? = null
         private val player: MediaPlayer = MediaPlayer()
-        private var isVisible = false
         private var resetOnScreenOff = false
         private var doubleTapEvent: GestureEvent = GestureEvent.NONE
         private var isScreenOn = true
@@ -193,9 +193,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 workpaper.imageUri.collect {
                     if (it == null) return@collect
                     LogUtils.i(
-                        this@LiveWallpaperEngine.javaClass.simpleName,
-                        "On image uri",
-                        it.toString()
+                        this@LiveWallpaperEngine.javaClass.simpleName, "On image uri", it.toString()
                     )
 
                     withContext(Dispatchers.IO) {
@@ -207,9 +205,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 workpaper.videoUri.collect {
                     if (it == null) return@collect
                     LogUtils.i(
-                        this@LiveWallpaperEngine.javaClass.simpleName,
-                        "On video uri",
-                        it.toString()
+                        this@LiveWallpaperEngine.javaClass.simpleName, "On video uri", it.toString()
                     )
 
                     startVideo(it.toUri())
@@ -234,7 +230,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
-            isVisible = visible
             if (renderer == null) return
 
             when (renderer!!.wallpaperType) {
@@ -280,12 +275,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             yPixelOffset: Int
         ) {
             super.onOffsetsChanged(
-                xOffset,
-                yOffset,
-                xOffsetStep,
-                yOffsetStep,
-                xPixelOffset,
-                yPixelOffset
+                xOffset, yOffset, xOffsetStep, yOffsetStep, xPixelOffset, yPixelOffset
             )
             if (renderer?.wallpaperType !== WallpaperType.IMAGE) return
 
@@ -314,11 +304,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 }
 
                 val newBitmap = Bitmap.createBitmap(
-                    bitmap!!,
-                    x,
-                    0,
-                    surfaceSize.width,
-                    surfaceSize.height
+                    bitmap!!, x, 0, surfaceSize.width, surfaceSize.height
                 )
 
                 renderer?.imageRenderer?.bitmap = newBitmap
@@ -332,32 +318,63 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             renderer?.updateWallpaperType(WallpaperType.IMAGE)
             stopVideo()
 
+            val lowSampleOptions = Options().apply { inSampleSize = 1024 }
+            val lowSampleOriginBitmap = loadBitmap(uri, lowSampleOptions) ?: return
             val originBitmap = loadBitmap(uri) ?: return
-            val prevBitmap = loadBitmap(prevImageUri?.toUri())
 
-            var alpha = 55
-            while (alpha <= 255) {
-                val alphaBitmap = bitmapWithTransition(prevBitmap, originBitmap, alpha)
+            val bitmapMap = mutableMapOf<Int, Bitmap>()
 
-                renderer?.imageRenderer?.bitmap = alphaBitmap
-                surfaceView?.requestRender()
+            val prevBitmap = loadBitmap(prevImageUri?.toUri(), lowSampleOptions)
+            prevImageUri = uri.toString()
 
-                alpha += 10
-                delay(10)
+            if (prevBitmap == null) {
+                bitmapMap[0] = originBitmap
+                changeBitmap(bitmapMap)
+                return
             }
 
-            prevImageUri = uri.toString()
+            var alpha = 55
+            val alphaList = mutableListOf<Int>()
+
+            while (alpha <= 255) {
+                alphaList.add(alpha)
+                alpha += 10
+            }
+            bitmapMap[alphaList.size] = originBitmap
+
+            for ((index, item) in alphaList.withIndex()) {
+                MainScope().launch(Dispatchers.IO) {
+                    bitmapMap[index] = bitmapWithTransition(prevBitmap, lowSampleOriginBitmap, item)
+                    if (bitmapMap.size - 1 == alphaList.size) {
+                        changeBitmap(bitmapMap)
+                        prevBitmap.recycle()
+                    }
+                }
+            }
+        }
+
+        private suspend fun changeBitmap(bitmaps: Map<Int, Bitmap>) {
+            for (index in 0 until bitmaps.size) {
+                try {
+                    renderer?.imageRenderer?.bitmap = bitmaps[index]
+                    surfaceView?.requestRender()
+                    delay(15)
+                    if (index < bitmaps.size - 1) {
+                        bitmaps[index - 1]?.recycle()
+                    }
+                } catch (e: Exception) {
+                    LogUtils.e(e.toString())
+                }
+            }
         }
 
         private fun bitmapWithTransition(
-            backgroundBitmap: Bitmap?,
-            frontBitmap: Bitmap,
-            alpha: Int
+            backgroundBitmap: Bitmap?, frontBitmap: Bitmap, alpha: Int
         ): Bitmap {
             val result = Bitmap.createBitmap(
                 frontBitmap.width,
                 frontBitmap.height,
-                frontBitmap.config
+                Bitmap.Config.RGB_565
             )
 
             val canvas = Canvas(result)
@@ -372,21 +389,17 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             return result
         }
 
-        private suspend fun loadBitmap(uri: Uri?): Bitmap? {
+        private suspend fun loadBitmap(uri: Uri?, options: Options = Options()): Bitmap? {
             if (uri == null) return null
 
             val originBitmap =
-                bitmapFromContentUri(uri, this@LiveWallpaperService)
-                    ?: return null
+                bitmapFromContentUri(uri, this@LiveWallpaperService, options) ?: return null
             bitmap = originBitmap
 
             var bitmap = originBitmap.scaleFixedRatio(
-                targetWidth = surfaceSize.width,
-                targetHeight = surfaceSize.height,
-                useMin = false
+                targetWidth = surfaceSize.width, targetHeight = surfaceSize.height, useMin = false
             ).centerCrop(
-                targetWidth = surfaceSize.width,
-                targetHeight = surfaceSize.height
+                targetWidth = surfaceSize.width, targetHeight = surfaceSize.height
             )
             bitmap = workpaper.handleBitmapStyle(bitmap)
 
@@ -483,9 +496,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             )!!.toInt()
             retriever.release()
             renderer!!.videoRenderer.setVideoSizeAndRotation(
-                width = width,
-                height = height,
-                rotation = rotation
+                width = width, height = height, rotation = rotation
             )
         }
 
