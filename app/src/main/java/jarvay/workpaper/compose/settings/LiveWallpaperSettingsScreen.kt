@@ -110,6 +110,14 @@ fun LiveWallpaperSettingsScreen(
                     })
             }
 
+            SettingsItem(labelId = R.string.settings_item_live_wallpaper_transition) {
+                Switch(
+                    checked = settings.imageTransition,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.IMAGE_TRANSITION, c)
+                    })
+            }
+
             SettingsItem(labelId = R.string.settings_item_video_wallpaper_reset_on_screen_off) {
                 Switch(
                     checked = settings.videoResetProgressOnScreenOff,

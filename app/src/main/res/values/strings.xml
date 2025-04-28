@@ -117,7 +117,7 @@
     <string name="settings_item_video_wallpaper_reset_on_screen_off">Reset video progress on Scree</string>
     <string name="settings_item_live_wallpaper_double_tap">On Double Tap</string>
     <string name="settings_item_allow_wallpaper_scrolling">Allow wallpaper scrolling</string>
-    <string name="settings_item_live_wallpaper_transition">Live wallpaper transition</string>
+    <string name="settings_item_live_wallpaper_transition">Image wallpaper transition</string>
     <string name="settings_item_blur_radius">Wallpaper blur radius</string>
     <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>

@@ -44,6 +44,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.enableLog,
                 wallpaperScrollable = preferences[SettingsPreferencesKeys.WALLPAPER_SCROLLABLE]
                     ?: DEFAULT_SETTINGS.wallpaperScrollable,
+                imageTransition = preferences[SettingsPreferencesKeys.IMAGE_TRANSITION]
+                    ?: DEFAULT_SETTINGS.imageTransition,
             )
         }.distinctUntilChanged { old, new ->
             old == new

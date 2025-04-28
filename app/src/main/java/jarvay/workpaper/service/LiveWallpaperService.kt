@@ -29,6 +29,7 @@ import androidx.media3.common.util.UnstableApi
 import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
+import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.GestureEvent
 import jarvay.workpaper.others.bitmapFromContentUri
@@ -83,15 +84,15 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private var resetOnScreenOff = false
         private var doubleTapEvent: GestureEvent = GestureEvent.NONE
         private var isScreenOn = true
-        private var wallpaperScrollable: Boolean = false
         private var bitmap: Bitmap? = null
+        private var settings: SettingsPreferences? = null
 
         init {
             setTouchEventsEnabled(true)
 
             MainScope().launch {
                 workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
-                    wallpaperScrollable = it.wallpaperScrollable
+                    settings = it
                 }
             }
         }
@@ -279,7 +280,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             )
             if (renderer?.wallpaperType !== WallpaperType.IMAGE) return
 
-            if (bitmap != null && wallpaperScrollable) {
+            if (bitmap != null && settings?.wallpaperScrollable == true) {
                 updateBitmapOffset(xOffset)
             }
         }
@@ -318,12 +319,19 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             renderer?.updateWallpaperType(WallpaperType.IMAGE)
             stopVideo()
 
-            val lowSampleOptions = Options().apply { inSampleSize = 1024 }
-            val lowSampleOriginBitmap = loadBitmap(uri, lowSampleOptions) ?: return
-            val originBitmap = loadBitmap(uri) ?: return
-
             val bitmapMap = mutableMapOf<Int, Bitmap>()
 
+            val originBitmap = loadBitmap(uri) ?: return
+
+            if (settings?.imageTransition == false) {
+                bitmapMap[0] = originBitmap
+                changeBitmap(bitmapMap)
+                return
+            }
+
+            val lowSampleOptions = Options().apply { inSampleSize = 1024 }
+            val lowSampleOriginBitmap = loadBitmap(uri, lowSampleOptions) ?: return
+            
             val prevBitmap = loadBitmap(prevImageUri?.toUri(), lowSampleOptions)
             prevImageUri = uri.toString()
 
@@ -344,7 +352,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
             for ((index, item) in alphaList.withIndex()) {
                 MainScope().launch(Dispatchers.IO) {
-                    bitmapMap[index] = bitmapWithTransition(prevBitmap, lowSampleOriginBitmap, item)
+                    bitmapMap[index] = getBitmapWithAlpha(prevBitmap, lowSampleOriginBitmap, item)
                     if (bitmapMap.size - 1 == alphaList.size) {
                         changeBitmap(bitmapMap)
                         prevBitmap.recycle()
@@ -368,7 +376,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             }
         }
 
-        private fun bitmapWithTransition(
+        private fun getBitmapWithAlpha(
             backgroundBitmap: Bitmap?, frontBitmap: Bitmap, alpha: Int
         ): Bitmap {
             val result = Bitmap.createBitmap(
