@@ -21,19 +21,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import jarvay.workpaper.request.RetrofitClient
-
-private const val WECHAT_IMG_URL = RetrofitClient.BASE_URL + "wechat.png"
+import com.blankj.utilcode.util.LogUtils
+import jarvay.workpaper.request.REPO_MIRRORS_MAP
+import jarvay.workpaper.request.RepoHost
+import jarvay.workpaper.viewModel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun SponsorScreen(navController: NavController) {
+fun SponsorScreen(navController: NavController, viewModel: SettingsViewModel = hiltViewModel()) {
     var loading by remember {
         mutableStateOf(true)
     }
+
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val mirror = (REPO_MIRRORS_MAP[settings.repoMirror]
+        ?: REPO_MIRRORS_MAP[RepoHost.GH_FAST.value]).toString()
+
+    val wechatImgUrl = mirror + "wechat.png"
+    LogUtils.i("SponsorScreen", wechatImgUrl)
 
     Scaffold(
         topBar = {
@@ -59,7 +69,7 @@ fun SponsorScreen(navController: NavController) {
             }
 
             AsyncImage(
-                model = WECHAT_IMG_URL,
+                model = wechatImgUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.Center)

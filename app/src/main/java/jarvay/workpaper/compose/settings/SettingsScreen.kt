@@ -6,6 +6,7 @@ import android.content.Context
 import android.service.wallpaper.WallpaperService.ACTIVITY_SERVICE
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,9 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -42,6 +46,7 @@ import jarvay.workpaper.compose.components.SettingsItem
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.requestNotificationPermission
+import jarvay.workpaper.request.REPO_MIRRORS_MAP
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.SettingsViewModel
 
@@ -58,6 +63,10 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
     val scrollState = rememberScrollState()
 
     val simpleSnackbar = LocalSimpleSnackbar.current
+
+    var repoMirrorMenuExpanded by remember {
+        mutableStateOf(false)
+    }
 
     Scaffold(
         topBar = {
@@ -195,6 +204,34 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
                     onCheckedChange = { c ->
                         viewModel.update(SettingsPreferencesKeys.AUTO_CHECK_UPDATE, c)
                     })
+            }
+
+            SettingsItem(labelId = R.string.settings_item_repo_mirror) {
+                Box {
+                    Text(
+                        modifier = Modifier.clickable {
+                            repoMirrorMenuExpanded = true
+                        },
+                        text = settings.repoMirror,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    DropdownMenu(
+                        expanded = repoMirrorMenuExpanded,
+                        onDismissRequest = { repoMirrorMenuExpanded = false }) {
+                        REPO_MIRRORS_MAP.entries.forEach {
+                            DropdownMenuItem(
+                                text = { Text(text = it.key) },
+                                onClick = {
+                                    viewModel.update(
+                                        SettingsPreferencesKeys.REPO_MIRROR,
+                                        it.key
+                                    )
+                                    repoMirrorMenuExpanded = false
+                                })
+                        }
+                    }
+                }
             }
         }
 

@@ -122,6 +122,7 @@
     <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>
     <string name="settings_item_enable_log">Save log</string>
+    <string name="settings_item_repo_mirror">Mirror of repo</string>
 
     <string name="gesture_event_none">None</string>
     <string name="gesture_event_lock_screen">Lock screen</string>

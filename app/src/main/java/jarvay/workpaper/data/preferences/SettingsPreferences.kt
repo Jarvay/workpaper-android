@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import jarvay.workpaper.others.GestureEvent
+import jarvay.workpaper.request.RepoHost
 
 data class SettingsPreferences(
     var startWithPrevRule: Boolean,
@@ -22,6 +23,7 @@ data class SettingsPreferences(
     var enableLog: Boolean,
     var wallpaperScrollable: Boolean,
     var imageTransition: Boolean,
+    var repoMirror: String,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -45,6 +47,7 @@ data class SettingsPreferences(
         result = 31 * result + enableLog.hashCode()
         result = 31 * result + wallpaperScrollable.hashCode()
         result = 31 * result + imageTransition.hashCode()
+        result = 31 * result + repoMirror.hashCode()
         return result
     }
 }
@@ -66,6 +69,7 @@ data object SettingsPreferencesKeys {
     val ENABLE_LOG = booleanPreferencesKey("enableLog")
     val WALLPAPER_SCROLLABLE = booleanPreferencesKey("wallpaperScrollable")
     val IMAGE_TRANSITION = booleanPreferencesKey("imageTransition")
+    val REPO_MIRROR = stringPreferencesKey("repoMirror")
 }
 
 val DEFAULT_SETTINGS =
@@ -86,4 +90,5 @@ val DEFAULT_SETTINGS =
         enableLog = false,
         wallpaperScrollable = false,
         imageTransition = false,
+        repoMirror = RepoHost.GH_FAST.value,
     )

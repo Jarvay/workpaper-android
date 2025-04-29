@@ -46,6 +46,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.wallpaperScrollable,
                 imageTransition = preferences[SettingsPreferencesKeys.IMAGE_TRANSITION]
                     ?: DEFAULT_SETTINGS.imageTransition,
+                repoMirror = preferences[SettingsPreferencesKeys.REPO_MIRROR]
+                    ?: DEFAULT_SETTINGS.repoMirror,
             )
         }.distinctUntilChanged { old, new ->
             old == new
