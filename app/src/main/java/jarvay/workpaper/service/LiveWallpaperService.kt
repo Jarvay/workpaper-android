@@ -331,7 +331,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
             val lowSampleOptions = Options().apply { inSampleSize = 1024 }
             val lowSampleOriginBitmap = loadBitmap(uri, lowSampleOptions) ?: return
-            
+
             val prevBitmap = loadBitmap(prevImageUri?.toUri(), lowSampleOptions)
             prevImageUri = uri.toString()
 
