@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <group
+        android:scaleX="1.6"
+        android:scaleY="1.6"
+        android:translateX="-20"
+        android:translateY="-24">
+        <path
+            android:fillColor="#212327"
+            android:fillType="evenOdd"
+            android:pathData="M31.453,20.453C32.426,20.309 33.168,20.652 33.688,21.484C35.723,24.98 37.84,28.418 40.047,31.797C40.516,30.859 41.145,30.059 41.938,29.391C42.371,29.48 42.715,29.707 42.969,30.078C45.832,34.891 48.699,39.703 51.563,44.516C51.848,45.273 51.676,45.902 51.047,46.406C38.902,46.637 26.754,46.637 14.609,46.406C13.957,45.785 13.785,45.039 14.094,44.172C17.27,38.43 20.246,32.586 23.031,26.641C23.32,26.121 23.719,25.949 24.234,26.125C24.68,26.844 25.082,27.586 25.438,28.359C27.648,25.863 29.652,23.23 31.453,20.453ZM31.453,20.453"
+            android:strokeColor="#00000000" />
+        <path
+            android:fillColor="#F8F8F8"
+            android:fillType="evenOdd"
+            android:pathData="M31.797,22.172C34.504,25.641 36.91,29.363 39.016,33.344C37.176,37.016 35.055,40.512 32.656,43.828C30.406,39.371 28.285,34.848 26.297,30.25C28.074,27.5 29.91,24.809 31.797,22.172ZM31.797,22.172"
+            android:strokeColor="#00000000" />
+        <path
+            android:fillColor="#F7F7F7"
+            android:fillType="evenOdd"
+            android:pathData="M41.766,31.797C44.641,35.82 47.277,40.059 49.672,44.516C44.516,44.973 39.359,44.973 34.203,44.516C36.816,40.324 39.336,36.082 41.766,31.797ZM41.766,31.797"
+            android:strokeColor="#00000000" />
+        <path
+            android:fillColor="#C2C9CE"
+            android:fillType="evenOdd"
+            android:pathData="M23.203,32.484C24.414,32.43 25.391,32.891 26.125,33.859C27.754,37.438 29.418,40.988 31.109,44.516C25.957,44.859 20.801,44.973 15.641,44.859C17.805,40.531 20.328,36.406 23.203,32.484ZM23.203,32.484"
+            android:strokeColor="#00000000" />
+    </group>
+</vector>

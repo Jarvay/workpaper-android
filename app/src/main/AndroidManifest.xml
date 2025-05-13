@@ -50,6 +50,20 @@
         </activity>
 
         <service
+            android:name=".service.SwitchTileService"
+            android:exported="true"
+            android:icon="@drawable/tile_service_icon"
+            android:label="${APP_NAME}"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name=".service.WorkpaperService"
             android:foregroundServiceType="mediaPlayback" />
 
