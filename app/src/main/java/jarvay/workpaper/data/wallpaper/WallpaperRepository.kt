@@ -33,6 +33,11 @@ class WallpaperRepository @Inject constructor(
         wallpaperDao.delete(ids)
     }
 
+    @WorkerThread
+    suspend fun deleteByAlbumId(albumId: Long) {
+        wallpaperDao.deleteByAlbumId(albumId)
+    }
+
     fun existsByContentUri(contentUri: String): Boolean {
         return wallpaperDao.existsByContentUri(contentUri)
     }

@@ -118,6 +118,8 @@ fun AlbumDetailScreen(
         mutableStateOf(false)
     }
 
+    var emptyDialogShow by remember { mutableStateOf(false) }
+
     var actionsShow by remember {
         mutableStateOf(false)
     }
@@ -132,8 +134,7 @@ fun AlbumDetailScreen(
     val listState = rememberLazyStaggeredGridState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments(),
-        onResult = { uris: List<Uri> ->
+        contract = ActivityResultContracts.OpenMultipleDocuments(), onResult = { uris: List<Uri> ->
             val existsCount = context.contentResolver.persistedUriPermissions.size
             val leaveCount = MAX_PERSISTED_URI_GRANTS - existsCount
             val after = existsCount + uris.size
@@ -278,8 +279,16 @@ fun AlbumDetailScreen(
                                 }, onClick = {
                                     actionsShow = false
                                     selecting = true
-                                },
-                                enabled = wallpapers.isNotEmpty()
+                                }, enabled = wallpapers.isNotEmpty()
+                            )
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(text = stringResource(id = R.string.action_empty))
+                                }, onClick = {
+                                    actionsShow = false
+                                    emptyDialogShow = true
+                                }, enabled = wallpapers.isNotEmpty()
                             )
                         } else {
                             DropdownMenuItem(text = {
@@ -374,6 +383,13 @@ fun AlbumDetailScreen(
         onDismissRequest = { limitTipShow = false }
     ) {
         limitTipShow = false
+    }
+
+    SimpleDialog(content = {
+        Text(text = stringResource(R.string.album_empty_tips))
+    }, show = emptyDialogShow, onDismissRequest = { emptyDialogShow = false }) {
+        emptyDialogShow = false
+        viewModel.emptyAlbum()
     }
 }
 

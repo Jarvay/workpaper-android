@@ -45,9 +45,15 @@ class AlbumDetailViewModel @Inject constructor(
 
     fun deleteWallpapers(wallpaperIds: List<Long>) {
         if (albumWithWallpapers.value != null) {
-            viewModelScope.launch {
+            MainScope().launch {
                 wallpaperRepository.delete(wallpaperIds)
             }
+        }
+    }
+
+    fun emptyAlbum() {
+        MainScope().launch {
+            wallpaperRepository.deleteByAlbumId(albumId = albumId.toLong())
         }
     }
 

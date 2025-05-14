@@ -72,6 +72,7 @@
     <string name="album_add_wallpaper_folder_tips">如果选择的文件数量过多可能需要等待一段时间</string>
     <string name="settings_live_wallpaper_tips">在一些设备上你可能需要手动打开动态壁纸的权限</string>
     <string name="settings_opengles2_not_supported">你的设备不支持opengles2</string>
+    <string name="album_empty_tips">确定要清空该相册吗？</string>
 
     <string name="rule_list_item_time">时间</string>
     <string name="rule_list_item_album">相册</string>
