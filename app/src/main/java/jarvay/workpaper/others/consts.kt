@@ -28,3 +28,5 @@ val MAX_PERSISTED_URI_GRANTS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.
 
 val PICKER_WALLPAPER_TYPES = listOf("image/*", "video/mp4", "video/quicktime")
 val SUPPORTED_WALLPAPER_TYPES_PREFIX = listOf("image/", "video/mp4", "video/quicktime")
+
+const val LOG_TAG = "WORKPAPER"

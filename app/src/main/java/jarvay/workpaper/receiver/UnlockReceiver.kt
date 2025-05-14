@@ -7,6 +7,7 @@ import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
+import jarvay.workpaper.others.LOG_TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
@@ -33,7 +34,7 @@ class UnlockReceiver : BroadcastReceiver() {
             val ruleAlbums = workpaper.currentRuleWithRelation.first()
 
             if (ruleAlbums === null) {
-                LogUtils.i(javaClass.simpleName, "Current rule is null, skip")
+                LogUtils.i(LOG_TAG, "Current rule is null, skip")
                 return@launch
             }
 

@@ -9,6 +9,7 @@ import androidx.work.WorkRequest
 import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
 import jarvay.workpaper.Workpaper
+import jarvay.workpaper.others.LOG_TAG
 import jarvay.workpaper.worker.WallpaperWorker
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
@@ -29,7 +30,7 @@ class WallpaperReceiver : BroadcastReceiver() {
             if (isChangeByManual) {
                 val next = workpaper.getNextWallpaper()
                 if (next == null) {
-                    LogUtils.w(javaClass.simpleName, "Next wallpaper is null")
+                    LogUtils.w(LOG_TAG, "Next wallpaper is null")
                     return@launch
                 }
                 workpaper.setNextWallpaper(next.copy(isManual = true))
@@ -41,7 +42,7 @@ class WallpaperReceiver : BroadcastReceiver() {
                     workManager.getWorkInfoByIdFlow(workpaper.lastWallpaperWorkerId!!).first()
                 }
                 if (!lastWorkInfo.state.isFinished) {
-                    LogUtils.i(javaClass.simpleName, "Last work not finished, skip")
+                    LogUtils.i(LOG_TAG, "Last work not finished, skip")
                     return@launch
                 }
             }
@@ -50,7 +51,7 @@ class WallpaperReceiver : BroadcastReceiver() {
                 .build()
             workpaper.lastWallpaperWorkerId = wallpaperWorkRequest.id
             WorkManager.getInstance(context).enqueue(wallpaperWorkRequest)
-            LogUtils.i(javaClass.simpleName, "WallpaperWork enqueue")
+            LogUtils.i(LOG_TAG, "WallpaperWork enqueue")
         }
     }
 

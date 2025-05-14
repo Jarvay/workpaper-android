@@ -20,6 +20,7 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -32,6 +33,7 @@ import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.GestureEvent
+import jarvay.workpaper.others.LOG_TAG
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.centerCrop
 import jarvay.workpaper.others.scaleFixedRatio
@@ -146,7 +148,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                     }
 
                     GestureEvent.OPEN_ALIPAY_SCAN -> {
-                        val uri = Uri.parse("alipayqr://platformapi/startapp?saId=10000007")
+                        val uri = "alipayqr://platformapi/startapp?saId=10000007".toUri()
                         val intent = Intent(Intent.ACTION_VIEW, uri).apply {
                             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
                         }
@@ -193,9 +195,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             MainScope().launch {
                 workpaper.imageUri.collect {
                     if (it == null) return@collect
-                    LogUtils.i(
-                        this@LiveWallpaperEngine.javaClass.simpleName, "On image uri", it.toString()
-                    )
+                    LogUtils.i(LOG_TAG, "On image uri", it.toString())
 
                     withContext(Dispatchers.IO) {
                         setImageBitmap(it.toUri())
@@ -205,9 +205,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             MainScope().launch {
                 workpaper.videoUri.collect {
                     if (it == null) return@collect
-                    LogUtils.i(
-                        this@LiveWallpaperEngine.javaClass.simpleName, "On video uri", it.toString()
-                    )
+                    LogUtils.i(LOG_TAG, "On video uri", it.toString())
 
                     startVideo(it.toUri())
                 }
@@ -231,6 +229,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
+
             if (renderer == null) return
 
             when (renderer!!.wallpaperType) {
@@ -249,6 +248,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         }
 
         private fun onVideoVisibleChanged(visible: Boolean) {
+            LogUtils.i(LOG_TAG, "onVideoVisibleChanged", visible, isVisible)
             if (visible) {
                 player.start()
             } else {
@@ -379,11 +379,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private fun getBitmapWithAlpha(
             backgroundBitmap: Bitmap?, frontBitmap: Bitmap, alpha: Int
         ): Bitmap {
-            val result = Bitmap.createBitmap(
-                frontBitmap.width,
-                frontBitmap.height,
-                Bitmap.Config.RGB_565
-            )
+            val result = createBitmap(frontBitmap.width, frontBitmap.height, Bitmap.Config.RGB_565)
 
             val canvas = Canvas(result)
             val paint = Paint()
@@ -453,7 +449,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             if (renderer == null) return
 
             LogUtils.i(
-                this@LiveWallpaperEngine.javaClass.simpleName,
+                LOG_TAG,
                 "fun startVideo",
                 "isVisible=$isVisible, isScreenOn=$isScreenOn"
             )
@@ -471,7 +467,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 if (isVisible && isScreenOn) {
                     setOnPreparedListener {
                         it.start()
-                        LogUtils.i(javaClass.simpleName, "player started")
+                        LogUtils.i(LOG_TAG, "player started")
                     }
                 }
                 prepareAsync()
@@ -484,6 +480,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             player.apply {
                 if (isPlaying) {
                     stop()
+                    LogUtils.i(LOG_TAG, "player stopped")
                 }
             }
         }

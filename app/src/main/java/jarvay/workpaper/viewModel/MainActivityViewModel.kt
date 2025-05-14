@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.BuildConfig
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
+import jarvay.workpaper.others.LOG_TAG
 import jarvay.workpaper.request.RetrofitClient
 import jarvay.workpaper.request.response.UpdatingLogItem
 import kotlinx.coroutines.flow.first
@@ -63,7 +64,7 @@ class MainActivityViewModel @Inject constructor(
                 onResult(hasNewVersion)
             } catch (e: Exception) {
                 checkingUpdate.value = false
-                LogUtils.i(javaClass.simpleName, "checkUpdate failed", e.toString())
+                LogUtils.i(LOG_TAG, "checkUpdate failed", e.toString())
                 onError()
             }
         }
