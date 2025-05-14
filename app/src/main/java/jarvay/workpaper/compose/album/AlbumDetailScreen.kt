@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -64,6 +63,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
@@ -160,6 +160,7 @@ fun AlbumDetailScreen(
 
             val newWallpapers = mutableListOf<Wallpaper>()
             MainScope().launch {
+                viewModel.loading.value = true
                 for (uri in splitUris) {
                     if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
                     context.contentResolver.takePersistableUriPermission(uri, takeFlags)
@@ -167,11 +168,13 @@ fun AlbumDetailScreen(
                     if (permissions.any { it.uri == uri }) {
                         val file = DocumentFile.fromSingleUri(context, uri)
                         file?.let {
+                            val ratio = viewModel.getImageRatio(context, uri)
                             newWallpapers.add(
                                 Wallpaper(
                                     contentUri = uri.toString(),
                                     type = wallpaperType(it.type ?: ""),
-                                    albumId = album.albumId
+                                    albumId = album.albumId,
+                                    ratio = ratio
                                 )
                             )
                         }
@@ -179,6 +182,7 @@ fun AlbumDetailScreen(
                 }
 
                 viewModel.addWallpapers(newWallpapers)
+                viewModel.loading.value = false
             }
         }
     )
@@ -195,7 +199,11 @@ fun AlbumDetailScreen(
                     context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                     val documentFile = DocumentFile.fromTreeUri(context, uri)
                         ?: return@launch
-                    viewModel.addWallpapersFromFolder(documentFile, albumId = album.albumId)
+                    viewModel.addWallpapersFromFolder(
+                        context,
+                        documentFile,
+                        albumId = album.albumId
+                    )
                 }
                 viewModel.loading.value = false
             }
@@ -428,6 +436,8 @@ private fun WallpaperItem(
     val model = try {
         ImageRequest.Builder(context)
             .data(contentUri.toUri())
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
             .size(Size.ORIGINAL)
             .crossfade(true)
             .build()
@@ -435,6 +445,7 @@ private fun WallpaperItem(
         LogUtils.e("AlbumDetailScreen", "Load wallpaper failed", e.toString())
         null
     }
+    val ratio = wallpaper.ratio ?: 1.0f
 
     Box(
         modifier = modifier
@@ -443,11 +454,7 @@ private fun WallpaperItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
-                .apply {
-                    if (model == null) {
-                        height(256.dp)
-                    }
-                }
+                .aspectRatio(ratio)
         ) {
             Box {
                 SubcomposeAsyncImage(
@@ -469,6 +476,7 @@ private fun WallpaperItem(
                     },
                     modifier = Modifier
                         .fillMaxSize()
+                        .aspectRatio(ratio)
                         .combinedClickable(
                             onLongClick = {
                                 dropMenuExpanded = true

@@ -18,4 +18,6 @@ data class Wallpaper(
     val contentUri: String,
     @ColumnInfo(defaultValue = "IMAGE")
     val type: WallpaperType,
+    @ColumnInfo(defaultValue = "NULL")
+    val ratio: Float?,
 )

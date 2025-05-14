@@ -8,6 +8,9 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.size.Size
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
@@ -32,14 +35,10 @@ class AlbumDetailViewModel @Inject constructor(
     private val albumId: String = savedStateHandle.get<String>(ALBUM_ID_SAVED_STATE_KEY)!!
 
     val albumWithWallpapers = repository.getAlbumWithWallpapers(albumId = albumId.toLong()).stateIn(
-        viewModelScope,
-        STATE_IN_STATED,
-        null
+        viewModelScope, STATE_IN_STATED, null
     )
     val album = repository.getAlbum(albumId = albumId.toLong()).stateIn(
-        viewModelScope,
-        STATE_IN_STATED,
-        null
+        viewModelScope, STATE_IN_STATED, null
     )
 
     val loading = MutableStateFlow(false)
@@ -58,8 +57,8 @@ class AlbumDetailViewModel @Inject constructor(
         }
     }
 
-    fun addWallpapersFromFolder(file: DocumentFile, albumId: Long) {
-        val result = getWallpapersInDir(file)
+    suspend fun addWallpapersFromFolder(context: Context, file: DocumentFile, albumId: Long) {
+        val result = getWallpapersInDir(context, file)
         addWallpapers(result.map {
             it.copy(albumId = albumId)
         })
@@ -76,7 +75,7 @@ class AlbumDetailViewModel @Inject constructor(
                 val newWallpapers = emptyList<Wallpaper>().toMutableList()
                 for (dir in dirs) {
                     val documentFile = DocumentFile.fromTreeUri(context, dir.toUri()) ?: continue
-                    newWallpapers.addAll(getWallpapersInDir(documentFile))
+                    newWallpapers.addAll(getWallpapersInDir(context, documentFile))
                 }
 
                 val toDeleteIds = emptyList<Long>().toMutableList()
@@ -127,15 +126,18 @@ class AlbumDetailViewModel @Inject constructor(
         }
     }
 
-    private fun getWallpapersInDir(
+    private suspend fun getWallpapersInDir(
+        context: Context,
         documentFile: DocumentFile,
         result: MutableList<Wallpaper> = mutableListOf(),
     ): MutableList<Wallpaper> {
         for (item in documentFile.listFiles()) {
             if (item.isDirectory) {
-                getWallpapersInDir(item, result)
+                getWallpapersInDir(context, item, result)
             } else if (item.isFile) {
+                val ratio = getImageRatio(context, item.uri)
                 val mimeType = item.type ?: continue
+
                 val supported = SUPPORTED_WALLPAPER_TYPES_PREFIX.any {
                     mimeType.startsWith(it)
                 }
@@ -144,12 +146,27 @@ class AlbumDetailViewModel @Inject constructor(
                     Wallpaper(
                         contentUri = item.uri.toString(),
                         type = wallpaperType(mimeType),
+                        ratio = ratio
                     )
                 )
             }
         }
 
         return result
+    }
+
+    suspend fun getImageRatio(context: Context, uri: Uri): Float? {
+        val imageLoader = ImageLoader(context)
+        val request = ImageRequest.Builder(context).data(uri).size(Size.ORIGINAL).build()
+
+        return try {
+            val result = imageLoader.execute(request)
+            val width = result.image!!.width.toFloat()
+            val height = result.image!!.height.toFloat()
+            width / height
+        } catch (e: Exception) {
+            null
+        }
     }
 
     companion object {
