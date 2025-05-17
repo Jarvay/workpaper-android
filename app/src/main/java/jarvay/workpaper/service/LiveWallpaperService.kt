@@ -207,7 +207,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                     if (it == null) return@collect
                     LogUtils.i(LOG_TAG, "On video uri", it.toString())
 
-                    startVideo(it.toUri())
+                    changeVideoSource(it.toUri())
                 }
             }
 
@@ -445,14 +445,14 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             renderer = null
         }
 
-        private fun startVideo(uri: Uri) {
-            if (renderer == null) return
-
+        private fun changeVideoSource(uri: Uri) {
             LogUtils.i(
                 LOG_TAG,
-                "fun startVideo",
+                "fun changeVideoSource",
                 "isVisible=$isVisible, isScreenOn=$isScreenOn"
             )
+
+            if (renderer == null) return
 
             renderer!!.videoRenderer.setSourcePlayer(player)
             renderer!!.updateWallpaperType(WallpaperType.VIDEO)
@@ -464,12 +464,15 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 setVolume(0f, 0f)
                 isLooping = true
                 setDataSource(this@LiveWallpaperService, uri)
-                if (isVisible && isScreenOn) {
-                    setOnPreparedListener {
+                setOnPreparedListener {
+                    if (isVisible && isScreenOn) {
                         it.start()
-                        LogUtils.i(LOG_TAG, "player started")
+                        LogUtils.i(LOG_TAG, "isVisible=$isVisible, isScreenOn=$isScreenOn", "player started")
+                    } else {
+                        LogUtils.i(LOG_TAG, "isVisible=$isVisible, isScreenOn=$isScreenOn", "player not start")
                     }
                 }
+
                 prepareAsync()
             }
 
