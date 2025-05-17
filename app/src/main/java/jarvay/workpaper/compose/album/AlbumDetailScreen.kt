@@ -77,14 +77,10 @@ import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.PICKER_WALLPAPER_TYPES
-import jarvay.workpaper.others.wallpaperType
 import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
 import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,41 +146,13 @@ fun AlbumDetailScreen(
                 return@rememberLauncherForActivityResult
             }
 
-            val takeFlags: Int =
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
             val splitUris = if (uris.size > MAX_PERSISTED_URI_GRANTS) {
                 uris.subList(0, MAX_PERSISTED_URI_GRANTS - 1)
             } else {
                 uris
             }
 
-            val newWallpapers = mutableListOf<Wallpaper>()
-            MainScope().launch {
-                viewModel.loading.value = true
-                for (uri in splitUris) {
-                    if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
-                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                    val permissions = context.contentResolver.persistedUriPermissions
-                    if (permissions.any { it.uri == uri }) {
-                        val file = DocumentFile.fromSingleUri(context, uri)
-                        file?.let {
-                            val ratio = viewModel.getImageRatio(context, uri)
-                            newWallpapers.add(
-                                Wallpaper(
-                                    contentUri = uri.toString(),
-                                    type = wallpaperType(it.type ?: ""),
-                                    albumId = album.albumId,
-                                    ratio = ratio
-                                )
-                            )
-                        }
-                    }
-                }
-
-                viewModel.addWallpapers(newWallpapers)
-                viewModel.loading.value = false
-            }
+            viewModel.addFromUris(context = context, uris = splitUris)
         }
     )
 
@@ -192,21 +160,17 @@ fun AlbumDetailScreen(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri: Uri? ->
             simpleSnackbar.show(R.string.album_add_wallpaper_folder_tips)
-            MainScope().launch(Dispatchers.IO) {
-                viewModel.loading.value = true
-                val takeFlags: Int =
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                if (uri != null) {
-                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                    val documentFile = DocumentFile.fromTreeUri(context, uri)
-                        ?: return@launch
-                    viewModel.addWallpapersFromFolder(
-                        context,
-                        documentFile,
-                        albumId = album.albumId
-                    )
-                }
-                viewModel.loading.value = false
+
+            val takeFlags: Int =
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            if (uri != null) {
+                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                val documentFile = DocumentFile.fromTreeUri(context, uri)
+                    ?: return@rememberLauncherForActivityResult
+                viewModel.addWallpapersFromFolder(
+                    context,
+                    documentFile,
+                )
             }
         }
     )
