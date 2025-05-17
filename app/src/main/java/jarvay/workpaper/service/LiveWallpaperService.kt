@@ -43,6 +43,7 @@ import jarvay.workpaper.wallpaper.WallpaperRenderer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -193,7 +194,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             )
 
             MainScope().launch {
-                workpaper.imageUri.collect {
+                workpaper.imageUri.distinctUntilChanged { old, new -> old == new }.collect {
                     if (it == null) return@collect
                     LogUtils.i(LOG_TAG, "On image uri", it.toString())
 
@@ -203,7 +204,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 }
             }
             MainScope().launch {
-                workpaper.videoUri.collect {
+                workpaper.videoUri.distinctUntilChanged { old, new -> old == new }.collect {
                     if (it == null) return@collect
                     LogUtils.i(LOG_TAG, "On video uri", it.toString())
 
@@ -248,7 +249,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         }
 
         private fun onVideoVisibleChanged(visible: Boolean) {
-            LogUtils.i(LOG_TAG, "onVideoVisibleChanged", visible, isVisible)
             if (visible) {
                 player.start()
             } else {
@@ -467,9 +467,17 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 setOnPreparedListener {
                     if (isVisible && isScreenOn) {
                         it.start()
-                        LogUtils.i(LOG_TAG, "isVisible=$isVisible, isScreenOn=$isScreenOn", "player started")
+                        LogUtils.i(
+                            LOG_TAG,
+                            "isVisible=$isVisible, isScreenOn=$isScreenOn",
+                            "player started"
+                        )
                     } else {
-                        LogUtils.i(LOG_TAG, "isVisible=$isVisible, isScreenOn=$isScreenOn", "player not start")
+                        LogUtils.i(
+                            LOG_TAG,
+                            "isVisible=$isVisible, isScreenOn=$isScreenOn",
+                            "player not start"
+                        )
                     }
                 }
 
