@@ -164,7 +164,8 @@ fun DirItem(fullPath: String, viewModel: AlbumDetailViewModel, context: Context)
         }
     }
 
-    SimpleDialog(text = stringResource(R.string.album_related_folder_delete_tips),
+    SimpleDialog(
+        text = stringResource(R.string.album_related_folder_delete_tips),
         show = deleteDialogShow,
         onDismissRequest = { deleteDialogShow = false }) {
         viewModel.removeDir(fullPath)

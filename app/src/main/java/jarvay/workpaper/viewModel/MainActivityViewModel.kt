@@ -9,8 +9,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.BuildConfig
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
+import jarvay.workpaper.others.LOG_TAG
 import jarvay.workpaper.request.RetrofitClient
-import jarvay.workpaper.request.response.Version
+import jarvay.workpaper.request.response.UpdatingLogItem
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,11 +29,13 @@ class MainActivityViewModel @Inject constructor(
 
     val runningPreferences = runningPreferencesRepository.runningPreferencesFlow.asLiveData()
 
-    val latestVersion = MutableLiveData<Version>()
+    val latestVersion = MutableLiveData<UpdatingLogItem>()
 
     val upgradeDialogShow = MutableLiveData(false)
 
     val checkingUpdate = MutableLiveData(false)
+
+    val updatingLogs = MutableLiveData(emptyList<UpdatingLogItem>())
 
     init {
         viewModelScope.launch {
@@ -47,8 +50,9 @@ class MainActivityViewModel @Inject constructor(
         checkingUpdate.value = true
         viewModelScope.launch {
             try {
-                val result = retrofitClient.updateService.data()
-                val latest = result.latestVersion
+                updatingLogs.value = retrofitClient.updateService.updatingLog()
+
+                val latest = updatingLogs.value!!.first()
 
                 var hasNewVersion = false
                 if (BuildConfig.VERSION_CODE < latest.versionCode) {
@@ -60,7 +64,7 @@ class MainActivityViewModel @Inject constructor(
                 onResult(hasNewVersion)
             } catch (e: Exception) {
                 checkingUpdate.value = false
-                LogUtils.i(javaClass.simpleName, "checkUpdate failed", e.toString())
+                LogUtils.i(LOG_TAG, "checkUpdate failed", e.toString())
                 onError()
             }
         }

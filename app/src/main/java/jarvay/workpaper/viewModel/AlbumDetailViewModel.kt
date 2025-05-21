@@ -8,6 +8,9 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.size.Size
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
@@ -32,37 +35,87 @@ class AlbumDetailViewModel @Inject constructor(
     private val albumId: String = savedStateHandle.get<String>(ALBUM_ID_SAVED_STATE_KEY)!!
 
     val albumWithWallpapers = repository.getAlbumWithWallpapers(albumId = albumId.toLong()).stateIn(
-        viewModelScope,
-        STATE_IN_STATED,
-        null
+        viewModelScope, STATE_IN_STATED, null
     )
     val album = repository.getAlbum(albumId = albumId.toLong()).stateIn(
-        viewModelScope,
-        STATE_IN_STATED,
-        null
+        viewModelScope, STATE_IN_STATED, null
     )
 
     val loading = MutableStateFlow(false)
 
     fun deleteWallpapers(wallpaperIds: List<Long>) {
         if (albumWithWallpapers.value != null) {
-            viewModelScope.launch {
+            MainScope().launch {
                 wallpaperRepository.delete(wallpaperIds)
             }
         }
     }
 
-    fun addWallpapers(wallpapers: List<Wallpaper>) {
+    fun emptyAlbum() {
+        MainScope().launch {
+            wallpaperRepository.deleteByAlbumId(albumId = albumId.toLong())
+        }
+    }
+
+    private fun addWallpapers(wallpapers: List<Wallpaper>) {
         MainScope().launch {
             wallpaperRepository.insert(wallpapers)
         }
     }
 
-    fun addWallpapersFromFolder(file: DocumentFile, albumId: Long) {
-        val result = getWallpapersInDir(file)
-        addWallpapers(result.map {
-            it.copy(albumId = albumId)
-        })
+    fun addFromUris(context: Context, uris: List<Uri>) {
+        loading.value = true
+        val takeFlags: Int =
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+        MainScope().launch(Dispatchers.IO) {
+            val chunks = uris.chunked(WALLPAPER_INSERT_CHUNK_SIZE)
+            chunks.forEach { chunk ->
+                val newWallpapers = mutableListOf<Wallpaper>()
+
+                chunk.forEach { uri ->
+                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                    val permissions = context.contentResolver.persistedUriPermissions
+                    if (permissions.any { it.uri == uri }) {
+                        val file = DocumentFile.fromSingleUri(context, uri)
+                        file?.let {
+                            val ratio = getImageRatio(context, uri)
+                            newWallpapers.add(
+                                Wallpaper(
+                                    contentUri = uri.toString(),
+                                    type = wallpaperType(it.type ?: ""),
+                                    albumId = albumId.toLong(),
+                                    ratio = ratio
+                                )
+                            )
+                        }
+                    }
+                }
+
+                addWallpapers(newWallpapers)
+            }
+            loading.value = false
+        }
+    }
+
+    fun addWallpapersFromFolder(context: Context, file: DocumentFile) {
+        loading.value = true
+        MainScope().launch(Dispatchers.IO) {
+            val chunks = getWallpapersInDir(context, file).chunked(WALLPAPER_INSERT_CHUNK_SIZE)
+            chunks.forEach { chunk ->
+                val wallpapers = mutableListOf<Wallpaper>()
+                chunk.forEach { wallpaper ->
+                    wallpapers.add(
+                        wallpaper.copy(
+                            albumId = albumId.toLong(),
+                            ratio = getImageRatio(context = context, wallpaper.contentUri.toUri())
+                        )
+                    )
+                }
+                addWallpapers(wallpapers = wallpapers)
+            }
+            loading.value = false
+        }
     }
 
     fun updateWallpapersByDirs(context: Context) {
@@ -72,31 +125,55 @@ class AlbumDetailViewModel @Inject constructor(
 
             MainScope().launch(Dispatchers.IO) {
                 loading.value = true
-                val wallpapers = albumWithWallpapers.value?.wallpapers ?: emptyList()
-                val newWallpapers = emptyList<Wallpaper>().toMutableList()
+                val oldWallpapers = albumWithWallpapers.value?.wallpapers ?: emptyList()
+                val newWallpapers = mutableListOf<Wallpaper>()
                 for (dir in dirs) {
                     val documentFile = DocumentFile.fromTreeUri(context, dir.toUri()) ?: continue
-                    newWallpapers.addAll(getWallpapersInDir(documentFile))
+                    newWallpapers.addAll(
+                        getWallpapersInDir(
+                            context,
+                            documentFile,
+                            skipGettingRatio = true
+                        )
+                    )
                 }
 
-                val toDeleteIds = emptyList<Long>().toMutableList()
-                wallpapers.forEach { old ->
-                    val shouldDelete =
-                        newWallpapers.none { new -> new.contentUri == old.contentUri }
-                    if (shouldDelete) {
-                        toDeleteIds.add(old.wallpaperId)
+                if (oldWallpapers.isNotEmpty()) {
+                    val toDeleteIds = mutableListOf<Long>()
+                    oldWallpapers.forEach { old ->
+                        val shouldDelete =
+                            newWallpapers.none { new -> new.contentUri == old.contentUri }
+                        if (shouldDelete) {
+                            toDeleteIds.add(old.wallpaperId)
+                        }
                     }
+                    deleteWallpapers(toDeleteIds)
                 }
-                deleteWallpapers(toDeleteIds)
 
-                val toAddList = emptyList<Wallpaper>().toMutableList()
+                val toAddList = mutableListOf<Wallpaper>()
                 newWallpapers.forEach { new ->
-                    val shouldAdd = wallpapers.none { old -> old.contentUri == new.contentUri }
+                    val shouldAdd = oldWallpapers.none { old -> old.contentUri == new.contentUri }
                     if (shouldAdd) {
                         toAddList.add(new)
                     }
                 }
-                addWallpapers(toAddList.map { toAdd -> toAdd.copy(albumId = albumId.toLong()) })
+                val chunks = toAddList.chunked(WALLPAPER_INSERT_CHUNK_SIZE)
+                chunks.forEach { chunk ->
+                    val wallpapers = mutableListOf<Wallpaper>()
+                    chunk.forEach { wallpaper ->
+                        wallpapers.add(
+                            wallpaper.copy(
+                                albumId = albumId.toLong(),
+                                ratio = getImageRatio(
+                                    context = context,
+                                    wallpaper.contentUri.toUri()
+                                )
+                            )
+                        )
+                    }
+
+                    addWallpapers(wallpapers)
+                }
 
                 loading.value = false
             }
@@ -127,15 +204,19 @@ class AlbumDetailViewModel @Inject constructor(
         }
     }
 
-    private fun getWallpapersInDir(
+    private suspend fun getWallpapersInDir(
+        context: Context,
         documentFile: DocumentFile,
         result: MutableList<Wallpaper> = mutableListOf(),
+        skipGettingRatio: Boolean = false
     ): MutableList<Wallpaper> {
         for (item in documentFile.listFiles()) {
             if (item.isDirectory) {
-                getWallpapersInDir(item, result)
+                getWallpapersInDir(context, item, result)
             } else if (item.isFile) {
+                val ratio = if (skipGettingRatio) null else getImageRatio(context, item.uri)
                 val mimeType = item.type ?: continue
+
                 val supported = SUPPORTED_WALLPAPER_TYPES_PREFIX.any {
                     mimeType.startsWith(it)
                 }
@@ -144,6 +225,7 @@ class AlbumDetailViewModel @Inject constructor(
                     Wallpaper(
                         contentUri = item.uri.toString(),
                         type = wallpaperType(mimeType),
+                        ratio = ratio
                     )
                 )
             }
@@ -152,8 +234,24 @@ class AlbumDetailViewModel @Inject constructor(
         return result
     }
 
+    suspend fun getImageRatio(context: Context, uri: Uri): Float? {
+        val imageLoader = ImageLoader(context)
+        val request = ImageRequest.Builder(context).data(uri).size(Size.ORIGINAL).build()
+
+        return try {
+            val result = imageLoader.execute(request)
+            val width = result.image!!.width.toFloat()
+            val height = result.image!!.height.toFloat()
+            width / height
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     companion object {
         private const val ALBUM_ID_SAVED_STATE_KEY = "albumId"
+
+        private const val WALLPAPER_INSERT_CHUNK_SIZE = 5
 
         fun releasePermissions(context: Context, contentUri: Uri) {
             val flags: Int =

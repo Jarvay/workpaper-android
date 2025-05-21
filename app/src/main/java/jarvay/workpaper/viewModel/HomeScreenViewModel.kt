@@ -4,11 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.Workpaper
-import jarvay.workpaper.data.preferences.RunningPreferencesKeys
 import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.others.STATE_IN_STATED
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -23,22 +21,7 @@ class HomeScreenViewModel @Inject constructor(
         null
     )
 
-    fun start() {
-        viewModelScope.launch {
-            runningPreferencesRepository.apply {
-                update(RunningPreferencesKeys.RUNNING, true)
-            }
-        }
-        workpaper.start()
-    }
+    fun start() = workpaper.start()
 
-    fun stop() {
-        viewModelScope.launch {
-            workpaper.stop()
-
-            runningPreferencesRepository.apply {
-                update(RunningPreferencesKeys.RUNNING, false)
-            }
-        }
-    }
+    fun stop() = workpaper.stop()
 }

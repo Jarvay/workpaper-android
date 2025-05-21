@@ -23,6 +23,9 @@ interface WallpaperDao {
     @Query("DELETE FROM wallpapers where id in (:ids)")
     suspend fun delete(ids: List<Long>)
 
+    @Query("DELETE FROM wallpapers where albumId=:albumId")
+    suspend fun deleteByAlbumId(albumId: Long)
+
     @Query("SELECT EXISTS (SELECT * FROM wallpapers WHERE contentUri=:contentUri )")
     fun existsByContentUri(contentUri: String): Boolean
 }

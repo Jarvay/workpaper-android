@@ -16,6 +16,7 @@ import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
+import jarvay.workpaper.others.LOG_TAG
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -39,7 +40,7 @@ class RuleReceiver : BroadcastReceiver() {
         val ruleWithRelation = ruleRepository.findRuleById(ruleId)
 
         if (ruleWithRelation == null) {
-            LogUtils.i(javaClass.simpleName, "Can not find rule where id=$ruleId")
+            LogUtils.i(LOG_TAG, "Can not find rule where id=$ruleId")
             return
         }
 
@@ -91,8 +92,9 @@ class RuleReceiver : BroadcastReceiver() {
                 interval.toLong(),
                 pendingIntent
             )
+            LogUtils.i(LOG_TAG, "startRepeatAlarm")
         } catch (e: SecurityException) {
-            LogUtils.e(javaClass.simpleName, "Can not set wallpaper alarm", e.toString())
+            LogUtils.e(LOG_TAG, "Can not set wallpaper alarm", e.toString())
         }
     }
 

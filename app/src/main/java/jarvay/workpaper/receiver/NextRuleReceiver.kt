@@ -15,6 +15,7 @@ import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleDao
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.data.rule.RuleWithRelationToSort
+import jarvay.workpaper.others.LOG_TAG
 import jarvay.workpaper.others.getCalendarWithRule
 import jarvay.workpaper.others.nextRule
 import jarvay.workpaper.receiver.RuleReceiver.Companion.RULE_ID_KEY
@@ -59,7 +60,7 @@ class NextRuleReceiver : BroadcastReceiver() {
         }
 
         if (nextRule == null) {
-            LogUtils.i(javaClass.simpleName, "Next rule is null")
+            LogUtils.i(LOG_TAG, "Next rule is null")
             return
         }
 
@@ -88,9 +89,9 @@ class NextRuleReceiver : BroadcastReceiver() {
                 calendar.timeInMillis,
                 pendingIntent
             )
-            LogUtils.i(javaClass.simpleName, "Rule alarm added", calendar)
+            LogUtils.i(LOG_TAG, "Rule alarm added", calendar)
         } catch (e: SecurityException) {
-            LogUtils.e(javaClass.simpleName, "Failed to set alarm", e.toString())
+            LogUtils.e(LOG_TAG, "Failed to set alarm", e.toString())
         }
 
         workpaper.nextRuleTime = calendar.timeInMillis

@@ -180,7 +180,8 @@ fun RuleForm(
                     rule = rule.copy(days = checkedDays)
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable {
                         toggleAllChecked()
                     }) {

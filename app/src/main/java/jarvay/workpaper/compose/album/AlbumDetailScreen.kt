@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -64,6 +63,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Size
@@ -77,14 +77,10 @@ import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.PICKER_WALLPAPER_TYPES
-import jarvay.workpaper.others.wallpaperType
 import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
 import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,6 +114,8 @@ fun AlbumDetailScreen(
         mutableStateOf(false)
     }
 
+    var emptyDialogShow by remember { mutableStateOf(false) }
+
     var actionsShow by remember {
         mutableStateOf(false)
     }
@@ -132,8 +130,7 @@ fun AlbumDetailScreen(
     val listState = rememberLazyStaggeredGridState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments(),
-        onResult = { uris: List<Uri> ->
+        contract = ActivityResultContracts.OpenMultipleDocuments(), onResult = { uris: List<Uri> ->
             val existsCount = context.contentResolver.persistedUriPermissions.size
             val leaveCount = MAX_PERSISTED_URI_GRANTS - existsCount
             val after = existsCount + uris.size
@@ -149,37 +146,13 @@ fun AlbumDetailScreen(
                 return@rememberLauncherForActivityResult
             }
 
-            val takeFlags: Int =
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
             val splitUris = if (uris.size > MAX_PERSISTED_URI_GRANTS) {
                 uris.subList(0, MAX_PERSISTED_URI_GRANTS - 1)
             } else {
                 uris
             }
 
-            val newWallpapers = mutableListOf<Wallpaper>()
-            MainScope().launch {
-                for (uri in splitUris) {
-                    if (newWallpapers.find { it.contentUri == uri.toString() } != null) continue
-                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                    val permissions = context.contentResolver.persistedUriPermissions
-                    if (permissions.any { it.uri == uri }) {
-                        val file = DocumentFile.fromSingleUri(context, uri)
-                        file?.let {
-                            newWallpapers.add(
-                                Wallpaper(
-                                    contentUri = uri.toString(),
-                                    type = wallpaperType(it.type ?: ""),
-                                    albumId = album.albumId
-                                )
-                            )
-                        }
-                    }
-                }
-
-                viewModel.addWallpapers(newWallpapers)
-            }
+            viewModel.addFromUris(context = context, uris = splitUris)
         }
     )
 
@@ -187,17 +160,17 @@ fun AlbumDetailScreen(
         contract = ActivityResultContracts.OpenDocumentTree(),
         onResult = { uri: Uri? ->
             simpleSnackbar.show(R.string.album_add_wallpaper_folder_tips)
-            MainScope().launch(Dispatchers.IO) {
-                viewModel.loading.value = true
-                val takeFlags: Int =
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                if (uri != null) {
-                    context.contentResolver.takePersistableUriPermission(uri, takeFlags)
-                    val documentFile = DocumentFile.fromTreeUri(context, uri)
-                        ?: return@launch
-                    viewModel.addWallpapersFromFolder(documentFile, albumId = album.albumId)
-                }
-                viewModel.loading.value = false
+
+            val takeFlags: Int =
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            if (uri != null) {
+                context.contentResolver.takePersistableUriPermission(uri, takeFlags)
+                val documentFile = DocumentFile.fromTreeUri(context, uri)
+                    ?: return@rememberLauncherForActivityResult
+                viewModel.addWallpapersFromFolder(
+                    context,
+                    documentFile,
+                )
             }
         }
     )
@@ -270,8 +243,16 @@ fun AlbumDetailScreen(
                                 }, onClick = {
                                     actionsShow = false
                                     selecting = true
-                                },
-                                enabled = wallpapers.isNotEmpty()
+                                }, enabled = wallpapers.isNotEmpty()
+                            )
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(text = stringResource(id = R.string.action_empty))
+                                }, onClick = {
+                                    actionsShow = false
+                                    emptyDialogShow = true
+                                }, enabled = wallpapers.isNotEmpty()
                             )
                         } else {
                             DropdownMenuItem(text = {
@@ -367,6 +348,13 @@ fun AlbumDetailScreen(
     ) {
         limitTipShow = false
     }
+
+    SimpleDialog(content = {
+        Text(text = stringResource(R.string.album_empty_tips))
+    }, show = emptyDialogShow, onDismissRequest = { emptyDialogShow = false }) {
+        emptyDialogShow = false
+        viewModel.emptyAlbum()
+    }
 }
 
 @Composable
@@ -428,6 +416,8 @@ private fun WallpaperItem(
     val model = try {
         ImageRequest.Builder(context)
             .data(contentUri.toUri())
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .diskCachePolicy(CachePolicy.ENABLED)
             .size(Size.ORIGINAL)
             .crossfade(true)
             .build()
@@ -435,6 +425,7 @@ private fun WallpaperItem(
         LogUtils.e("AlbumDetailScreen", "Load wallpaper failed", e.toString())
         null
     }
+    val ratio = wallpaper.ratio ?: 1.0f
 
     Box(
         modifier = modifier
@@ -443,11 +434,7 @@ private fun WallpaperItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
-                .apply {
-                    if (model == null) {
-                        height(256.dp)
-                    }
-                }
+                .aspectRatio(ratio)
         ) {
             Box {
                 SubcomposeAsyncImage(
@@ -469,6 +456,7 @@ private fun WallpaperItem(
                     },
                     modifier = Modifier
                         .fillMaxSize()
+                        .aspectRatio(ratio)
                         .combinedClickable(
                             onLongClick = {
                                 dropMenuExpanded = true
