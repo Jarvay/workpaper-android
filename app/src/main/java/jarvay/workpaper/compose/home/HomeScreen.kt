@@ -67,6 +67,7 @@ import jarvay.workpaper.compose.rule.RuleListScreen
 import jarvay.workpaper.compose.style.StyleListScreen
 import jarvay.workpaper.others.requestAlarmPermission
 import jarvay.workpaper.viewModel.HomeScreenViewModel
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 enum class WorkpaperPage(
@@ -246,10 +247,14 @@ private fun TopBar(
                     if (it && checkPermissions(context, onRequestPermission = {
                             alarmPermissionDialogShow = true
                         })) {
-                        homeScreenViewModel.start()
+                        MainScope().launch {
+                            homeScreenViewModel.start()
+                        }
 
                     } else if (!it) {
-                        homeScreenViewModel.stop()
+                        MainScope().launch {
+                            homeScreenViewModel.stop()
+                        }
                     }
                 },
                 modifier = Modifier.padding(end = 16.dp),

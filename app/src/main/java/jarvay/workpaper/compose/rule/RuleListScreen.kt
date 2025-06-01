@@ -48,6 +48,8 @@ import jarvay.workpaper.ui.theme.COLOR_LIST_LABEL
 import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.RuleListViewModel
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -239,8 +241,8 @@ private fun RuleItem(
                             expanded = false
 
                             if (running) {
-                                viewModel.apply {
-                                    workpaper.restart()
+                                MainScope().launch {
+                                    viewModel.workpaper.restart()
                                 }
                             }
                         }
