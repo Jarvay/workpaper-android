@@ -21,7 +21,7 @@ class HomeScreenViewModel @Inject constructor(
         null
     )
 
-    fun start() = workpaper.start()
+    suspend fun start() = workpaper.start()
 
-    fun stop() = workpaper.stop()
+    suspend fun stop() = workpaper.stop()
 }

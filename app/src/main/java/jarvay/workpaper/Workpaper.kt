@@ -82,34 +82,32 @@ class Workpaper @Inject constructor(
         }
     }
 
-    fun restart() {
+    suspend fun restart() {
         stop()
 
         start()
     }
 
-    fun start() {
+    suspend fun start() {
         val i = Intent(context, WorkpaperService::class.java)
         context.startService(i)
 
-        MainScope().launch {
-            runningPreferencesRepository.apply {
-                update(RunningPreferencesKeys.RUNNING, true)
-            }
+        runningPreferencesRepository.apply {
+            update(RunningPreferencesKeys.RUNNING, true)
+        }
 
-            if (settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper) {
-                context.startActivity(
-                    Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).putExtra(
-                        WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, ComponentName(
-                            context, LiveWallpaperService::class.java
-                        )
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }
+        if (settingsPreferencesRepository.settingsPreferencesFlow.first().useLiveWallpaper) {
+            context.startActivity(
+                Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).putExtra(
+                    WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT, ComponentName(
+                        context, LiveWallpaperService::class.java
+                    )
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
         }
     }
 
-    fun stop() {
+    suspend fun stop() {
         currentRuleId.value = -1
         nextRuleId.value = -1
 
@@ -118,13 +116,11 @@ class Workpaper @Inject constructor(
 
         cancelAllAlarm()
 
-        MainScope().launch {
-            runningPreferencesRepository.apply {
-                update(RunningPreferencesKeys.LAST_INDEX, -1)
-                update(RunningPreferencesKeys.LAST_WALLPAPER, "")
-                update(RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI, "")
-                update(RunningPreferencesKeys.RUNNING, false)
-            }
+        runningPreferencesRepository.apply {
+            update(RunningPreferencesKeys.LAST_INDEX, -1)
+            update(RunningPreferencesKeys.LAST_WALLPAPER, "")
+            update(RunningPreferencesKeys.CURRENT_VIDEO_CONTENT_URI, "")
+            update(RunningPreferencesKeys.RUNNING, false)
         }
 
         nextWallpaper.value = null
