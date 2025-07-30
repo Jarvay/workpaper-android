@@ -2,7 +2,9 @@ package jarvay.workpaper.viewModel
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.SavedStateHandle
@@ -10,8 +12,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.ImageLoader
 import coil3.request.ImageRequest
+import coil3.request.allowHardware
 import coil3.size.Size
+import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
@@ -24,15 +29,19 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumDetailViewModel @Inject constructor(
     private val repository: AlbumRepository,
     private val wallpaperRepository: WallpaperRepository,
+    private val workpaper: Workpaper,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val albumId: String = savedStateHandle.get<String>(ALBUM_ID_SAVED_STATE_KEY)!!
+
+    private val imageRatioCache = mutableMapOf<String, Float>()
 
     val albumWithWallpapers = repository.getAlbumWithWallpapers(albumId = albumId.toLong()).stateIn(
         viewModelScope, STATE_IN_STATED, null
@@ -42,6 +51,17 @@ class AlbumDetailViewModel @Inject constructor(
     )
 
     val loading = MutableStateFlow(false)
+
+    init {
+        if (workpaper.loadingAlbumIdSet.value.contains(albumId.toLong())) {
+            loading.value = true
+        }
+        viewModelScope.launch {
+            workpaper.loadingAlbumIdSet.collect {
+                loading.value = it.contains(albumId.toLong())
+            }
+        }
+    }
 
     fun deleteWallpapers(wallpaperIds: List<Long>) {
         if (albumWithWallpapers.value != null) {
@@ -57,14 +77,23 @@ class AlbumDetailViewModel @Inject constructor(
         }
     }
 
-    private fun addWallpapers(wallpapers: List<Wallpaper>) {
-        MainScope().launch {
-            wallpaperRepository.insert(wallpapers)
+    private suspend fun addWallpapers(wallpapers: List<Wallpaper>) {
+        wallpaperRepository.insert(wallpapers)
+    }
+
+    private fun setLoading(flag: Boolean) {
+        loading.value = flag
+        val newSet = workpaper.loadingAlbumIdSet.value.toMutableSet()
+        if (flag) {
+            newSet.add(albumId.toLong())
+        } else {
+            newSet.remove(albumId.toLong())
         }
+        workpaper.loadingAlbumIdSet.value = newSet
     }
 
     fun addFromUris(context: Context, uris: List<Uri>) {
-        loading.value = true
+        setLoading(true)
         val takeFlags: Int =
             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
@@ -94,12 +123,12 @@ class AlbumDetailViewModel @Inject constructor(
 
                 addWallpapers(newWallpapers)
             }
-            loading.value = false
+            setLoading(false)
         }
     }
 
     fun addWallpapersFromFolder(context: Context, file: DocumentFile) {
-        loading.value = true
+        setLoading(true)
         MainScope().launch(Dispatchers.IO) {
             val chunks = getWallpapersInDir(context, file).chunked(WALLPAPER_INSERT_CHUNK_SIZE)
             chunks.forEach { chunk ->
@@ -114,26 +143,26 @@ class AlbumDetailViewModel @Inject constructor(
                 }
                 addWallpapers(wallpapers = wallpapers)
             }
-            loading.value = false
+            setLoading(false)
         }
     }
 
     fun updateWallpapersByDirs(context: Context) {
+        if (loading.value) return
+
         albumWithWallpapers.value?.album?.let {
             val dirs = it.dirs ?: emptyList()
             if (dirs.isEmpty()) return
 
             MainScope().launch(Dispatchers.IO) {
-                loading.value = true
+                setLoading(true)
                 val oldWallpapers = albumWithWallpapers.value?.wallpapers ?: emptyList()
                 val newWallpapers = mutableListOf<Wallpaper>()
                 for (dir in dirs) {
                     val documentFile = DocumentFile.fromTreeUri(context, dir.toUri()) ?: continue
                     newWallpapers.addAll(
                         getWallpapersInDir(
-                            context,
-                            documentFile,
-                            skipGettingRatio = true
+                            context, documentFile, skipGettingRatio = true
                         )
                     )
                 }
@@ -163,10 +192,8 @@ class AlbumDetailViewModel @Inject constructor(
                     chunk.forEach { wallpaper ->
                         wallpapers.add(
                             wallpaper.copy(
-                                albumId = albumId.toLong(),
-                                ratio = getImageRatio(
-                                    context = context,
-                                    wallpaper.contentUri.toUri()
+                                albumId = albumId.toLong(), ratio = getImageRatio(
+                                    context = context, wallpaper.contentUri.toUri()
                                 )
                             )
                         )
@@ -175,7 +202,7 @@ class AlbumDetailViewModel @Inject constructor(
                     addWallpapers(wallpapers)
                 }
 
-                loading.value = false
+                setLoading(false)
             }
         }
     }
@@ -234,19 +261,76 @@ class AlbumDetailViewModel @Inject constructor(
         return result
     }
 
-    suspend fun getImageRatio(context: Context, uri: Uri): Float? {
-        val imageLoader = ImageLoader(context)
-        val request = ImageRequest.Builder(context).data(uri).size(Size.ORIGINAL).build()
+    private suspend fun getImageRatio(context: Context, uri: Uri): Float? =
+        withContext(Dispatchers.IO) {
+            val uriString = uri.toString()
 
-        return try {
-            val result = imageLoader.execute(request)
-            val width = result.image!!.width.toFloat()
-            val height = result.image!!.height.toFloat()
-            width / height
-        } catch (e: Exception) {
+            imageRatioCache[uriString]?.let { return@withContext it }
+
+            try {
+                val projection =
+                    arrayOf(MediaStore.MediaColumns.WIDTH, MediaStore.MediaColumns.HEIGHT)
+                context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val widthIndex = cursor.getColumnIndex(MediaStore.MediaColumns.WIDTH)
+                        val heightIndex = cursor.getColumnIndex(MediaStore.MediaColumns.HEIGHT)
+
+                        if (widthIndex != -1 && heightIndex != -1) {
+                            val width = cursor.getInt(widthIndex)
+                            val height = cursor.getInt(heightIndex)
+
+                            if (height > 0) {
+                                val ratio = width.toFloat() / height
+                                imageRatioCache[uriString] = ratio
+                                return@withContext ratio
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                LogUtils.e("MediaStore query failed for $uri", e)
+            }
+
+            try {
+                val options = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    BitmapFactory.decodeStream(inputStream, null, options)
+
+                    if (options.outHeight > 0 && options.outWidth > 0) {
+                        val ratio = options.outWidth.toFloat() / options.outHeight
+                        imageRatioCache[uriString] = ratio
+                        return@withContext ratio
+                    }
+                }
+            } catch (e: Exception) {
+                LogUtils.e("BitmapFactory bounds decode failed for $uri", e)
+            }
+
+            try {
+                val imageLoader = ImageLoader(context)
+                val request = ImageRequest.Builder(context)
+                    .data(uri)
+                    .size(Size.ORIGINAL)
+                    .allowHardware(false)
+                    .build()
+
+                val result = imageLoader.execute(request)
+                result.image?.let { image ->
+                    if (image.height > 0) {
+                        val ratio = image.width.toFloat() / image.height
+                        imageRatioCache[uriString] = ratio
+                        return@withContext ratio
+                    }
+                }
+            } catch (e: Exception) {
+                LogUtils.e("Full image load failed for $uri", e)
+            }
+
             null
         }
-    }
 
     companion object {
         private const val ALBUM_ID_SAVED_STATE_KEY = "albumId"
