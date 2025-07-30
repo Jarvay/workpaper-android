@@ -74,6 +74,8 @@ class Workpaper @Inject constructor(
     val imageUri = MutableStateFlow<String?>(null)
     val videoUri = MutableStateFlow<String?>(null)
 
+    val loadingAlbumIdSet = MutableStateFlow<MutableSet<Long>>(mutableSetOf())
+
     init {
         MainScope().launch {
             currentRuleId.collect {
