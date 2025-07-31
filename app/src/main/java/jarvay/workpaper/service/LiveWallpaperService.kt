@@ -7,8 +7,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory.Options
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
@@ -20,7 +18,6 @@ import android.view.MotionEvent
 import android.view.SurfaceHolder
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -89,6 +86,9 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private var isScreenOn = true
         private var bitmap: Bitmap? = null
         private var settings: SettingsPreferences? = null
+
+        private var currentBitmap: Bitmap? = null
+        private var nextBitmap: Bitmap? = null
 
         init {
             setTouchEventsEnabled(true)
@@ -217,8 +217,13 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         override fun onDestroy() {
             super.onDestroy()
-            engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            currentBitmap?.recycle()
+            nextBitmap?.recycle()
+            currentBitmap = null
+            nextBitmap = null
 
+            engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            renderer?.destroy()
             unregisterReceiver(screenStateReceiver)
         }
 
@@ -308,7 +313,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                     bitmap!!, x, 0, surfaceSize.width, surfaceSize.height
                 )
 
-                renderer?.imageRenderer?.bitmap = newBitmap
+                renderer?.imageRenderer?.setBitmap(newBitmap)
                 surfaceView?.requestRender()
             }
         }
@@ -319,95 +324,67 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             renderer?.updateWallpaperType(WallpaperType.IMAGE)
             stopVideo()
 
-            val bitmapMap = mutableMapOf<Int, Bitmap>()
-
-            val originBitmap = loadBitmap(uri) ?: return
+            var newBitmap = loadBitmap(uri) ?: return
+            newBitmap = workpaper.handleBitmapStyle(newBitmap)
 
             if (settings?.imageTransition == false) {
-                bitmapMap[0] = originBitmap
-                changeBitmap(bitmapMap)
+                currentBitmap?.recycle()
+                currentBitmap = newBitmap
+                renderer?.imageRenderer?.setBitmap(newBitmap)
+                surfaceView?.requestRender()
+                prevImageUri = uri.toString()
                 return
             }
 
-            val lowSampleOptions = Options().apply { inSampleSize = 1024 }
-            val lowSampleOriginBitmap = loadBitmap(uri, lowSampleOptions) ?: return
-
-            val prevBitmap = loadBitmap(prevImageUri?.toUri(), lowSampleOptions)
+            val prevBitmap = currentBitmap ?: newBitmap
+            nextBitmap = newBitmap
             prevImageUri = uri.toString()
 
-            if (prevBitmap == null) {
-                bitmapMap[0] = originBitmap
-                changeBitmap(bitmapMap)
-                return
-            }
+            renderer?.imageRenderer?.setBitmap(prevBitmap)
+            renderer?.imageRenderer?.setBitmap(nextBitmap!!, isNext = true)
 
-            var alpha = 55
-            val alphaList = mutableListOf<Int>()
+            renderer?.imageRenderer?.startTransition()
+            surfaceView?.requestRender()
 
-            while (alpha <= 255) {
-                alphaList.add(alpha)
-                alpha += 10
-            }
-            bitmapMap[alphaList.size] = originBitmap
-
-            for ((index, item) in alphaList.withIndex()) {
-                MainScope().launch(Dispatchers.IO) {
-                    bitmapMap[index] = getBitmapWithAlpha(prevBitmap, lowSampleOriginBitmap, item)
-                    if (bitmapMap.size - 1 == alphaList.size) {
-                        changeBitmap(bitmapMap)
-                        prevBitmap.recycle()
-                    }
-                }
-            }
-        }
-
-        private suspend fun changeBitmap(bitmaps: Map<Int, Bitmap>) {
-            for (index in 0 until bitmaps.size) {
-                try {
-                    renderer?.imageRenderer?.bitmap = bitmaps[index]
+            lifecycleScope.launch {
+                val transitionSteps = 20
+                for (i in 0..transitionSteps) {
+                    val alpha = i.toFloat() / transitionSteps
+                    renderer?.imageRenderer?.updateTransitionAlpha(alpha)
                     surfaceView?.requestRender()
                     delay(15)
-                    if (index < bitmaps.size - 1) {
-                        bitmaps[index - 1]?.recycle()
-                    }
-                } catch (e: Exception) {
-                    LogUtils.e(e.toString())
                 }
+
+                currentBitmap?.recycle()
+                currentBitmap = nextBitmap
+                nextBitmap = null
+
+                bitmap = currentBitmap
             }
         }
 
-        private fun getBitmapWithAlpha(
-            backgroundBitmap: Bitmap?, frontBitmap: Bitmap, alpha: Int
-        ): Bitmap {
-            val result = createBitmap(frontBitmap.width, frontBitmap.height, Bitmap.Config.RGB_565)
-
-            val canvas = Canvas(result)
-            val paint = Paint()
-            if (backgroundBitmap != null) {
-                paint.alpha = 255 - alpha
-                canvas.drawBitmap(backgroundBitmap, 0f, 0f, paint)
-            }
-            paint.alpha = alpha
-            canvas.drawBitmap(frontBitmap, 0f, 0f, paint)
-
-            return result
-        }
-
-        private suspend fun loadBitmap(uri: Uri?, options: Options = Options()): Bitmap? {
+        private fun loadBitmap(uri: Uri?, options: Options = Options()): Bitmap? {
             if (uri == null) return null
 
             val originBitmap =
                 bitmapFromContentUri(uri, this@LiveWallpaperService, options) ?: return null
-            bitmap = originBitmap
 
-            var bitmap = originBitmap.scaleFixedRatio(
-                targetWidth = surfaceSize.width, targetHeight = surfaceSize.height, useMin = false
-            ).centerCrop(
-                targetWidth = surfaceSize.width, targetHeight = surfaceSize.height
-            )
-            bitmap = workpaper.handleBitmapStyle(bitmap)
-
-            return bitmap
+            return if (surfaceSize.width > 0 && surfaceSize.height > 0) {
+                originBitmap.scaleFixedRatio(
+                    targetWidth = surfaceSize.width,
+                    targetHeight = surfaceSize.height,
+                    useMin = false
+                ).centerCrop(
+                    targetWidth = surfaceSize.width,
+                    targetHeight = surfaceSize.height
+                ).also {
+                    if (it != originBitmap) {
+                        originBitmap.recycle()
+                    }
+                }
+            } else {
+                originBitmap
+            }
         }
 
         private fun initSurfaceView() {

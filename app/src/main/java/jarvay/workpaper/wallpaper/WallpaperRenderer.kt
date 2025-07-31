@@ -67,16 +67,7 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
         }
     }
 
-    fun scaleTransition(@FloatRange(from = 1.0) scale: Float) {
-        scope.launch(Dispatchers.IO) {
-            var current = scale
-            while (current > 1.0f) {
-                this@WallpaperRenderer.scale = current
-                surfaceView.requestRender()
-                current -= 0.01f
-                delay(10)
-            }
-            this@WallpaperRenderer.scale = 1.0f
-        }
+    fun destroy() {
+        imageRenderer.onDestroy()
     }
 }
