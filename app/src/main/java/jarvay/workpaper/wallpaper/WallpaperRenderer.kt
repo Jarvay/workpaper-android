@@ -3,16 +3,12 @@ package jarvay.workpaper.wallpaper
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Size
-import androidx.annotation.FloatRange
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.service.LiveWallpaperService
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -67,16 +63,7 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
         }
     }
 
-    fun scaleTransition(@FloatRange(from = 1.0) scale: Float) {
-        scope.launch(Dispatchers.IO) {
-            var current = scale
-            while (current > 1.0f) {
-                this@WallpaperRenderer.scale = current
-                surfaceView.requestRender()
-                current -= 0.01f
-                delay(10)
-            }
-            this@WallpaperRenderer.scale = 1.0f
-        }
+    fun destroy() {
+        imageRenderer.onDestroy()
     }
 }
