@@ -8,49 +8,52 @@
     <img src="https://img.shields.io/github/release/Jarvay/workpaper-android?style=flat-square" alt="">
   </a>
 
-# 定时壁纸
+English | [简体中文](./README_zh.md)
 
-- 支持在指定时间更换壁纸
-- 支持指定间隔自动更换壁纸
-- 支持在解锁后更换壁纸
-- 支持桌面小部件更换壁纸
+Translated by google translation.
 
-## 使用方法
-1. [下载](https://github.com/Jarvay/workpaper-android/releases)并安装
-2. 切换到相册tab，新建相册，然后进入相册添加图片
-3. 切换到计划tab，新建计划
-   - 选择在哪天使用这个计划
-   - 选择计划的时间，比如前面你选了周一到周五，这里选择了9:30，那么将会在周一到周五的9:30切换到这个计划
-   - 选择相册，可以多选
-   - 禁用所有滤镜：开启则不使用任何滤镜
-   - 滤镜：如果设置了则使用计划的滤镜，否则使用默认滤镜
-   - 随机切换：如果打开则随机显示相册内的图片
-   - 定时更换壁纸：开启后可以设置定时更换的间隔
-   - 解锁时更换壁纸：开启后会在手机解锁后更换壁纸
-  4. 返回主页，点击右上角的开关按钮启动
-  5. 设置允许应用后台运行(自行搜索对应厂商的设置方法)
+# Scheduled Wallpaper
 
-## 其他功能
-- 长按计划可以设置强制生效
-- 长按滤镜可以设置为默认滤镜，计划中没有设置滤镜的会使用默认滤镜，否则使用计划中设置的滤镜
-   
-## 设置
-- 启动后应用上一计划：默认开启，字面意思
-- 同时设置锁屏壁纸：默认关闭，开启后会同时设置桌面和锁屏壁纸
-- 在最近任务中隐藏：默认关闭，开启后应用不显示在最近任务中
-- 启用动态颜色：默认关闭，只是应用内部颜色
-- 启用通知：默认关闭，开启后会显示通知，可以在通知中切换下一张壁纸
-  - 常驻通知：默认关闭，开启后安卓14以下通知不会被清除
-- 以动态壁纸模式运行：视频暂只支持mov和mp4，双击桌面可以切换下一张壁纸（部分系统可能不生效，如澎湃OS），如果没启用将会跳过相册中的视频壁纸
-- 自动检查更新：默认关闭，开启后打开应用会自动检查更新
+- Supports changing wallpapers at a specified time
+- Supports automatically changing wallpapers at a specified interval
+- Supports changing wallpapers after unlocking the phone
+- Supports changing wallpapers via the desktop widget
 
-## 小部件
-- 显示的图片为下一次更换的壁纸
-- 单击图片可以换一张
-- 双击图片可以立即将该图片设为壁纸
+## Instructions
+1. [Download](https://github.com/Jarvay/workpaper-android/releases) and install
+2. Switch to the Albums tab, create a new album, and then add images to the album.
+3. Switch to the Schedule tab and create a new schedule.
+- Select the day to use this schedule.
+- Select the schedule time. For example, if you selected Monday through Friday and selected 9:30 AM, the schedule will switch to this schedule at 9:30 AM on Monday through Friday.
+- Select an album. Multiple selections are allowed.
+- Disable all filters: Enable this option to disable all filters.
+- Filters: If set, the scheduled filter will be used; otherwise, the default filter will be used.
+- Random Switch: Enable this option to display random images in the album.
+- Scheduled Wallpaper Change: Enable this option to set the interval for the scheduled wallpaper change.
+- Change Wallpaper on Unlock: Enable this option to change the wallpaper when the phone is unlocked.
+4. Return to the homepage and tap the toggle button in the top right corner to start the app.
+5. Set the app to run in the background (search for the settings for your manufacturer).
 
-## 有条件的朋友可以打赏一下
+## Other Features
+- Long-press a plan to force it to take effect.
+- Long-press a filter to set it as the default filter. If no filter is set in the plan, the default filter will be used; otherwise, the filter set in the plan will be used.
+
+## Settings
+- Apply the last plan after launch: Enabled by default, literally.
+- Set lock screen wallpaper: Disabled by default. When enabled, sets both the desktop and lock screen wallpapers.
+- Hide in Recent Tasks: Disabled by default. When enabled, the app will not appear in Recent Tasks.
+- Enable dynamic colors: Disabled by default, only the internal colors of the app will be displayed.
+- Enable notifications: Disabled by default. When enabled, a notification will be displayed, allowing you to switch to the next wallpaper.
+- Persistent notifications: Disabled by default. When enabled, notifications below Android 14 will not be cleared.
+- Run in dynamic wallpaper mode: Videos currently only support mov and mp4. Double-clicking the desktop will switch to the next wallpaper (this may not work on some systems, such as Pengpai OS). If not enabled, video wallpapers in the album will be skipped.
+- Automatically check for updates: Off by default. Enable this to automatically check for updates when you open the app.
+
+## Widget
+- The image displayed is the next wallpaper to be changed.
+- Click an image to change it.
+- Double-click an image to instantly set it as your wallpaper.
+
+## If you have the means, please donate.
 
 <img src="https://cdn.jsdelivr.net/gh/Jarvay/workpaper-android-release@main/wechat.png" alt="" style="width: 128px;" />
-
 
