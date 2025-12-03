@@ -1,6 +1,7 @@
 package jarvay.workpaper.compose.rule
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,6 +44,7 @@ import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.data.rule.RuleWithRelation
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
+import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
 import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.COLOR_LIST_LABEL
@@ -118,6 +121,7 @@ private fun RuleItem(
     isNext: Boolean,
     navController: NavController,
 ) {
+    val context = LocalContext.current
     val rule = ruleWithRelation.rule
     val albums = ruleWithRelation.albums
 
@@ -214,6 +218,25 @@ private fun RuleItem(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
+                    if (!isCurrent && running) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.rule_list_item_apply_now)
+                                )
+                            },
+                            onClick = {
+                                val ruleIntent = Intent(context, RuleReceiver::class.java)
+                                ruleIntent.putExtra(
+                                    RuleReceiver.RULE_ID_KEY,
+                                    rule.ruleId
+                                )
+                                context.sendBroadcast(ruleIntent)
+                                expanded = false
+                            }
+                        )
+                    }
+
                     DropdownMenuItem(
                         text = {
                             Text(

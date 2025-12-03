@@ -83,6 +83,7 @@
     <string name="rule_list_item_delete_tips">确定要删除该项吗？</string>
     <string name="rule_list_item_forced_used">强制生效</string>
     <string name="rule_list_item_cancel_forced_used">取消强制生效</string>
+    <string name="rule_list_item_apply_now">立即生效</string>
     <string name="rule_list_item_style">滤镜</string>
     <string name="rule_forced_apply">强制生效</string>
     <string name="rule_current_rule">当前生效</string>
