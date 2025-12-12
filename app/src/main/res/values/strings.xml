@@ -82,6 +82,7 @@
     <string name="rule_list_item_delete_tips">Are you sure to delete deleted this rule?</string>
     <string name="rule_list_item_forced_used">Use it by force</string>
     <string name="rule_list_item_cancel_forced_used">Cancel using it by force</string>
+    <string name="rule_list_item_apply_now">Apply now</string>
     <string name="rule_list_item_style">Style</string>
     <string name="rule_forced_apply">Forced apply</string>
     <string name="rule_current_rule">Current</string>
