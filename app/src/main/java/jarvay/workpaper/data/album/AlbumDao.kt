@@ -4,11 +4,13 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AlbumDao {
+    @Transaction
     @Query(
         """
         SELECT * FROM albums
@@ -16,6 +18,7 @@ interface AlbumDao {
     )
     fun findAll(): Flow<List<AlbumWithWallpapers>>
 
+    @Transaction
     @Query(
         """
         SELECT * FROM albums WHERE id = :id
@@ -30,6 +33,7 @@ interface AlbumDao {
     )
     fun findAlbumFlowById(id: Long): Flow<Album>
 
+    @Transaction
     @Query(
         """
         SELECT * FROM albums 

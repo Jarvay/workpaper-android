@@ -10,18 +10,23 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RuleDao {
+    @Transaction
     @Query("SELECT * FROM rules")
     fun findAll(): List<RuleWithRelation>
 
+    @Transaction
     @Query("SELECT * FROM rules")
     fun findAllFlow(): Flow<List<RuleWithRelation>>
 
+    @Transaction
     @Query("SELECT * FROM rules WHERE id= :id ")
     fun findByIdFlow(id: Long): Flow<Rule>
 
+    @Transaction
     @Query("SELECT * FROM rules WHERE id= :id ")
     fun findById(id: Long): RuleWithRelation?
 
+    @Transaction
     @Query("SELECT * FROM rules WHERE id= :id ")
     fun findFlowById(id: Long): Flow<RuleWithRelation>?
 
@@ -35,10 +40,6 @@ interface RuleDao {
     suspend fun delete(item: Rule)
 
     @Transaction
-    @Query(
-        """SELECT * FROM rules
-                
-                """
-    )
+    @Query("SELECT * FROM rules")
     fun test(): List<RuleWithRelation>
 }

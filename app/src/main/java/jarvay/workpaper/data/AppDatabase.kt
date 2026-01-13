@@ -27,7 +27,7 @@ import jarvay.workpaper.data.wallpaper.WallpaperDao
         Wallpaper::class,
         Style::class,
     ],
-    version = 7,
+    version = 8,
     autoMigrations = [
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4, spec = AppDatabase.AutoMigration3To4::class),
@@ -74,7 +74,8 @@ abstract class AppDatabase : RoomDatabase() {
             return builder
                 .allowMainThreadQueries()
                 .addMigrations(
-                    Migration_1_2
+                    Migration_1_2,
+                    Migration_7_8,
                 )
                 .build()
         }

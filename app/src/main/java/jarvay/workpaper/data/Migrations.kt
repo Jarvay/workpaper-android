@@ -34,3 +34,10 @@ val Migration_1_2 = object : Migration(1, 2) {
         db.execSQL("ALTER TABLE albums DROP COLUMN wallpaperUris")
     }
 }
+
+val Migration_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_rule_album_relations_ruleId` ON `rule_album_relations` (ruleId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_rule_album_relations_albumId` ON `rule_album_relations` (albumId)")
+    }
+}

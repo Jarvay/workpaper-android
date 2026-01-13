@@ -2,9 +2,13 @@ package jarvay.workpaper.data.rule
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "rule_album_relations")
+@Entity(
+    tableName = "rule_album_relations",
+    indices = [Index(value = ["ruleId"]), Index(value = ["albumId"])]
+)
 data class RuleAlbumRelation(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
