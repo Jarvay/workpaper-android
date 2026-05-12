@@ -136,9 +136,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                     }
 
                     GestureEvent.LOCK_SCREEN -> {
-                        val devicePolicyManager =
-                            getSystemService(DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                        devicePolicyManager.lockNow()
+                        LockAccessibilityService.lockScreen()
                     }
 
                     GestureEvent.OPEN_WECHAT -> {

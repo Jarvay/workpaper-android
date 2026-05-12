@@ -1,12 +1,6 @@
 package jarvay.workpaper.compose.settings
 
-import android.app.Activity
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.Context
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,8 +38,6 @@ import jarvay.workpaper.compose.components.SettingsItem
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.GestureEvent
-import jarvay.workpaper.others.deviceAdminIntent
-import jarvay.workpaper.receiver.DeviceManagerReceiver
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.SettingsViewModel
 
@@ -63,21 +55,9 @@ fun LiveWallpaperSettingsScreen(
     var gestureDropExpanded by remember {
         mutableStateOf(false)
     }
-    var deviceAdminDialogShow by remember {
+    var accessibilityDialogShow by remember {
         mutableStateOf(false)
     }
-
-    val deviceAdminLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                viewModel.update(
-                    SettingsPreferencesKeys.DOUBLE_TAP_EVENT,
-                    GestureEvent.LOCK_SCREEN.name
-                )
-            }
-        }
-    )
 
     Scaffold(
         topBar = {
@@ -147,41 +127,37 @@ fun LiveWallpaperSettingsScreen(
                     DropdownMenu(
                         expanded = gestureDropExpanded,
                         onDismissRequest = { gestureDropExpanded = false }) {
-                        GestureEvent.entries.forEach {
+                        GestureEvent.entries.forEach { event ->
                             DropdownMenuItem(
-                                text = { Text(text = stringResource(id = it.labelResId)) },
+                                text = { Text(text = stringResource(id = event.labelResId)) },
                                 onClick = {
-                                    val devicePolicyManager =
-                                        context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                                    val isAdminActive = devicePolicyManager.isAdminActive(
-                                        ComponentName(
-                                            context,
-                                            DeviceManagerReceiver::class.java
-                                        )
-                                    )
-                                    if (it == GestureEvent.LOCK_SCREEN) {
-                                        if (!isAdminActive) {
-                                            deviceAdminDialogShow = true
+                                    if (event == GestureEvent.LOCK_SCREEN) {
+                                        val accessibilityManager =
+                                            context.getSystemService(Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+                                        val enabledServices =
+                                            accessibilityManager.getEnabledAccessibilityServiceList(
+                                                android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC
+                                            )
+                                        val isAccessibilityEnabled =
+                                            enabledServices.any { service ->
+                                                service.resolveInfo.serviceInfo.packageName == context.packageName &&
+                                                        service.resolveInfo.serviceInfo.name == jarvay.workpaper.service.LockAccessibilityService::class.java.name
+                                            }
+
+                                        if (!isAccessibilityEnabled) {
+                                            accessibilityDialogShow = true
                                             gestureDropExpanded = false
                                             return@DropdownMenuItem
-                                        }
-                                    } else {
-                                        if (isAdminActive) {
-                                            devicePolicyManager.removeActiveAdmin(
-                                                ComponentName(
-                                                    context,
-                                                    DeviceManagerReceiver::class.java
-                                                )
-                                            )
                                         }
                                     }
 
                                     viewModel.update(
                                         SettingsPreferencesKeys.DOUBLE_TAP_EVENT,
-                                        it.name
+                                        event.name
                                     )
                                     gestureDropExpanded = false
                                 })
+
                         }
                     }
                 }
@@ -191,8 +167,11 @@ fun LiveWallpaperSettingsScreen(
 
     SimpleDialog(
         text = stringResource(id = R.string.permission_request_device_admin),
-        show = deviceAdminDialogShow,
-        onDismissRequest = { deviceAdminDialogShow = false }) {
-        deviceAdminLauncher.launch(deviceAdminIntent(context))
+        show = accessibilityDialogShow,
+        onDismissRequest = { accessibilityDialogShow = false }) {
+        val intent = android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+        accessibilityDialogShow = false
     }
 }

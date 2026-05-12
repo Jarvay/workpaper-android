@@ -28,14 +28,3 @@ fun requestNotificationPermission(context: Context) {
     }
     context.startActivity(intent)
 }
-
-fun deviceAdminIntent(context: Context): Intent {
-    return Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-        putExtra(
-            DevicePolicyManager.EXTRA_DEVICE_ADMIN, ComponentName(
-                context,
-                DeviceManagerReceiver::class.java
-            )
-        )
-    }
-}

@@ -5,7 +5,7 @@
     <string name="permission_request_alarm">Request permission of alarm</string>
     <string name="permission_request_notification">Request permission of notification</string>
     <string name="permission_read_storage">Request permission of reading storage</string>
-    <string name="permission_request_device_admin">Request permission of device admin. If the screen is locked in this way, the subsequent unlocking will not be able to use fingerprint unlocking</string>
+    <string name="permission_request_device_admin">Accessibility features need to be enabled</string>
 
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
@@ -138,4 +138,6 @@
     <string name="notify_next_wallpaper">Next wallpaper</string>
     <string name="notify_action_change_next">CHANGE ONE</string>
     <string name="notify_action_change_to_next_now">CHANGE TO IT NOW</string>
+
+    <string name="accessibility_service_description">Lock Screen</string>
 </resources>
