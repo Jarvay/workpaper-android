@@ -28,7 +28,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -242,10 +241,8 @@ class Workpaper @Inject constructor(
         return result
     }
 
-    private fun nextIndex(currentIndex: Int): Int {
-        val ruleWithRelation = runBlocking {
-            currentRuleWithRelation.first()
-        }
+    private suspend fun nextIndex(currentIndex: Int): Int {
+        val ruleWithRelation = currentRuleWithRelation.first()
 
         if (currentIndex + 1 >= wallpapers.size) {
             if (ruleWithRelation?.rule?.random == true) {
