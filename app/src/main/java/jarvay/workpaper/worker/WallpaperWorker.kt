@@ -67,7 +67,7 @@ class WallpaperWorker @AssistedInject constructor(
 
             val wallpaperManager = WallpaperManager.getInstance(applicationContext)
             if (!settings.useLiveWallpaper) {
-                bitmap = workpaper.handleBitmapStyle(bitmap!!)
+                bitmap = workpaper.handleBitmapStyle(bitmap)
 
                 if (!settings.alsoSetLockWallpaper) {
                     wallpaperManager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_SYSTEM)

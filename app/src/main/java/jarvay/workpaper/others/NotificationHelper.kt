@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
+import android.graphics.Bitmap.createBitmap
 import android.graphics.Paint
 import android.os.Build
 import android.util.Size
@@ -107,29 +108,26 @@ class NotificationHelper @Inject constructor(
 
         val backgroundHeight = 288
         val backgroundSize = Size(backgroundHeight * 2, backgroundHeight)
-        val background = Bitmap.createBitmap(
+        
+        val background = createBitmap(
             backgroundSize.width, backgroundSize.height, Bitmap.Config.ARGB_8888
-        ).copy(Bitmap.Config.ARGB_8888, true)
+        )
         val canvas = android.graphics.Canvas(background)
-
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
         val maxWidth = 2048
         val cropWidth = if (bitmap.width > maxWidth) maxWidth else bitmap.width
-        val cropSize = Size(
-            cropWidth, cropWidth / 2
-        )
+        val cropSize = Size(cropWidth, cropWidth / 2)
+        
         val backgroundBitmap = bitmap.centerCrop(cropSize.width, cropSize.height)
-            .copy(Bitmap.Config.ARGB_8888, true)
             .scaleFixedRatio(backgroundSize.width, backgroundSize.height)
-            .copy(Bitmap.Config.ARGB_8888, true)
-
 
         canvas.drawBitmap(backgroundBitmap, 0F, 0F, paint)
         canvas.drawARGB((255 * 0.4).toInt(), 0, 0, 0)
+        
+        backgroundBitmap.recycle()
 
         bitmap = bitmap.scaleFixedRatio(backgroundSize.height, backgroundSize.height)
-            .copy(Bitmap.Config.ARGB_8888, true)
         canvas.drawBitmap(
             bitmap, (backgroundSize.width / 2 - bitmap.width / 2).toFloat(), 0F, paint
         )

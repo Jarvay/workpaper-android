@@ -18,3 +18,6 @@ local.properties
 /app/build
 /app/release
 /app/debug
+/workpaper-lib/build
+/workpaper-lib/target
+/workpaper-lib/src/main/jniLibs

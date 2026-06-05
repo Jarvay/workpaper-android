@@ -66,6 +66,7 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":workpaper-lib"))
     implementation(libs.androidx.lifecycle.runtime.compose.android)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.junit.ktx)
@@ -117,6 +118,4 @@ dependencies {
     implementation(libs.androidx.glance.material)
 
     implementation(libs.utilcodex)
-
-    implementation(fileTree("libs"))
 }

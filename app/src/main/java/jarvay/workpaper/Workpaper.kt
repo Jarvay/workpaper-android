@@ -225,10 +225,10 @@ class Workpaper @Inject constructor(
             val style = defaultStyle ?: ruleWithRelation.style
             style?.let {
                 if (style.blurRadius > 0) {
-                    result = bitmap.blur(style.blurRadius)
+                    result = result.blur(style.blurRadius)
                 }
                 if (style.noisePercent > 0) {
-                    result = bitmap.noise(style.noisePercent)
+                    result = result.noise(style.noisePercent)
                 }
                 result = result.effect(
                     brightness = style.brightness,

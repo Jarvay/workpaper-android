@@ -4,19 +4,23 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.PixelFormat
+import android.media.ImageReader
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.IntRange
+import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.LogUtils
-import com.google.android.renderscript.Toolkit
-import java.util.Random
+import jarvay.workpaper.JNIWrapper
+import android.hardware.HardwareBuffer
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.graphics.RenderNode
+import android.graphics.HardwareRenderer
 import kotlin.math.max
 import kotlin.math.min
 
@@ -48,8 +52,7 @@ fun Bitmap.centerCrop(targetWidth: Int, targetHeight: Int): Bitmap {
         dy = (height - targetHeight) / 2
     }
 
-    val desBitmap = Bitmap.createBitmap(this, dx, dy, targetWidth, targetHeight)
-    return desBitmap
+    return Bitmap.createBitmap(this, dx, dy, targetWidth, targetHeight)
 }
 
 fun Bitmap.info(): String {
@@ -98,35 +101,62 @@ fun bitmapFromContentUri(
 }
 
 fun Bitmap.blur(@IntRange(1, 25) radius: Int): Bitmap {
-    return Toolkit.blur(this, radius)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        try {
+            blurHardwareBuffer(radius)
+        } catch (e: Exception) {
+            LogUtils.w("Bitmap.blur", "HardwareBuffer blur failed, falling back to JNI", e.toString())
+            JNIWrapper.blur(this, radius)
+        }
+    } else {
+        JNIWrapper.blur(this, radius)
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.S)
+private fun Bitmap.blurHardwareBuffer(radius: Int): Bitmap {
+    val imageReader = ImageReader.newInstance(
+        width, height,
+        PixelFormat.RGBA_8888, 2,
+        HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE or HardwareBuffer.USAGE_GPU_COLOR_OUTPUT
+    )
+
+    val renderNode = RenderNode("BlurEffect")
+    val hardwareRenderer = HardwareRenderer()
+
+    hardwareRenderer.setSurface(imageReader.surface)
+    hardwareRenderer.setContentRoot(renderNode)
+    renderNode.setPosition(0, 0, imageReader.width, imageReader.height)
+
+    val blurRenderEffect = RenderEffect.createBlurEffect(
+        radius.toFloat(), radius.toFloat(),
+        Shader.TileMode.MIRROR
+    )
+    renderNode.setRenderEffect(blurRenderEffect)
+
+    val renderCanvas = renderNode.beginRecording()
+    renderCanvas.drawBitmap(this, 0f, 0f, null)
+    renderNode.endRecording()
+
+    hardwareRenderer.createRenderRequest()
+        .setWaitForPresent(true)
+        .syncAndDraw()
+
+    val image = imageReader.acquireNextImage() ?: throw RuntimeException("Blur failed: ImageReader.acquireNextImage() returned null")
+    val hardwareBuffer = image.hardwareBuffer ?: throw RuntimeException("Blur failed: Image.hardwareBuffer is null")
+
+    try {
+        val hardwareBitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, null)
+            ?: throw RuntimeException("Blur failed: Bitmap.wrapHardwareBuffer() returned null")
+        return hardwareBitmap.copy(Bitmap.Config.ARGB_8888, true)
+    } finally {
+        image.close()
+        imageReader.close()
+    }
 }
 
 fun Bitmap.noise(@IntRange(1, 100) percent: Int): Bitmap {
-    val pixels = IntArray(width * height)
-
-    getPixels(pixels, 0, width, 0, 0, width, height)
-
-    val random = Random()
-
-    var index: Int
-
-    var rgb: Int
-    var randColor: Int
-
-    for (y in 0 until height) {
-        for (x in 0 until width) {
-            if (random.nextInt(101) > percent / 4) {
-                continue
-            }
-            index = y * width + x
-            rgb = random.nextInt(255)
-            randColor = Color.rgb(rgb, rgb, rgb)
-            pixels[index] = pixels[index] or randColor
-        }
-    }
-    val bmOut = Bitmap.createBitmap(width, height, config)
-    bmOut.setPixels(pixels, 0, width, 0, 0, width, height)
-    return bmOut
+    return JNIWrapper.noise(this, percent)
 }
 
 fun Bitmap.effect(
@@ -134,43 +164,15 @@ fun Bitmap.effect(
     contrast: Int,
     saturation: Int,
 ): Bitmap {
-    val bitmap = Bitmap.createBitmap(this, 0, 0, width, height)
+    val b = (brightness - 50) * 50 / 150
+    val c = (contrast - 50) * 50 / 150
+    val s = (saturation - 50) * 50 / 150
 
-    val colorMatrix = ColorMatrix()
-
-    val lum = (brightness - 50) * 2 * 0.3f * 255 * 0.01f
-    val brightnessArray = floatArrayOf(
-        1f, 0f, 0f, 0f, lum,
-        0f, 1f, 0f, 0f, lum,
-        0f, 0f, 1f, 0f, lum,
-        0f, 0f, 0f, 1f, 0f
-    )
-    colorMatrix.set(brightnessArray)
-
-    val scale = (contrast - 50 + 100) / 100f
-    val offset = 0.5f * (1 - scale) + 0.5f
-    val contrastArray =
-        floatArrayOf(
-            scale, 0f, 0f, 0f, offset,
-            0f, scale, 0f, 0f, offset,
-            0f, 0f, scale, 0f, offset,
-            0f, 0f, 0f, 1f, 0f
-        )
-    colorMatrix.postConcat(ColorMatrix(contrastArray))
-    val saturationMatrix = ColorMatrix()
-    saturationMatrix.setSaturation(((saturation - 50) / 50) * 0.3f + 1)
-    colorMatrix.postConcat(saturationMatrix)
-
-    val colorFilter = ColorMatrixColorFilter(colorMatrix)
-
-    val paint = Paint().apply {
-        this.colorFilter = colorFilter
+    if (b == 0 && c == 0 && s == 0) {
+        return this
     }
 
-    val canvas = Canvas(bitmap)
-    canvas.drawBitmap(this, 0f, 0f, paint)
-
-    return bitmap
+    return JNIWrapper.effect(this, b, c, s)
 }
 
 fun Bitmap.setAlpha(alpha: Int): Bitmap {
@@ -179,6 +181,5 @@ fun Bitmap.setAlpha(alpha: Int): Bitmap {
     val paint = Paint()
     paint.alpha = alpha
     canvas.drawBitmap(this, 0f, 0f, paint)
-
     return bm
 }

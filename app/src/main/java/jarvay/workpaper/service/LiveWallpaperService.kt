@@ -85,7 +85,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private var resetOnScreenOff = false
         private var doubleTapEvent: GestureEvent = GestureEvent.NONE
         private var isScreenOn = true
-        private var bitmap: Bitmap? = null
         private var settings: SettingsPreferences = DEFAULT_SETTINGS
 
         private var currentBitmap: Bitmap? = null
@@ -195,7 +194,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             MainScope().launch {
                 workpaper.imageUri.distinctUntilChanged { old, new -> old == new }.collect {
                     if (it == null) return@collect
-                    LogUtils.i(LOG_TAG, "On image uri", it.toString())
+                    LogUtils.i(LOG_TAG, "On image uri", it)
 
                     withContext(Dispatchers.IO) {
                         setImageBitmap(it.toUri())
@@ -205,7 +204,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             MainScope().launch {
                 workpaper.videoUri.distinctUntilChanged { old, new -> old == new }.collect {
                     if (it == null) return@collect
-                    LogUtils.i(LOG_TAG, "On video uri", it.toString())
+                    LogUtils.i(LOG_TAG, "On video uri", it)
 
                     changeVideoSource(it.toUri())
                 }
@@ -330,8 +329,6 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 currentBitmap?.recycle()
                 currentBitmap = nextBitmap
                 nextBitmap = null
-
-                bitmap = currentBitmap
             }
         }
 
