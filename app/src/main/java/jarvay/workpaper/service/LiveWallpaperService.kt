@@ -109,11 +109,15 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 }
                 if (intent.action == Intent.ACTION_SCREEN_OFF) {
                     isScreenOn = false
-                    if (player.isPlaying) {
-                        player.pause()
-                    }
-                    if (resetOnScreenOff) {
-                        player.seekTo(0);
+                    try {
+                        if (player.isPlaying) {
+                            player.pause()
+                        }
+                        if (resetOnScreenOff) {
+                            player.seekTo(0)
+                        }
+                    } catch (e: IllegalStateException) {
+                        LogUtils.e(LOG_TAG, "Failed to handle screen off", e)
                     }
                 }
             }
@@ -220,6 +224,12 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             currentBitmap = null
             nextBitmap = null
 
+            try {
+                player.release()
+            } catch (e: Exception) {
+                LogUtils.e(LOG_TAG, "Failed to release player", e)
+            }
+
             engineLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             renderer?.destroy()
             unregisterReceiver(screenStateReceiver)
@@ -252,10 +262,14 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         }
 
         private fun onVideoVisibleChanged(visible: Boolean) {
-            if (visible) {
-                player.start()
-            } else {
-                player.pause()
+            try {
+                if (visible) {
+                    if (!player.isPlaying) player.start()
+                } else {
+                    if (player.isPlaying) player.pause()
+                }
+            } catch (e: IllegalStateException) {
+                LogUtils.e(LOG_TAG, "Failed to change player state", e)
             }
         }
 
@@ -392,6 +406,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         }
 
         private fun destroySurfaceView() {
+            renderer?.destroy()
             surfaceView?.detach()
             surfaceView = null
             renderer = null
@@ -416,6 +431,10 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
                 setVolume(0f, 0f)
                 isLooping = true
                 setDataSource(this@LiveWallpaperService, uri)
+                setOnErrorListener { _, what, extra ->
+                    LogUtils.e(LOG_TAG, "MediaPlayer error: what=$what, extra=$extra")
+                    true
+                }
                 setOnPreparedListener {
                     if (isVisible && isScreenOn) {
                         it.start()
@@ -452,20 +471,23 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             if (renderer == null) return
 
             val retriever = MediaMetadataRetriever()
-            retriever.setDataSource(this@LiveWallpaperService, uri)
-            val rotation = retriever.extractMetadata(
-                MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION
-            )!!.toInt()
-            val width = retriever.extractMetadata(
-                MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH
-            )!!.toInt()
-            val height = retriever.extractMetadata(
-                MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT
-            )!!.toInt()
-            retriever.release()
-            renderer!!.videoRenderer.setVideoSizeAndRotation(
-                width = width, height = height, rotation = rotation
-            )
+            try {
+                retriever.setDataSource(this@LiveWallpaperService, uri)
+                val rotation = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION
+                )?.toIntOrNull() ?: 0
+                val width = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH
+                )?.toIntOrNull() ?: 0
+                val height = retriever.extractMetadata(
+                    MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT
+                )?.toIntOrNull() ?: 0
+                renderer!!.videoRenderer.setVideoSizeAndRotation(
+                    width = width, height = height, rotation = rotation
+                )
+            } finally {
+                retriever.release()
+            }
         }
 
         inner class GLWallpaperSurfaceView(

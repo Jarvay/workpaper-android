@@ -65,5 +65,6 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
 
     fun destroy() {
         imageRenderer.onDestroy()
+        videoRenderer.onDestroy()
     }
 }

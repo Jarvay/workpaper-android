@@ -234,12 +234,7 @@ class GLVideoWallpaperRenderer : GLWallpaperRenderer(), GLSurfaceView.Renderer {
             videoWidth = newWidth
             videoHeight = newHeight
             videoRotation = rotation
-//            debug(TAG, String.format(
-//                Locale.US, "Set video size to %dx%d", videoWidth, videoHeight
-//            ))
-//            debug(TAG, String.format(
-//                Locale.US, "Set video rotation to %d", videoRotation
-//            ))
+            surfaceTexture?.setDefaultBufferSize(videoWidth, videoHeight)
             maxXOffset =
                 (1.0f - screenWidth.toFloat() / screenHeight / (videoWidth.toFloat() / videoHeight)) / 2
             maxYOffset =
@@ -260,7 +255,7 @@ class GLVideoWallpaperRenderer : GLWallpaperRenderer(), GLSurfaceView.Renderer {
         if (newYOffset > maxYOffset) {
             newYOffset = maxYOffset
         }
-        if (newYOffset < -maxXOffset) {
+        if (newYOffset < -maxYOffset) {
             newYOffset = -maxYOffset
         }
         if (this.xOffset != newXOffset || this.yOffset != newYOffset) {
@@ -286,6 +281,8 @@ class GLVideoWallpaperRenderer : GLWallpaperRenderer(), GLSurfaceView.Renderer {
     }
 
     private fun updateMatrix() {
+        if (videoWidth == 0 || videoHeight == 0 || screenWidth == 0 || screenHeight == 0) return
+
         // Players are buggy and unclear, so we do crop by ourselves.
         // Start with an identify matrix.
         for (i in 0..15) {
@@ -326,6 +323,14 @@ class GLVideoWallpaperRenderer : GLWallpaperRenderer(), GLSurfaceView.Renderer {
             Matrix.translateM(mvp, 0, 0f, yOffset, 0f)
         }
         // This is a 2D center crop, so we only need model matrix, no view and projection.
+    }
+
+    fun onDestroy() {
+        surfaceTexture?.release()
+        surfaceTexture = null
+        GLES20.glDeleteProgram(program)
+        GLES20.glDeleteBuffers(buffers.size, buffers, 0)
+        GLES20.glDeleteTextures(textures.size, textures, 0)
     }
 
     override fun getFragmentShaderCode(): String {
