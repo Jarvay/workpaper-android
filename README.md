@@ -35,7 +35,7 @@ Translated by google translation.
 5. Set the app to run in the background (search for the settings for your manufacturer).
 
 ## Other Features
-- Long-press a plan to force it to take effect.
+- Long-press the plan to set it to take effect immediately or force it to take effect immediately. Taking effect immediately will not affect the next plan.
 - Long-press a filter to set it as the default filter. If no filter is set in the plan, the default filter will be used; otherwise, the filter set in the plan will be used.
 
 ## Settings
