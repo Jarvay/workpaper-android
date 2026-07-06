@@ -1,6 +1,8 @@
 package jarvay.workpaper.data.preferences
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import jarvay.workpaper.others.GestureEvent
@@ -24,6 +26,11 @@ data class SettingsPreferences(
     var wallpaperScrollable: Boolean,
     var imageTransition: Boolean,
     var repoMirror: String,
+    var parallaxSensitivity: Float,
+    var parallaxInvertDirection: Boolean,
+    var parallaxFrameRate: Int,
+    var enableDepthLayers: Boolean,
+    var depthStrength: Float,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -48,6 +55,11 @@ data class SettingsPreferences(
         result = 31 * result + wallpaperScrollable.hashCode()
         result = 31 * result + imageTransition.hashCode()
         result = 31 * result + repoMirror.hashCode()
+        result = 31 * result + parallaxSensitivity.hashCode()
+        result = 31 * result + parallaxInvertDirection.hashCode()
+        result = 31 * result + parallaxFrameRate.hashCode()
+        result = 31 * result + enableDepthLayers.hashCode()
+        result = 31 * result + depthStrength.hashCode()
         return result
     }
 }
@@ -70,6 +82,11 @@ data object SettingsPreferencesKeys {
     val WALLPAPER_SCROLLABLE = booleanPreferencesKey("wallpaperScrollable")
     val IMAGE_TRANSITION = booleanPreferencesKey("imageTransition")
     val REPO_MIRROR = stringPreferencesKey("repoMirror")
+    val PARALLAX_SENSITIVITY = floatPreferencesKey("parallaxSensitivity")
+    val PARALLAX_INVERT_DIRECTION = booleanPreferencesKey("parallaxInvertDirection")
+    val PARALLAX_FRAME_RATE = intPreferencesKey("parallaxFrameRate")
+    val ENABLE_DEPTH_LAYERS = booleanPreferencesKey("enableDepthLayers")
+    val DEPTH_STRENGTH = floatPreferencesKey("depthStrength")
 }
 
 val DEFAULT_SETTINGS =
@@ -91,4 +108,9 @@ val DEFAULT_SETTINGS =
         wallpaperScrollable = false,
         imageTransition = false,
         repoMirror = RepoHost.GH_FAST.value,
+        parallaxSensitivity = 0.5f,
+        parallaxInvertDirection = true,
+        parallaxFrameRate = 60,
+        enableDepthLayers = false,
+        depthStrength = 0.5f,
     )

@@ -1,7 +1,8 @@
-package jarvay.workpaper.wallpaper
+﻿package jarvay.workpaper.wallpaper
 
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.util.Size
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -18,52 +19,85 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
     private val scope: CoroutineScope
 ) : GLSurfaceView.Renderer {
     val imageRenderer = GLImageWallpaperRenderer()
+    val depthLayerRenderer = GLDepthLayerRenderer()
     var videoRenderer = GLVideoWallpaperRenderer()
     var wallpaperType = WallpaperType.IMAGE
+    var parallaxSensorManager: ParallaxSensorManager? = null
+    var useDepthLayers = false
 
     val surfaceSize = MutableStateFlow(Size(0, 0))
-    private var scale = 1.0f
+    private var lastUseDepthLayers = false
+    private var depthStrength = 0.15f
 
     override fun onSurfaceCreated(gl10: GL10, p1: EGLConfig) {
         imageRenderer.onSurfaceCreated(gl10, p1)
+        depthLayerRenderer.onSurfaceCreated(gl10, p1)
         videoRenderer.onSurfaceCreated(gl10, p1)
     }
 
     override fun onSurfaceChanged(gl10: GL10, width: Int, height: Int) {
         surfaceSize.value = Size(width, height)
         imageRenderer.onSurfaceChanged(gl10, width, height)
+        depthLayerRenderer.onSurfaceChanged(gl10, width, height)
         videoRenderer.onSurfaceChanged(gl10, width, height)
     }
 
     override fun onDrawFrame(gl10: GL10) {
-        if (scale != 1.0f) {
-            val scaleWidth = (surfaceSize.value.width * scale).toInt()
-            val scaleHeight = (surfaceSize.value.height * scale).toInt()
-            val offsetX = (scaleWidth - surfaceSize.value.width) / 2
-            val offsetY = (scaleHeight - surfaceSize.value.height) / 2
-
-            GLES20.glViewport(
-                -offsetX,
-                -offsetY,
-                scaleWidth,
-                scaleHeight
-            )
+        if (lastUseDepthLayers != useDepthLayers) {
+            Log.d(TAG, "Switching renderer: useDepthLayers=$useDepthLayers, wallpaperType=$wallpaperType")
+            lastUseDepthLayers = useDepthLayers
         }
+
+        parallaxSensorManager?.let { sensor ->
+            sensor.update()
+            if (useDepthLayers) {
+                depthLayerRenderer.updateParallaxOffset(sensor.tiltX, sensor.tiltY, sensor.sensitivity)
+            } else {
+                imageRenderer.updateParallaxOffset(sensor.tiltX, sensor.tiltY, sensor.sensitivity)
+            }
+        }
+
         when (wallpaperType) {
-            WallpaperType.IMAGE -> imageRenderer.onDrawFrame(gl10)
+            WallpaperType.IMAGE -> {
+                if (useDepthLayers) {
+                    depthLayerRenderer.onDrawFrame(gl10)
+                } else {
+                    imageRenderer.onDrawFrame(gl10)
+                }
+            }
             WallpaperType.VIDEO -> videoRenderer.onDrawFrame(gl10)
         }
     }
 
-    fun updateWallpaperType(type: WallpaperType) {
+    fun triggerWakeAnimation() {
+        imageRenderer.triggerWakeAnimation()
+        depthLayerRenderer.triggerWakeAnimation()
+    }
+
+    fun setDepthStrength(strength: Float) {
+        depthStrength = strength
+        depthLayerRenderer.setDepthStrength(strength)
+    }
+
+    fun updateWallpaperType(
+        type: WallpaperType,
+        parallaxFrameRate: Int = 0
+    ) {
         wallpaperType = type
-        surfaceView.renderMode = when (type) {
-            WallpaperType.IMAGE -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
-            WallpaperType.VIDEO -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
+        surfaceView.renderMode = when {
+            type == WallpaperType.VIDEO -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            parallaxFrameRate >= 60 -> GLSurfaceView.RENDERMODE_CONTINUOUSLY
+            parallaxFrameRate > 0 -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
+            else -> GLSurfaceView.RENDERMODE_WHEN_DIRTY
         }
     }
 
     fun destroy() {
         imageRenderer.onDestroy()
+        depthLayerRenderer.onDestroy()
+    }
+
+    companion object {
+        private const val TAG = "WallpaperRenderer"
     }
 }

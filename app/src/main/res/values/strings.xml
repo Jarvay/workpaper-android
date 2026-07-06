@@ -125,6 +125,12 @@
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>
     <string name="settings_item_enable_log">Save log</string>
     <string name="settings_item_repo_mirror">Mirror of repo</string>
+    <string name="settings_item_parallax_sensitivity">Parallax sensitivity</string>
+    <string name="settings_item_parallax_invert_direction">Invert parallax direction</string>
+    <string name="settings_item_parallax_frame_rate">Parallax frame rate</string>
+    <string name="settings_item_enable_depth_layers">Depth layers (AI)</string>
+    <string name="settings_item_depth_strength">Depth effect strength</string>
+    <string name="rule_enable_parallax">Parallax effect</string>
 
     <string name="gesture_event_none">None</string>
     <string name="gesture_event_lock_screen">Lock screen</string>

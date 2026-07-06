@@ -403,6 +403,12 @@ fun RuleForm(
                     checked = rule.changeWhileUnlock,
                     onCheckedChange = { rule = rule.copy(changeWhileUnlock = it) })
             }
+
+            RuleFormItem(labelId = R.string.rule_enable_parallax) {
+                Switch(
+                    checked = rule.enableParallaxEffect,
+                    onCheckedChange = { rule = rule.copy(enableParallaxEffect = it) })
+            }
         }
 
         AlbumModalSheet(

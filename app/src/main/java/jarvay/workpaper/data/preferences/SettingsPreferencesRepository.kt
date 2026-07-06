@@ -48,6 +48,16 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.imageTransition,
                 repoMirror = preferences[SettingsPreferencesKeys.REPO_MIRROR]
                     ?: DEFAULT_SETTINGS.repoMirror,
+                parallaxSensitivity = preferences[SettingsPreferencesKeys.PARALLAX_SENSITIVITY]
+                    ?: DEFAULT_SETTINGS.parallaxSensitivity,
+                parallaxInvertDirection = preferences[SettingsPreferencesKeys.PARALLAX_INVERT_DIRECTION]
+                    ?: DEFAULT_SETTINGS.parallaxInvertDirection,
+                parallaxFrameRate = preferences[SettingsPreferencesKeys.PARALLAX_FRAME_RATE]
+                    ?: DEFAULT_SETTINGS.parallaxFrameRate,
+                enableDepthLayers = preferences[SettingsPreferencesKeys.ENABLE_DEPTH_LAYERS]
+                    ?: DEFAULT_SETTINGS.enableDepthLayers,
+                depthStrength = preferences[SettingsPreferencesKeys.DEPTH_STRENGTH]
+                    ?: DEFAULT_SETTINGS.depthStrength,
             )
         }.distinctUntilChanged { old, new ->
             old == new

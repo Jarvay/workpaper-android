@@ -118,5 +118,8 @@ dependencies {
 
     implementation(libs.utilcodex)
 
+    implementation(libs.onnxruntime)
+    implementation(libs.tensorflow.lite)
+
     implementation(fileTree("libs"))
 }

@@ -19,6 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +40,7 @@ import jarvay.workpaper.compose.components.SettingsItem
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.GestureEvent
+import kotlin.math.roundToInt
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.SettingsViewModel
 
@@ -161,6 +164,96 @@ fun LiveWallpaperSettingsScreen(
                         }
                     }
                 }
+            }
+
+            SettingsItem(labelId = R.string.settings_item_parallax_sensitivity) {
+                Text(
+                    text = "%",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Slider(
+                value = settings.parallaxSensitivity,
+                onValueChange = { viewModel.update(SettingsPreferencesKeys.PARALLAX_SENSITIVITY, it) },
+                onValueChangeFinished = {
+                    val rounded = (settings.parallaxSensitivity * 10).roundToInt() / 10f
+                    viewModel.update(SettingsPreferencesKeys.PARALLAX_SENSITIVITY, rounded)
+                },
+                valueRange = 0.1f..2.0f,
+                steps = 18,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary
+                )
+            )
+
+            SettingsItem(labelId = R.string.settings_item_parallax_invert_direction) {
+                Switch(
+                    checked = settings.parallaxInvertDirection,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.PARALLAX_INVERT_DIRECTION, c)
+                    })
+            }
+
+            SettingsItem(labelId = R.string.settings_item_parallax_frame_rate) {
+                Text(
+                    text = " fps",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Slider(
+                value = settings.parallaxFrameRate.toFloat(),
+                onValueChange = { value ->
+                    val options = intArrayOf(15, 30, 60, 90, 120)
+                    val snapped = options.minByOrNull { option -> kotlin.math.abs(option - value.toInt()) } ?: 30
+                    viewModel.update(SettingsPreferencesKeys.PARALLAX_FRAME_RATE, snapped)
+                },
+                onValueChangeFinished = {
+                    val options = intArrayOf(15, 30, 60, 90, 120)
+                    val current = settings.parallaxFrameRate
+                    val snapped = options.minByOrNull { option -> kotlin.math.abs(option - current) } ?: 30
+                    viewModel.update(SettingsPreferencesKeys.PARALLAX_FRAME_RATE, snapped)
+                },
+                valueRange = 15f..120f,
+                steps = 3,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary
+                )
+            )
+
+            SettingsItem(labelId = R.string.settings_item_enable_depth_layers) {
+                Switch(
+                    checked = settings.enableDepthLayers,
+                    onCheckedChange = { c ->
+                        viewModel.update(SettingsPreferencesKeys.ENABLE_DEPTH_LAYERS, c)
+                    })
+            }
+
+            if (settings.enableDepthLayers) {
+                SettingsItem(labelId = R.string.settings_item_depth_strength) {
+                    Text(
+                        text = "%",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Slider(
+                    value = settings.depthStrength,
+                    onValueChange = { viewModel.update(SettingsPreferencesKeys.DEPTH_STRENGTH, it) },
+                    onValueChangeFinished = {
+                        val rounded = (settings.depthStrength * 20).roundToInt() / 20f
+                        viewModel.update(SettingsPreferencesKeys.DEPTH_STRENGTH, rounded)
+                    },
+                    valueRange = 0.05f..0.5f,
+                    steps = 8,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary
+                    )
+                )
             }
         }
     }

@@ -4,6 +4,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory.Options
@@ -32,13 +33,19 @@ import jarvay.workpaper.data.preferences.SettingsPreferences
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.GestureEvent
 import jarvay.workpaper.others.LOG_TAG
+import jarvay.workpaper.others.PARALLAX_QUAD_SCALE
 import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.centerCrop
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.others.wechatIntent
+import jarvay.workpaper.depth.DepthEstimator
+
 import jarvay.workpaper.receiver.WallpaperReceiver
+import jarvay.workpaper.wallpaper.ParallaxSensorManager
 import jarvay.workpaper.wallpaper.WallpaperRenderer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -56,6 +63,10 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
     private val lifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
+
+    private var cachedDepthUri: String? = null
+    private var cachedDepthMap: FloatArray? = null
+    private var cachedDepthImage: Bitmap? = null
 
 
     override fun onCreate() {
@@ -90,6 +101,9 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         private var currentBitmap: Bitmap? = null
         private var nextBitmap: Bitmap? = null
+        private var parallaxSensorManager: ParallaxSensorManager? = null
+        private var parallaxFrameRateJob: Job? = null
+        private val depthEstimator: DepthEstimator = DepthEstimator.create(this@LiveWallpaperService)
 
         init {
             setTouchEventsEnabled(true)
@@ -97,6 +111,13 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             MainScope().launch {
                 workpaper.settingsPreferencesRepository.settingsPreferencesFlow.collect {
                     settings = it
+                    updateParallaxState()
+                }
+            }
+
+            MainScope().launch {
+                workpaper.currentRuleWithRelation.collect {
+                    updateParallaxState()
                 }
             }
         }
@@ -216,6 +237,11 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         override fun onDestroy() {
             super.onDestroy()
+            stopParallaxFrameRateTimer()
+            parallaxSensorManager?.stop()
+            parallaxSensorManager = null
+            renderer?.parallaxSensorManager = null
+            depthEstimator.close()
             currentBitmap?.recycle()
             nextBitmap?.recycle()
             currentBitmap = null
@@ -250,6 +276,63 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
         private fun onImageVisibleChanged(visible: Boolean) {
             if (renderer == null) return
+            if (visible) {
+                renderer?.triggerWakeAnimation()
+            }
+            updateParallaxState()
+        }
+
+        private fun isParallaxEnabled(): Boolean {
+            val rule = workpaper.currentRuleWithRelation.value ?: return false
+            return rule.rule.enableParallaxEffect
+                    && renderer?.wallpaperType == WallpaperType.IMAGE
+        }
+
+        private fun updateParallaxState() {
+            val enabled = isParallaxEnabled() && isVisible
+            val frameRate = if (enabled) settings.parallaxFrameRate else 0
+
+            if (enabled) {
+                if (parallaxSensorManager == null) {
+                    parallaxSensorManager = ParallaxSensorManager(this@LiveWallpaperService)
+                    renderer?.parallaxSensorManager = parallaxSensorManager
+                }
+                parallaxSensorManager?.sensitivity = settings.parallaxSensitivity
+                parallaxSensorManager?.invertDirection = settings.parallaxInvertDirection
+                parallaxSensorManager?.start()
+                renderer?.imageRenderer?.setParallaxEnabled(true)
+                renderer?.depthLayerRenderer?.setParallaxEnabled(true)
+                renderer?.setDepthStrength(settings.depthStrength)
+                renderer?.updateWallpaperType(WallpaperType.IMAGE, frameRate)
+                if (frameRate < 60) {
+                    startParallaxFrameRateTimer()
+                } else {
+                    stopParallaxFrameRateTimer()
+                }
+            } else {
+                parallaxSensorManager?.stop()
+                stopParallaxFrameRateTimer()
+                renderer?.imageRenderer?.setParallaxEnabled(false)
+                if (renderer?.wallpaperType == WallpaperType.IMAGE) {
+                    renderer?.updateWallpaperType(WallpaperType.IMAGE)
+                }
+            }
+        }
+
+        private fun startParallaxFrameRateTimer() {
+            stopParallaxFrameRateTimer()
+            val intervalMs = 1000L / settings.parallaxFrameRate.coerceAtLeast(1)
+            parallaxFrameRateJob = lifecycleScope.launch {
+                while (isActive) {
+                    surfaceView?.requestRender()
+                    delay(intervalMs)
+                }
+            }
+        }
+
+        private fun stopParallaxFrameRateTimer() {
+            parallaxFrameRateJob?.cancel()
+            parallaxFrameRateJob = null
         }
 
         private fun onVideoVisibleChanged(visible: Boolean) {
@@ -293,45 +376,64 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
         private suspend fun setImageBitmap(uri: Uri) {
             if (!surfaceHolder.surface.isValid) return
 
-            renderer?.updateWallpaperType(WallpaperType.IMAGE)
+            val parallax = isParallaxEnabled()
+            if (uri.toString() != prevImageUri) {
+                renderer?.useDepthLayers = false
+            }
+            renderer?.imageRenderer?.setParallaxEnabled(parallax)
+            renderer?.depthLayerRenderer?.setParallaxEnabled(parallax)
+            val frameRate = if (parallax) settings.parallaxFrameRate else 0
+            renderer?.updateWallpaperType(WallpaperType.IMAGE, frameRate)
             stopVideo()
 
             var newBitmap = loadBitmap(uri) ?: return
             newBitmap = workpaper.handleBitmapStyle(newBitmap)
 
-            if (!settings.imageTransition) {
-                currentBitmap?.recycle()
-                currentBitmap = newBitmap
-                renderer?.imageRenderer?.setBitmap(newBitmap)
-                surfaceView?.requestRender()
-                prevImageUri = uri.toString()
-                return
-            }
-
-            val prevBitmap = currentBitmap ?: newBitmap
-            nextBitmap = newBitmap
+            currentBitmap?.recycle()
+            currentBitmap = newBitmap
+            renderer?.imageRenderer?.setBitmap(newBitmap, parallax = parallax)
+            surfaceView?.requestRender()
             prevImageUri = uri.toString()
 
-            renderer?.imageRenderer?.setBitmap(prevBitmap)
-            renderer?.imageRenderer?.setBitmap(nextBitmap!!, isNext = true)
-
-            renderer?.imageRenderer?.startTransition()
-            surfaceView?.requestRender()
-
-            lifecycleScope.launch {
-                val transitionSteps = 20
-                for (i in 0..transitionSteps) {
-                    val alpha = i.toFloat() / transitionSteps
-                    renderer?.imageRenderer?.updateTransitionAlpha(alpha)
-                    surfaceView?.requestRender()
-                    delay(15)
+            if (parallax && settings.enableDepthLayers) {
+                Log.d(LOG_TAG, "Depth layers enabled, parallax=$parallax, enableDepthLayers=${settings.enableDepthLayers}")
+                try {
+                    val cachedUri = this@LiveWallpaperService.cachedDepthUri
+                    val cachedMap = this@LiveWallpaperService.cachedDepthMap
+                    val cachedImg = this@LiveWallpaperService.cachedDepthImage
+                    if (cachedUri == uri.toString() && cachedMap != null && cachedImg != null) {
+                        Log.d(LOG_TAG, "Using cached depth data")
+                        renderer?.depthLayerRenderer?.setDepthData(cachedImg.copy(cachedImg.config, false), cachedMap)
+                        renderer?.useDepthLayers = true
+                        surfaceView?.requestRender()
+                    } else {
+                        Log.d(LOG_TAG, "Depth processing starting...")
+                        if (depthEstimator.isInitialized().not()) {
+                            withContext(Dispatchers.IO) {
+                                depthEstimator.initialize()
+                            }
+                        }
+                        if (depthEstimator.isInitialized()) {
+                            val bitmapForDepth = newBitmap.copy(newBitmap.config, false)
+                            val depthMap = withContext(Dispatchers.IO) {
+                                depthEstimator.estimateDepth(bitmapForDepth)
+                            }
+                            Log.d(LOG_TAG, "Depth map size: ${depthMap.size}")
+                            if (depthMap.isNotEmpty()) {
+                                this@LiveWallpaperService.cachedDepthUri = uri.toString()
+                                this@LiveWallpaperService.cachedDepthMap = depthMap
+                                this@LiveWallpaperService.cachedDepthImage = bitmapForDepth
+                                renderer?.depthLayerRenderer?.setDepthData(bitmapForDepth, depthMap)
+                                renderer?.useDepthLayers = true
+                                surfaceView?.requestRender()
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(LOG_TAG, "Depth processing failed", e)
                 }
-
-                currentBitmap?.recycle()
-                currentBitmap = nextBitmap
-                nextBitmap = null
-
-                bitmap = currentBitmap
+            } else {
+                Log.d(LOG_TAG, "Depth layers NOT enabled: parallax=$parallax, enableDepthLayers=${settings.enableDepthLayers}")
             }
         }
 
@@ -341,13 +443,19 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
             val originBitmap = bitmapFromContentUri(uri, this@LiveWallpaperService, options)
                 ?: return null
 
+            val parallax = isParallaxEnabled()
+
             return if (surfaceSize.width > 0 && surfaceSize.height > 0) {
+                val scale = if (parallax) PARALLAX_QUAD_SCALE else 1.0f
+                val targetW = (surfaceSize.width * scale).toInt()
+                val targetH = (surfaceSize.height * scale).toInt()
+
                 originBitmap.scaleFixedRatio(
-                    targetWidth = surfaceSize.width,
-                    targetHeight = surfaceSize.height,
+                    targetWidth = targetW,
+                    targetHeight = targetH,
                     useMin = false
                 ).let {
-                    if (!settings.wallpaperScrollable) {
+                    if (!settings.wallpaperScrollable && !parallax) {
                         it.centerCrop(
                             targetWidth = surfaceSize.width,
                             targetHeight = surfaceSize.height
@@ -411,6 +519,7 @@ class LiveWallpaperService : WallpaperService(), LifecycleOwner {
 
             renderer!!.videoRenderer.setSourcePlayer(player)
             renderer!!.updateWallpaperType(WallpaperType.VIDEO)
+            parallaxSensorManager?.stop()
 
             updateVideoInfo(uri)
 

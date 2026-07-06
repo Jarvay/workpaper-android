@@ -30,3 +30,6 @@ val PICKER_WALLPAPER_TYPES = listOf("image/*", "video/mp4", "video/quicktime")
 val SUPPORTED_WALLPAPER_TYPES_PREFIX = listOf("image/", "video/mp4", "video/quicktime")
 
 const val LOG_TAG = "WORKPAPER"
+
+const val PARALLAX_QUAD_SCALE = 1.2f
+const val PARALLAX_NO_SCALE = 1.0f

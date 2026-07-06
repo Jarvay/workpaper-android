@@ -23,4 +23,6 @@ data class Rule(
     var styleId: Long = -1,
     @ColumnInfo(defaultValue = "0")
     var noStyle: Boolean = false,
+    @ColumnInfo(defaultValue = "0")
+    var enableParallaxEffect: Boolean = false,
 )
