@@ -34,6 +34,7 @@
     <string name="drawer_menu_settings">设置</string>
     <string name="drawer_menu_check_update">检查更新</string>
     <string name="drawer_menu_sponsor">打赏</string>
+    <string name="sponsor_text">感谢您的支持！</string>
 
     <string name="monday">周一</string>
     <string name="tuesday">周二</string>
@@ -56,6 +57,7 @@
     <string name="rule_replace_global_blur">覆盖设置中的壁纸模糊</string>
     <string name="rule_blur_radius">壁纸模糊半径</string>
     <string name="rule_conflicts_tips">时间和已有计划冲突</string>
+    <string name="rule_style_none">无</string>
 
     <string name="album_name">相册名</string>
     <string name="album_delete_tips">确定要删除该相册吗？</string>
@@ -64,6 +66,8 @@
     <string name="album_wallpaper_delete_tips">确定要删除所选壁纸吗？</string>
     <string name="album_no_cover">暂无封面</string>
     <string name="album_set_as_cover">设为封面</string>
+    <string name="hide_cover">不展示封面</string>
+    <string name="show_cover">展示封面</string>
     <string name="album_add_images">添加壁纸</string>
     <string name="album_add_folder">添加文件夹</string>
     <string name="album_relate_folders">关联文件夹</string>
@@ -81,6 +85,10 @@
     <string name="rule_list_item_days">日期</string>
     <string name="rule_list_item_random">随机切换</string>
     <string name="rule_list_item_delete_tips">确定要删除该项吗？</string>
+    <string name="rule_list_item_start">启动</string>
+    <string name="rule_list_item_edit">编辑</string>
+    <string name="rule_list_item_delete">删除</string>
+    <string name="rule_list_item_copy">复制</string>
     <string name="rule_list_item_forced_used">强制生效</string>
     <string name="rule_list_item_cancel_forced_used">取消强制生效</string>
     <string name="rule_list_item_apply_now">立即生效</string>
@@ -108,6 +116,7 @@
     <string name="style_list_item_default">默认</string>
 
     <string name="settings_item_interval">壁纸更换间隔</string>
+    <string name="settings_item_timer">定时器</string>
     <string name="settings_item_start_with_prev_rule">启动后应用上一个计划</string>
     <string name="settings_item_enable_notification">启用通知</string>
     <string name="settings_item_notification_ongoing">通知常驻</string>
@@ -117,6 +126,7 @@
     <string name="settings_item_auto_check_update">自动检查更新</string>
     <string name="settings_item_disabled_when_playing_audio">播放音频时不更换壁纸</string>
     <string name="settings_item_use_live_wallpaper">以动态壁纸模式运行</string>
+    <string name="settings_item_live_wallpaper_mode">动态壁纸模式</string>
     <string name="settings_item_settings_of_live_wallpaper">动态壁纸设置</string>
     <string name="settings_item_live_wallpaper_double_tap">双击壁纸执行</string>
     <string name="settings_item_video_wallpaper_reset_on_screen_off">熄屏后重置视频进度</string>

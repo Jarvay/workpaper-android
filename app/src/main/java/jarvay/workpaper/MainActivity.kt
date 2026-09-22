@@ -75,9 +75,7 @@ class MainActivity : ComponentActivity() {
 
         viewModel.settings.observe(this) {
             setContent {
-                WorkpaperTheme(
-                    dynamicColor = it.enableDynamicColor
-                ) {
+                WorkpaperTheme(dynamicColor = it.enableDynamicColor) {
                     WorkpaperApp(mainActivityViewModel = viewModel)
                 }
             }
@@ -88,10 +86,7 @@ class MainActivity : ComponentActivity() {
         val intentFilter = IntentFilter(ACTION_APK_DOWNLOAD_ID)
 
         ContextCompat.registerReceiver(
-            this,
-            downloadStartReceiver,
-            intentFilter,
-            ContextCompat.RECEIVER_EXPORTED
+            this, downloadStartReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED
         )
     }
 
@@ -99,10 +94,7 @@ class MainActivity : ComponentActivity() {
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
 
         ContextCompat.registerReceiver(
-            this,
-            downloadCompleteReceiver,
-            intentFilter,
-            ContextCompat.RECEIVER_EXPORTED
+            this, downloadCompleteReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED
         )
     }
 

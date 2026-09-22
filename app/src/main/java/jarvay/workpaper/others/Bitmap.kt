@@ -4,23 +4,24 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.HardwareRenderer
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.RenderEffect
+import android.graphics.RenderNode
+import android.graphics.Shader
+import android.hardware.HardwareBuffer
 import android.media.ImageReader
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.createBitmap
 import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.JNIWrapper
-import android.hardware.HardwareBuffer
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.graphics.RenderNode
-import android.graphics.HardwareRenderer
 import kotlin.math.max
 import kotlin.math.min
 
@@ -105,7 +106,11 @@ fun Bitmap.blur(@IntRange(1, 25) radius: Int): Bitmap {
         try {
             blurHardwareBuffer(radius)
         } catch (e: Exception) {
-            LogUtils.w("Bitmap.blur", "HardwareBuffer blur failed, falling back to JNI", e.toString())
+            LogUtils.w(
+                "Bitmap.blur",
+                "HardwareBuffer blur failed, falling back to JNI",
+                e.toString()
+            )
             JNIWrapper.blur(this, radius)
         }
     } else {
@@ -142,8 +147,10 @@ private fun Bitmap.blurHardwareBuffer(radius: Int): Bitmap {
         .setWaitForPresent(true)
         .syncAndDraw()
 
-    val image = imageReader.acquireNextImage() ?: throw RuntimeException("Blur failed: ImageReader.acquireNextImage() returned null")
-    val hardwareBuffer = image.hardwareBuffer ?: throw RuntimeException("Blur failed: Image.hardwareBuffer is null")
+    val image = imageReader.acquireNextImage()
+        ?: throw RuntimeException("Blur failed: ImageReader.acquireNextImage() returned null")
+    val hardwareBuffer =
+        image.hardwareBuffer ?: throw RuntimeException("Blur failed: Image.hardwareBuffer is null")
 
     try {
         val hardwareBitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, null)
@@ -176,7 +183,7 @@ fun Bitmap.effect(
 }
 
 fun Bitmap.setAlpha(alpha: Int): Bitmap {
-    val bm = Bitmap.createBitmap(width, height, config)
+    val bm = createBitmap(width, height)
     val canvas = Canvas(bm)
     val paint = Paint()
     paint.alpha = alpha

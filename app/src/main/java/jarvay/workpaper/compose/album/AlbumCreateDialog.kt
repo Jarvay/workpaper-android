@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.album
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import jarvay.workpaper.R
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.viewModel.AlbumListViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun AlbumCreateDialog(
     show: Boolean,

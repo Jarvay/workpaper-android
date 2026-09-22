@@ -14,18 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -40,21 +29,37 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.Route
+import jarvay.workpaper.compose.components.CustomIconButton
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.others.getOneWallpaperInDir
 import jarvay.workpaper.ui.theme.COLOR_FORM_LABEL
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Add
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirsRelationScreen(
-    navController: NavController, viewModel: AlbumDetailViewModel = hiltViewModel()
+    albumId: Long,
+    onNavigate: (Route) -> Unit,
+    viewModel: AlbumDetailViewModel = hiltViewModel { factory: AlbumDetailViewModel.Factory ->
+        factory.create(albumId)
+    }
 ) {
 
     val context = LocalContext.current
@@ -65,8 +70,7 @@ fun DirsRelationScreen(
     val dirs = album!!.dirs ?: emptyList()
 
     val folderPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
-        onResult = { uri: Uri? ->
+        contract = ActivityResultContracts.OpenDocumentTree(), onResult = { uri: Uri? ->
             if (uri != null) {
                 val takeFlags: Int =
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -77,14 +81,12 @@ fun DirsRelationScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(album!!.name)
-                },
+            SmallTopAppBar(
+                title = stringResource(R.string.album_relate_folders),
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "")
-                    }
+                    CustomIconButton(
+                        imageVector = MiuixIcons.Back,
+                        onClick = { onNavigate(Route.Home) })
                 },
             )
         },
@@ -92,7 +94,11 @@ fun DirsRelationScreen(
             FloatingActionButton(onClick = {
                 folderPickerLauncher.launch(null)
             }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.add))
+                Icon(
+                    MiuixIcons.Add,
+                    contentDescription = stringResource(id = R.string.add),
+                    tint = Color.White
+                )
             }
         },
     ) { padding ->
@@ -133,7 +139,7 @@ fun DirItem(fullPath: String, viewModel: AlbumDetailViewModel, context: Context)
     val dirsList = uri.lastPathSegment?.split("/") ?: emptyList()
     val dir = dirsList.last()
 
-    Card {
+    Card(pressFeedbackType = PressFeedbackType.Sink) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -159,13 +165,13 @@ fun DirItem(fullPath: String, viewModel: AlbumDetailViewModel, context: Context)
             IconButton(onClick = {
                 deleteDialogShow = true
             }) {
-                Icon(Icons.Default.DeleteForever, "")
+                Icon(MiuixIcons.Delete, "")
             }
         }
     }
 
     SimpleDialog(
-        text = stringResource(R.string.album_related_folder_delete_tips),
+        title = stringResource(R.string.album_related_folder_delete_tips),
         show = deleteDialogShow,
         onDismissRequest = { deleteDialogShow = false }) {
         viewModel.removeDir(fullPath)

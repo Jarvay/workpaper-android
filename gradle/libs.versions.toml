@@ -1,30 +1,32 @@
 [versions]
-compileSdk = "34"
+compileSdk = "37"
+kotlinMetadataJvm = "2.4.0"
 minSdk = "24"
-targetSdk = "34"
+targetSdk = "37"
 
-agp = "8.5.2"
+agp = "9.2.0"
 glance = "1.1.1"
-kotlin = "2.0.10"
+kotlin = "2.4.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-activityCompose = "1.9.3"
-composeBom = "2024.06.00"
-navigation = "2.7.7"
+activityCompose = "1.10.0"
+composeBom = "2026.06.00"
+navigation = "2.9.0"
+navigationevent = "1.1.2"
 
-hilt = "2.52"
+hilt = "2.60.1"
 hiltNavigationCompose = "1.2.0"
 retrofit = "2.11.0"
-roomCommon = "2.6.1"
-roomKtx = "2.6.1"
+roomCommon = "2.7.1"
+roomKtx = "2.7.1"
 utilcodex = "1.31.1"
 work = "2.9.1"
 lifecycle = "2.8.4"
 runtimeLivedata = "1.6.8"
-ksp = "2.0.10-1.0.24"
-room = "2.6.1"
+ksp = "2.3.11"
+room = "2.7.1"
 gson = "2.11.0"
 coil = "3.0.0"
 hiltCommon = "1.2.0"
@@ -33,6 +35,8 @@ datastorePreferences = "1.1.1"
 junitKtx = "1.2.1"
 documentfile = "1.0.1"
 media3Exoplayer = "1.4.1"
+miuix = "0.9.4-rc01"
+uiGraphics = "1.12.0"
 appcompat = "1.6.1"
 material = "1.10.0"
 
@@ -57,6 +61,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigation" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
+androidx-navigationevent-compose = { group = "androidx.navigationevent", name = "navigationevent-compose", version.ref = "navigationevent" }
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
@@ -76,6 +81,7 @@ coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = 
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlinMetadataJvm" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycle" }
@@ -84,6 +90,11 @@ androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.
 androidx-documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3Exoplayer" }
 utilcodex = { module = "com.blankj:utilcodex", version.ref = "utilcodex" }
+miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version.ref = "miuix" }
+miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference-android", version.ref = "miuix" }
+miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons-android", version.ref = "miuix" }
+miuix-nav = { module = "top.yukonga.miuix.kmp:miuix-nav", version.ref = "miuix" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -92,3 +103,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

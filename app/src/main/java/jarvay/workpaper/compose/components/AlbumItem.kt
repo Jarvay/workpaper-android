@@ -1,34 +1,39 @@
 package jarvay.workpaper.compose.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.blankj.utilcode.util.LogUtils
-import jarvay.workpaper.R
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.wallpaper.Wallpaper
+import top.yukonga.miuix.kmp.basic.Badge
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Image
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AlbumItem(
     modifier: Modifier = Modifier,
@@ -38,80 +43,92 @@ fun AlbumItem(
     onClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val colorScheme = MiuixTheme.colorScheme
 
-    val cover = album.coverUri ?: wallpapers.getOrNull(0)?.contentUri
+    var cover = album.coverUri ?: wallpapers.getOrNull(0)?.contentUri
+
+    if (album.hideCover) {
+        cover = null
+    }
 
     val model = try {
-        ImageRequest.Builder(context).data(cover).size(256, 256)
-            .build()
+        ImageRequest.Builder(context).data(cover).size(256, 256).build()
     } catch (e: Exception) {
         LogUtils.e("AlbumItem", "Load album cover failed", e.toString())
         null
     }
 
-    ElevatedCard(
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        ),
-        modifier = modifier
-            .fillMaxSize()
-            .combinedClickable(
-                onLongClick = onLongClick,
-                onClick = onClick
-            )
-    ) {
-        Box(
+    Box(modifier = modifier.fillMaxSize()) {
+        Card(
             modifier = Modifier
-                .combinedClickable(
-                    onLongClick = onLongClick,
-                    onClick = onClick
-                )
-                .fillMaxSize()
-                .aspectRatio(1f),
-
-            ) {
-            if (cover != null) {
-                AsyncImage(
-                    model = model,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .aspectRatio(1f)
-                        .fillMaxSize()
-                )
-            } else {
-                Text(
-                    text = stringResource(id = R.string.album_no_cover),
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color.White
-                )
-            }
-
-            Row(
+                .fillMaxSize(),
+            pressFeedbackType = PressFeedbackType.Sink,
+            onClick = onClick,
+            onLongPress = onLongClick
+        ) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .background(
-                        color = Color.LightGray.copy(alpha = 0.4F),
+                    .fillMaxSize()
+                    .aspectRatio(1f)
+            ) {
+                val coverModifier = Modifier
+                    .aspectRatio(1f)
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+
+                if (cover != null) {
+                    AsyncImage(
+                        model = model,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = coverModifier
                     )
-            ) {
-                Text(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    text = wallpapers.size.toString(),
-                    color = Color.White
-                )
-            }
+                } else {
+                    Icon(
+                        imageVector = MiuixIcons.Image,
+                        contentDescription = null,
+                        modifier = coverModifier.scale(0.5f)
+                    )
+                }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        color = Color.LightGray.copy(alpha = 0.4F),
-                    ),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(text = album.name, color = Color.White)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.7f)
+                                )
+                            )
+                        )
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = album.name,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
+        }
+
+        Badge(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 8.dp),
+            containerColor = colorScheme.primary,
+        ) {
+            Text(
+                text = wallpapers.size.toString(),
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

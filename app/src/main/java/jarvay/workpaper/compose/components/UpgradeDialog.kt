@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -19,6 +18,7 @@ import jarvay.workpaper.MainActivity
 import jarvay.workpaper.R
 import jarvay.workpaper.others.download
 import jarvay.workpaper.viewModel.MainActivityViewModel
+import top.yukonga.miuix.kmp.basic.Text
 
 @Composable
 fun UpgradeDialog(
@@ -30,24 +30,27 @@ fun UpgradeDialog(
 
     val context = LocalContext.current
 
-    SimpleDialog(show = upgradeDialogShow, title = {
-        Text(text = stringResource(id = R.string.tips_new_app_version))
-    }, content = {
-        LazyColumn(
-            modifier = Modifier.height(320.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(items = updatingLogs, key = { it.versionName }) {
-                Row {
-                    Text(text = it.versionName)
-                }
-                Row(modifier = Modifier.padding(top = 4.dp)) {
-                    Text(text = it.desc)
+    SimpleDialog(
+        show = upgradeDialogShow,
+        title = stringResource(id = R.string.tips_new_app_version),
+        content = {
+            LazyColumn(
+                modifier = Modifier.height(320.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(items = updatingLogs, key = { it.versionName }) {
+                    Row {
+                        Text(text = it.versionName)
+                    }
+                    Row(modifier = Modifier.padding(top = 4.dp)) {
+                        Text(text = it.desc)
+                    }
                 }
             }
-        }
-    }, onDismissRequest = {
-        viewModal.upgradeDialogShow.value = false
-    }) {
+        },
+        onDismissRequest = {
+            viewModal.upgradeDialogShow.value = false
+        }) {
         latestVersion?.let {
             simpleSnackbar.show(R.string.tips_start_downloading)
             val id = download(url = it.apkUrl, context = context)

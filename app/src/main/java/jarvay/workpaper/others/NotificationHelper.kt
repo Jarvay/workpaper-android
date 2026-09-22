@@ -108,7 +108,7 @@ class NotificationHelper @Inject constructor(
 
         val backgroundHeight = 288
         val backgroundSize = Size(backgroundHeight * 2, backgroundHeight)
-        
+
         val background = createBitmap(
             backgroundSize.width, backgroundSize.height, Bitmap.Config.ARGB_8888
         )
@@ -118,13 +118,13 @@ class NotificationHelper @Inject constructor(
         val maxWidth = 2048
         val cropWidth = if (bitmap.width > maxWidth) maxWidth else bitmap.width
         val cropSize = Size(cropWidth, cropWidth / 2)
-        
+
         val backgroundBitmap = bitmap.centerCrop(cropSize.width, cropSize.height)
             .scaleFixedRatio(backgroundSize.width, backgroundSize.height)
 
         canvas.drawBitmap(backgroundBitmap, 0F, 0F, paint)
         canvas.drawARGB((255 * 0.4).toInt(), 0, 0, 0)
-        
+
         backgroundBitmap.recycle()
 
         bitmap = bitmap.scaleFixedRatio(backgroundSize.height, backgroundSize.height)

@@ -5,7 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.hilt.navigation.compose.hiltViewModel
 import jarvay.workpaper.R
 import jarvay.workpaper.data.album.Album
@@ -18,7 +18,7 @@ fun AlbumUpdateDialog(
     album: Album?,
     onDismissRequest: () -> Unit
 ) {
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
     var errorMessage by remember {
         mutableStateOf<String?>(null)
@@ -36,7 +36,7 @@ fun AlbumUpdateDialog(
             onConfirm = { newName ->
                 album?.let {
                     if (viewModel.exists(newName, album.albumId)) {
-                        errorMessage = context.getString(R.string.album_name_exists)
+                        errorMessage = resources.getString(R.string.album_name_exists)
                     } else {
                         viewModel.update(album.copy(name = newName))
                         onDismissRequest()

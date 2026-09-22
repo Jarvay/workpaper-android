@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.album
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -10,40 +11,24 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VideoFile
-import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,12 +41,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
@@ -69,7 +54,8 @@ import coil3.request.crossfade
 import coil3.size.Size
 import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.R
-import jarvay.workpaper.compose.Screen
+import jarvay.workpaper.compose.Route
+import jarvay.workpaper.compose.components.CustomIconButton
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.Album
@@ -77,16 +63,35 @@ import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.others.MAX_PERSISTED_URI_GRANTS
 import jarvay.workpaper.others.PICKER_WALLPAPER_TYPES
-import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
-import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.AlbumDetailViewModel
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.ListPopupColumn
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Add
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Image
+import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.overlay.OverlayListPopup
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun AlbumDetailScreen(
-    navController: NavController,
-    viewModel: AlbumDetailViewModel = hiltViewModel()
+    albumId: Long,
+    onNavigate: (Route) -> Unit,
+    viewModel: AlbumDetailViewModel = hiltViewModel { factory: AlbumDetailViewModel.Factory ->
+        factory.create(albumId)
+    }
 ) {
     val context = LocalContext.current
 
@@ -97,7 +102,6 @@ fun AlbumDetailScreen(
 
     val album = albumWithWallpapers!!.album
     val wallpapers = albumWithWallpapers!!.wallpapers
-
 
     val isRelatedMode = album.dirs?.isNotEmpty() ?: false
     val canRelateDir = wallpapers.isEmpty() || isRelatedMode
@@ -119,6 +123,8 @@ fun AlbumDetailScreen(
     var actionsShow by remember {
         mutableStateOf(false)
     }
+
+    var pendingRoute by remember { mutableStateOf<Route?>(null) }
 
     var limitTipShow by remember {
         mutableStateOf(false)
@@ -182,23 +188,20 @@ fun AlbumDetailScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(album.name)
-                },
+            SmallTopAppBar(
+                title = album.name,
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "")
-                    }
+                    CustomIconButton(
+                        imageVector = MiuixIcons.Back,
+                        onClick = { onNavigate(Route.Home) })
                 },
                 actions = {
-                    IconButton(onClick = { actionsShow = true }) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
-                    }
-
+                    CustomIconButton(
+                        imageVector = MiuixIcons.More,
+                        onClick = { actionsShow = true })
                     SimpleDialog(
                         show = deleteDialogShow,
-                        text = stringResource(id = R.string.album_wallpaper_delete_tips),
+                        title = stringResource(id = R.string.album_wallpaper_delete_tips),
                         onDismissRequest = {
                             deleteDialogShow = false
                         }
@@ -208,74 +211,118 @@ fun AlbumDetailScreen(
                         checkedState = emptySet()
                     }
 
-                    DropdownMenu(
-                        expanded = actionsShow,
-                        onDismissRequest = { actionsShow = false }) {
-                        if (!selecting) {
-                            if (!isRelatedMode) {
-                                DropdownMenuItem(text = {
-                                    Text(text = stringResource(id = R.string.album_add_images))
-                                }, onClick = {
-                                    actionsShow = false
-                                    imagePickerLauncher.launch(PICKER_WALLPAPER_TYPES.toTypedArray())
-                                })
-
-                                DropdownMenuItem(text = {
-                                    Text(text = stringResource(id = R.string.album_add_folder))
-                                }, onClick = {
-                                    actionsShow = false
-                                    folderPickerLauncher.launch(null)
-                                })
+                    OverlayListPopup(
+                        show = actionsShow,
+                        onDismissRequest = { actionsShow = false },
+                        onDismissFinished = {
+                            pendingRoute?.let { route ->
+                                pendingRoute = null
+                                onNavigate(route)
                             }
+                        }
+                    ) {
+                        ListPopupColumn {
+                            if (!selecting) {
+                                if (!isRelatedMode) {
+                                    Text(
+                                        text = stringResource(id = R.string.album_add_images),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                actionsShow = false
+                                                imagePickerLauncher.launch(PICKER_WALLPAPER_TYPES.toTypedArray())
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    )
 
-                            if (canRelateDir) {
-                                DropdownMenuItem(text = {
-                                    Text(text = stringResource(id = R.string.album_relate_folders))
-                                }, onClick = {
-                                    actionsShow = false
-                                    navController.navigate(Screen.DirsRelation.createRoute(albumId = album.albumId))
-                                })
+                                    Text(
+                                        text = stringResource(id = R.string.album_add_folder),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                actionsShow = false
+                                                folderPickerLauncher.launch(null)
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    )
+                                }
+
+                                if (canRelateDir) {
+                                    Text(
+                                        text = stringResource(id = R.string.album_relate_folders),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                pendingRoute = Route.DirsRelation(
+                                                    albumId = album.albumId
+                                                )
+                                                actionsShow = false
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    )
+                                }
+
+                                if (wallpapers.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(id = R.string.edit),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                actionsShow = false
+                                                selecting = true
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    )
+
+                                    Text(
+                                        text = stringResource(id = R.string.action_empty),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                actionsShow = false
+                                                emptyDialogShow = true
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = stringResource(id = R.string.select_all),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            actionsShow = false
+                                            checkedState =
+                                                wallpapers.map { it.wallpaperId }.toMutableSet()
+                                        }
+                                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                                )
+
+                                Text(
+                                    text = stringResource(id = R.string.cancel),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            actionsShow = false
+                                            selecting = false
+                                            checkedState = emptySet()
+                                        }
+                                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                                )
+
+                                if (checkedState.isNotEmpty()) {
+                                    Text(
+                                        text = stringResource(id = R.string.delete),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                actionsShow = false
+                                                deleteDialogShow = true
+                                            }
+                                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                                    )
+                                }
                             }
-
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = stringResource(id = R.string.edit))
-                                }, onClick = {
-                                    actionsShow = false
-                                    selecting = true
-                                }, enabled = wallpapers.isNotEmpty()
-                            )
-
-                            DropdownMenuItem(
-                                text = {
-                                    Text(text = stringResource(id = R.string.action_empty))
-                                }, onClick = {
-                                    actionsShow = false
-                                    emptyDialogShow = true
-                                }, enabled = wallpapers.isNotEmpty()
-                            )
-                        } else {
-                            DropdownMenuItem(text = {
-                                Text(text = stringResource(id = R.string.select_all))
-                            }, onClick = {
-                                actionsShow = false
-                                checkedState = wallpapers.map { it.wallpaperId }.toMutableSet()
-                            })
-
-                            DropdownMenuItem(text = {
-                                Text(text = stringResource(id = R.string.cancel))
-                            }, onClick = {
-                                actionsShow = false
-                                selecting = false
-                                checkedState = emptySet()
-                            })
-
-                            DropdownMenuItem(text = {
-                                Text(text = stringResource(id = R.string.delete))
-                            }, onClick = {
-                                actionsShow = false
-                                deleteDialogShow = true
-                            }, enabled = checkedState.isNotEmpty())
                         }
                     }
                 }
@@ -305,11 +352,12 @@ fun AlbumDetailScreen(
                                 rotationZ = rotate
                             }
                         },
-                        imageVector = Icons.Default.Sync,
-                        contentDescription = stringResource(id = R.string.add)
+                        imageVector = MiuixIcons.Refresh,
+                        contentDescription = "",
+                        tint = Color.White
                     )
                 } else {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.add))
+                    Icon(MiuixIcons.Add, contentDescription = stringResource(id = R.string.add))
                 }
             }
         },
@@ -349,9 +397,10 @@ fun AlbumDetailScreen(
         limitTipShow = false
     }
 
-    SimpleDialog(content = {
-        Text(text = stringResource(R.string.album_empty_tips))
-    }, show = emptyDialogShow, onDismissRequest = { emptyDialogShow = false }) {
+    SimpleDialog(
+        title = stringResource(R.string.album_empty_tips),
+        show = emptyDialogShow,
+        onDismissRequest = { emptyDialogShow = false }) {
         emptyDialogShow = false
         viewModel.emptyAlbum()
     }
@@ -392,7 +441,6 @@ private fun WallpaperList(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun WallpaperItem(
     modifier: Modifier = Modifier,
@@ -406,6 +454,7 @@ private fun WallpaperItem(
 ) {
     val context = LocalContext.current
     val simpleSnackbar = LocalSimpleSnackbar.current
+    val colorScheme = MiuixTheme.colorScheme
 
     val contentUri = wallpaper.contentUri
 
@@ -433,94 +482,131 @@ private fun WallpaperItem(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
-                .aspectRatio(ratio)
+                .padding(6.dp)
+                .aspectRatio(ratio),
+            pressFeedbackType = PressFeedbackType.Sink,
+            onClick = onClick,
+            onLongPress = {
+                dropMenuExpanded = true
+            }
         ) {
             Box {
                 SubcomposeAsyncImage(
                     model = model,
                     contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                     loading = {
-                        Icon(
-                            imageVector = when (wallpaper.type) {
-                                WallpaperType.IMAGE -> Icons.Default.Image
-                                WallpaperType.VIDEO -> Icons.Default.VideoFile
-                            },
-                            contentDescription = null,
+                        Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .aspectRatio(1.0f)
-                                .padding(4.dp)
-                        )
+                                .background(colorScheme.primaryContainer.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val infiniteTransition = rememberInfiniteTransition(label = "loading")
+                            val alpha by infiniteTransition.animateFloat(
+                                initialValue = 0.3f,
+                                targetValue = 1f,
+                                animationSpec = infiniteRepeatable(
+                                    animation = tween(durationMillis = 1000),
+                                    repeatMode = RepeatMode.Reverse
+                                ),
+                                label = "alpha"
+                            )
+                            Icon(
+                                imageVector = when (wallpaper.type) {
+                                    WallpaperType.IMAGE -> MiuixIcons.Image
+                                    WallpaperType.VIDEO -> Icons.Default.VideoFile
+                                },
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .graphicsLayer { this.alpha = alpha },
+                                tint = colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+                            )
+                        }
                     },
                     modifier = Modifier
                         .fillMaxSize()
                         .aspectRatio(ratio)
-                        .combinedClickable(
-                            onLongClick = {
-                                dropMenuExpanded = true
-                            },
-                            onClick = onClick
-                        )
                 )
 
-                Row(
+                Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .background(color = Color.White.copy(alpha = 0.5F))
+                        .offset(x = 8.dp, y = 8.dp)
+                        .size(24.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        modifier = Modifier.padding(4.dp)
-                    ) {
-                        when (wallpaper.type) {
-                            WallpaperType.IMAGE -> Icon(
-                                imageVector = Icons.Default.Image,
-                                contentDescription = null,
-                                tint = COLOR_BADGE_ORANGE
-                            )
+                    when (wallpaper.type) {
+                        WallpaperType.IMAGE -> Icon(
+                            imageVector = MiuixIcons.Image,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
 
-                            WallpaperType.VIDEO -> Icon(
-                                imageVector = Icons.Default.VideoFile,
-                                contentDescription = null,
-                                tint = COLOR_BADGE_GREEN
-                            )
-                        }
+                        WallpaperType.VIDEO -> Icon(
+                            imageVector = Icons.Default.VideoFile,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                if (selecting) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Checkbox(
+                            state = if (checkedState.contains(wallpaper.wallpaperId)) ToggleableState.On else ToggleableState.Off,
+                            onClick = {
+                                onItemCheckedChange(
+                                    !checkedState.contains(wallpaper.wallpaperId),
+                                    wallpaper.wallpaperId
+                                )
+                            }
+                        )
                     }
                 }
             }
         }
 
-        DropdownMenu(
-            expanded = dropMenuExpanded,
-            onDismissRequest = { dropMenuExpanded = false }) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(id = R.string.album_set_as_cover)) },
-                onClick = {
-                    viewModel.update(album.copy(coverUri = contentUri))
-                    dropMenuExpanded = false
-                    simpleSnackbar.show(R.string.tips_operation_success)
-                }
-            )
+        OverlayListPopup(
+            show = dropMenuExpanded,
+            onDismissRequest = { dropMenuExpanded = false }
+        ) {
+            ListPopupColumn {
+                Text(
+                    text = stringResource(id = R.string.album_set_as_cover),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.update(album.copy(coverUri = contentUri))
+                            dropMenuExpanded = false
+                            simpleSnackbar.show(R.string.tips_operation_success)
+                        }
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                )
 
-            DropdownMenuItem(
-                text = { Text(text = stringResource(id = R.string.delete)) },
-                onClick = {
-                    viewModel.deleteWallpapers(listOf(wallpaper.wallpaperId))
-                    dropMenuExpanded = false
-                    simpleSnackbar.show(R.string.tips_operation_success)
-                }
-            )
-        }
-
-        if (selecting) {
-            Checkbox(
-                checked = checkedState.contains(wallpaper.wallpaperId),
-                onCheckedChange = { checked ->
-                    onItemCheckedChange(checked, wallpaper.wallpaperId)
-                },
-                modifier = Modifier.align(Alignment.TopEnd)
-            )
+                Text(
+                    text = stringResource(id = R.string.delete),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.deleteWallpapers(listOf(wallpaper.wallpaperId))
+                            dropMenuExpanded = false
+                            simpleSnackbar.show(R.string.tips_operation_success)
+                        }
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                )
+            }
         }
     }
 }

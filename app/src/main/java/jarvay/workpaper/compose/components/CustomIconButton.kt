@@ -1,28 +1,38 @@
 package jarvay.workpaper.compose.components
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun CustomIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable () -> Unit
 ) {
     IconButton(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        colors = IconButtonDefaults.iconButtonColors()
-            .copy(contentColor = MaterialTheme.colorScheme.primary),
-        interactionSource = interactionSource,
-        content = content
+        onClick = onClick, modifier = modifier, enabled = enabled, content = content
     )
+}
+
+@Composable
+fun CustomIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    imageVector: ImageVector,
+    contentDescription: String? = null
+) {
+    IconButton(
+        onClick = onClick, modifier = modifier, enabled = enabled, content = {
+            Icon(
+                imageVector = imageVector,
+                contentDescription = contentDescription,
+                tint = if (enabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.disabledOnPrimaryButton
+            )
+        })
 }

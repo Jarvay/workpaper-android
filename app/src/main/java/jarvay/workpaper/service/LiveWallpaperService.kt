@@ -1,6 +1,5 @@
 package jarvay.workpaper.service
 
-import android.app.admin.DevicePolicyManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent

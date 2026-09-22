@@ -13,4 +13,6 @@ data class Album(
     val coverUri: String? = null,
     @ColumnInfo(defaultValue = "null")
     val dirs: List<String>? = null,
+    @ColumnInfo(defaultValue = "0")
+    val hideCover: Boolean = false,
 )

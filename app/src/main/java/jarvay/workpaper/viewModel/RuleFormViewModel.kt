@@ -1,8 +1,10 @@
 package jarvay.workpaper.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
@@ -10,17 +12,14 @@ import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.others.STATE_IN_STATED
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class RuleFormViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = RuleFormViewModel.Factory::class)
+class RuleFormViewModel @AssistedInject constructor(
     private val repository: RuleRepository,
     styleRepository: StyleRepository,
-    savedStateHandle: SavedStateHandle,
+    @Assisted private val ruleId: Long?,
 ) : ViewModel() {
-    private val ruleId: String? = savedStateHandle.get<String>(RULE_ID_SAVED_STATE_KEY)
-
-    val ruleWithRelation = if (ruleId != null) repository.findRuleById(ruleId.toLong()) else null
+    val ruleWithRelation = if (ruleId != null) repository.findRuleById(ruleId) else null
 
     val styles = styleRepository.allStyles.stateIn(
         viewModelScope,
@@ -44,7 +43,8 @@ class RuleFormViewModel @Inject constructor(
         return repository.exists(startHour, startMinute, days, ruleId)
     }
 
-    companion object {
-        private const val RULE_ID_SAVED_STATE_KEY = "ruleId"
+    @AssistedFactory
+    interface Factory {
+        fun create(ruleId: Long?): RuleFormViewModel
     }
 }

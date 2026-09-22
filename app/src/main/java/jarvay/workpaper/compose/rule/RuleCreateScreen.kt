@@ -2,17 +2,22 @@ package jarvay.workpaper.compose.rule
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.Route
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.viewModel.RuleFormViewModel
 
 @Composable
-fun RuleCreateScreen(navController: NavController, viewModel: RuleFormViewModel = hiltViewModel()) {
+fun RuleCreateScreen(
+    onNavigate: (Route) -> Unit,
+    viewModel: RuleFormViewModel = hiltViewModel { factory: RuleFormViewModel.Factory ->
+        factory.create(null)
+    }
+) {
     val simpleSnackbar = LocalSimpleSnackbar.current
 
     RuleForm(
-        navController = navController,
+        onNavigate = onNavigate,
         viewModel = viewModel,
     ) { rule ->
         val exists = viewModel.exists(rule.startHour, rule.startMinute, rule.days)
@@ -21,6 +26,6 @@ fun RuleCreateScreen(navController: NavController, viewModel: RuleFormViewModel 
             return@RuleForm
         }
         viewModel.insert(rule.copy())
-        navController.navigateUp()
+        onNavigate(Route.Home)
     }
 }

@@ -2,11 +2,11 @@ package jarvay.workpaper.compose.components
 
 import android.content.Context
 import androidx.annotation.StringRes
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.staticCompositionLocalOf
 import jarvay.workpaper.viewModel.MainActivityViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
 
 val LocalMainActivityModel = staticCompositionLocalOf<MainActivityViewModel> { error("") }
 

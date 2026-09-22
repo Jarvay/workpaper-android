@@ -1,59 +1,46 @@
 package jarvay.workpaper.compose.settings
 
-import android.app.ActivityManager
 import android.app.NotificationManager
 import android.content.Context
-import android.service.wallpaper.WallpaperService.ACTIVITY_SERVICE
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import jarvay.workpaper.R
-import jarvay.workpaper.compose.Screen
-import jarvay.workpaper.compose.components.LocalSimpleSnackbar
-import jarvay.workpaper.compose.components.SettingsItem
+import jarvay.workpaper.compose.Route
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.requestNotificationPermission
 import jarvay.workpaper.request.REPO_MIRRORS_MAP
+import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_PADDING_BOTTOM
+import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.SettingsViewModel
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    onNavigate: (Route) -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
 
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -62,185 +49,119 @@ fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = 
     }
     val scrollState = rememberScrollState()
 
-    val simpleSnackbar = LocalSimpleSnackbar.current
-
-    var repoMirrorMenuExpanded by remember {
-        mutableStateOf(false)
-    }
-
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.drawer_menu_settings))
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "")
-                    }
-                },
-                actions = {}
-            )
-        },
+    Column(
+        modifier = Modifier
+            .verticalScroll(scrollState)
+            .navigationBarsPadding()
+            .padding(bottom = HOME_SCREEN_PAGER_PADDING_BOTTOM + HOME_SCREEN_PAGER_VERTICAL_PADDING)
+            .fillMaxWidth()
+            .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(scrollState)
-                .padding(it)
-                .fillMaxWidth()
-                .padding(horizontal = SCREEN_HORIZONTAL_PADDING),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SettingsItem(
-                labelId = R.string.settings_item_use_live_wallpaper,
-                modifier = Modifier.clickable {
-                    navController.navigate(Screen.LiveWallpaperSettings.route);
-                }) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Switch(
-                        checked = settings.useLiveWallpaper,
-                        onCheckedChange = { c ->
-                            val activityManager = context.getSystemService(
-                                ACTIVITY_SERVICE
-                            ) as ActivityManager
-                            val configInfo = activityManager.deviceConfigurationInfo
-                            if (configInfo.reqGlEsVersion < 0x20000) {
-                                simpleSnackbar.show(R.string.settings_opengles2_not_supported)
-                                return@Switch
-                            }
+        Card {
+            ArrowPreference(
+                title = stringResource(id = R.string.settings_item_live_wallpaper_mode),
+                onClick = {
+                    onNavigate(Route.LiveWallpaperSettings)
+                })
+        }
 
-                            viewModel.update(SettingsPreferencesKeys.USE_LIVE_WALLPAPER, c)
-                            if (c) {
-                                simpleSnackbar.show(R.string.settings_live_wallpaper_tips)
-                            }
-                        })
-
-                    Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, "")
-                }
-            }
-
+        Card {
             if (!settings.useLiveWallpaper) {
-                SettingsItem(labelId = R.string.settings_item_also_set_lock_wallpaper) {
-                    Switch(
-                        checked = settings.alsoSetLockWallpaper,
-                        onCheckedChange = { c ->
-                            viewModel.update(SettingsPreferencesKeys.ALSO_SET_LOCK_WALLPAPER, c)
-                        })
-                }
-            }
-
-            SettingsItem(labelId = R.string.settings_item_start_with_prev_rule) {
-                Switch(
-                    checked = settings.startWithPrevRule,
+                SwitchPreference(
+                    title = stringResource(id = R.string.settings_item_also_set_lock_wallpaper),
+                    checked = settings.alsoSetLockWallpaper,
                     onCheckedChange = { c ->
-                        viewModel.update(SettingsPreferencesKeys.START_WITH_PREV_RULE, c)
+                        viewModel.update(SettingsPreferencesKeys.ALSO_SET_LOCK_WALLPAPER, c)
                     })
             }
 
-            SettingsItem(labelId = R.string.settings_item_hide_in_recent_task) {
-                Switch(
-                    checked = settings.hideInRecentTask,
-                    onCheckedChange = { c ->
-                        viewModel.update(SettingsPreferencesKeys.HIDE_IN_RECENT_TASK, c)
-                    })
-            }
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_start_with_prev_rule),
+                checked = settings.startWithPrevRule,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.START_WITH_PREV_RULE, c)
+                })
 
-            SettingsItem(labelId = R.string.settings_item_enable_dynamic_color) {
-                Switch(
-                    checked = settings.enableDynamicColor,
-                    onCheckedChange = { c ->
-                        viewModel.update(SettingsPreferencesKeys.ENABLE_DYNAMIC_COLOR, c)
-                    })
-            }
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_disabled_when_playing_audio),
+                checked = settings.disableWhenPlayingAudio,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.DISABLE_WHEN_PLAYING_AUDIO, c)
+                })
+        }
 
-            SettingsItem(labelId = R.string.settings_item_disabled_when_playing_audio) {
-                Switch(
-                    checked = settings.disableWhenPlayingAudio,
-                    onCheckedChange = { c ->
-                        viewModel.update(SettingsPreferencesKeys.DISABLE_WHEN_PLAYING_AUDIO, c)
-                    })
-            }
+        Card {
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_hide_in_recent_task),
+                checked = settings.hideInRecentTask,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.HIDE_IN_RECENT_TASK, c)
+                })
 
-            SettingsItem(labelId = R.string.settings_item_enable_notification) {
-                Switch(
-                    checked = settings.enableNotification,
-                    onCheckedChange = { c ->
-                        if (c) {
-                            val hasPermission = checkNotifyPermission(context) {
-                                notificationDialogShow = true
-                            }
-                            if (!hasPermission) return@Switch
-                            viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, true)
-                        } else {
-                            viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, false)
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_enable_dynamic_color),
+                checked = settings.enableDynamicColor,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.ENABLE_DYNAMIC_COLOR, c)
+                })
+
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_enable_notification),
+                checked = settings.enableNotification,
+                onCheckedChange = { c ->
+                    if (c) {
+                        val hasPermission = checkNotifyPermission(context) {
+                            notificationDialogShow = true
                         }
-                    })
-            }
+                        if (!hasPermission) return@SwitchPreference
+                        viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, true)
+                    } else {
+                        viewModel.update(SettingsPreferencesKeys.ENABLE_NOTIFICATION, false)
+                    }
+                })
 
             if (settings.enableNotification) {
-                SettingsItem(labelId = R.string.settings_item_notification_ongoing) {
-                    Switch(
-                        checked = settings.notificationOngoing,
-                        onCheckedChange = { c ->
-                            viewModel.update(SettingsPreferencesKeys.NOTIFICATION_ONGOING, c)
-                        })
-                }
-            }
-
-            SettingsItem(labelId = R.string.settings_item_enable_log) {
-                Switch(
-                    checked = settings.enableLog,
+                SwitchPreference(
+                    title = stringResource(id = R.string.settings_item_notification_ongoing),
+                    checked = settings.notificationOngoing,
                     onCheckedChange = { c ->
-                        viewModel.update(SettingsPreferencesKeys.ENABLE_LOG, c)
+                        viewModel.update(SettingsPreferencesKeys.NOTIFICATION_ONGOING, c)
                     })
             }
 
-            SettingsItem(labelId = R.string.settings_item_auto_check_update) {
-                Switch(
-                    checked = settings.autoCheckUpdate,
-                    onCheckedChange = { c ->
-                        viewModel.update(SettingsPreferencesKeys.AUTO_CHECK_UPDATE, c)
-                    })
-            }
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_enable_log),
+                checked = settings.enableLog,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.ENABLE_LOG, c)
+                })
 
-            SettingsItem(labelId = R.string.settings_item_repo_mirror) {
-                Box {
-                    Text(
-                        modifier = Modifier.clickable {
-                            repoMirrorMenuExpanded = true
-                        },
-                        text = settings.repoMirror,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_auto_check_update),
+                checked = settings.autoCheckUpdate,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.AUTO_CHECK_UPDATE, c)
+                })
 
-                    DropdownMenu(
-                        expanded = repoMirrorMenuExpanded,
-                        onDismissRequest = { repoMirrorMenuExpanded = false }) {
-                        REPO_MIRRORS_MAP.entries.forEach {
-                            DropdownMenuItem(
-                                text = { Text(text = it.key) },
-                                onClick = {
-                                    viewModel.update(
-                                        SettingsPreferencesKeys.REPO_MIRROR,
-                                        it.key
-                                    )
-                                    repoMirrorMenuExpanded = false
-                                })
-                        }
-                    }
-                }
-            }
+            OverlayDropdownPreference(
+                title = stringResource(id = R.string.settings_item_repo_mirror),
+                items = REPO_MIRRORS_MAP.keys.toList(),
+                selectedIndex = REPO_MIRRORS_MAP.keys.indexOf(settings.repoMirror)
+                    .coerceAtLeast(0),
+                onSelectedIndexChange = { index ->
+                    val key = REPO_MIRRORS_MAP.keys.elementAtOrNull(index)
+                        ?: return@OverlayDropdownPreference
+                    viewModel.update(SettingsPreferencesKeys.REPO_MIRROR, key)
+                })
         }
+    }
 
-        SimpleDialog(
-            text = stringResource(id = R.string.permission_request_notification),
-            show = notificationDialogShow,
-            onDismissRequest = { notificationDialogShow = false }) {
-            requestNotificationPermission(context)
-        }
+    SimpleDialog(
+        title = stringResource(id = R.string.permission_request_notification),
+        show = notificationDialogShow,
+        onDismissRequest = { notificationDialogShow = false }) {
+        requestNotificationPermission(context)
     }
 }
 

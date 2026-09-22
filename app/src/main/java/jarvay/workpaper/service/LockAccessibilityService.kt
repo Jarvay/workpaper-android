@@ -1,10 +1,10 @@
 package jarvay.workpaper.service
 
 import android.accessibilityservice.AccessibilityService
-import android.view.accessibility.AccessibilityEvent
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.os.Build
+import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.RequiresApi
 
 @SuppressLint("AccessibilityPolicy")

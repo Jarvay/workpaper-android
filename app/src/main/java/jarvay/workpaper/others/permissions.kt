@@ -1,13 +1,10 @@
 package jarvay.workpaper.others
 
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import jarvay.workpaper.receiver.DeviceManagerReceiver
 
 
 fun requestAlarmPermission(context: Context) {

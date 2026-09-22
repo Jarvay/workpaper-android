@@ -1,12 +1,19 @@
 package jarvay.workpaper.compose.components
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import jarvay.workpaper.R
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 
 @Composable
 fun SimpleDialog(
@@ -17,55 +24,70 @@ fun SimpleDialog(
     confirmButtonText: String = stringResource(id = R.string.ok),
     dismissButtonText: String = stringResource(id = R.string.cancel),
     hideDismissButton: Boolean = false,
-    title: @Composable (() -> Unit)? = null,
-    content: @Composable () -> Unit,
+    title: String? = null,
+    content: @Composable (() -> Unit)? = null,
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit
 ) {
     if (show) {
-        AlertDialog(
-            onDismissRequest = { onDismissRequest() },
-            confirmButton = {
-                TextButton(enabled = confirmButtonEnable, onClick = {
-                    onConfirm()
-                    if (dismissOnConfirm) {
-                        onDismissRequest()
-                    }
-                }) {
-                    Text(text = confirmButtonText)
+        OverlayDialog(
+            show = true, title = title, onDismissRequest = onDismissRequest, content = {
+                if (content != null) {
+                    content()
                 }
-            },
-            dismissButton = if (hideDismissButton) null else {
-                {
-                    TextButton(onClick = { onDismissRequest() }) {
-                        Text(text = dismissButtonText)
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (!hideDismissButton) {
+                        TextButton(
+                            modifier = Modifier.weight(0.5f),
+                            text = dismissButtonText,
+                            onClick = { onDismissRequest() })
+
+                        Spacer(modifier = Modifier.width(16.dp))
                     }
+
+                    TextButton(
+                        modifier = Modifier.weight(0.5f),
+                        text = confirmButtonText,
+                        enabled = confirmButtonEnable,
+                        onClick = {
+                            onConfirm()
+                            if (dismissOnConfirm) {
+                                onDismissRequest()
+                            }
+                        })
                 }
-            },
-            title = title,
-            text = {
-                content()
-            },
-            modifier = modifier
+            }, modifier = modifier
         )
     }
 }
 
 @Composable
 fun SimpleDialog(
-    text: String,
+    text: String? = null,
     show: Boolean,
     dismissOnConfirm: Boolean = true,
-    title: @Composable (() -> Unit)? = null,
+    title: String? = null,
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    val content = if (text != null) {
+        @Composable {
+            Text(text = text)
+        }
+    } else {
+        null
+    }
+
     SimpleDialog(
         show = show,
         title = title,
-        content = {
-            Text(text = text)
-        },
+        content = content,
         onDismissRequest = onDismissRequest,
         onConfirm = onConfirm,
         dismissOnConfirm = dismissOnConfirm
