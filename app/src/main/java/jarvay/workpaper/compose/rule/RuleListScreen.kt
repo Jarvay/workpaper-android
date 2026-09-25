@@ -45,6 +45,7 @@ import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.WallpaperSource
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
 import jarvay.workpaper.receiver.RuleReceiver
@@ -225,10 +226,17 @@ private fun RuleItem(
                             }.joinToString(separator = ",")
                         )
 
-                        RuleParamTag(
-                            label = stringResource(id = R.string.rule_list_item_album),
-                            value = albums.joinToString(separator = ", ") { item -> item.album.name }
-                        )
+                        when (rule.wallpaperSource) {
+                            WallpaperSource.ALBUM -> RuleParamTag(
+                                label = stringResource(id = R.string.rule_list_item_album),
+                                value = albums.joinToString(separator = ", ") { item -> item.album.name }
+                            )
+
+                            WallpaperSource.WEB_API -> RuleParamTag(
+                                label = stringResource(id = R.string.rule_wallpaper_source_web_api),
+                                value = rule.webWallpaperApi.apiName
+                            )
+                        }
 
                         if (ruleWithRelation.style != null) {
                             RuleParamTag(

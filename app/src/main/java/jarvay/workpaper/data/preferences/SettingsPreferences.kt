@@ -24,6 +24,7 @@ data class SettingsPreferences(
     var wallpaperScrollable: Boolean,
     var imageTransition: Boolean,
     var repoMirror: String,
+    var downloadOnlyOnWifi: Boolean,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -48,6 +49,7 @@ data class SettingsPreferences(
         result = 31 * result + wallpaperScrollable.hashCode()
         result = 31 * result + imageTransition.hashCode()
         result = 31 * result + repoMirror.hashCode()
+        result = 31 * result + downloadOnlyOnWifi.hashCode()
         return result
     }
 }
@@ -70,6 +72,7 @@ data object SettingsPreferencesKeys {
     val WALLPAPER_SCROLLABLE = booleanPreferencesKey("wallpaperScrollable")
     val IMAGE_TRANSITION = booleanPreferencesKey("imageTransition")
     val REPO_MIRROR = stringPreferencesKey("repoMirror")
+    val DOWNLOAD_ONLY_ON_WIFI = booleanPreferencesKey("downloadOnlyOnWifi")
 }
 
 val DEFAULT_SETTINGS =
@@ -91,4 +94,5 @@ val DEFAULT_SETTINGS =
         wallpaperScrollable = false,
         imageTransition = false,
         repoMirror = RepoHost.GH_FAST.value,
+        downloadOnlyOnWifi = false,
     )

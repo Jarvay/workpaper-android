@@ -58,6 +58,10 @@
     <string name="rule_blur_radius">壁纸模糊半径</string>
     <string name="rule_conflicts_tips">时间和已有计划冲突</string>
     <string name="rule_style_none">无</string>
+    <string name="rule_wallpaper_source">壁纸来源</string>
+    <string name="rule_wallpaper_source_album">相册</string>
+    <string name="rule_wallpaper_source_web_api">网络壁纸</string>
+    <string name="rule_web_wallpaper_api">网络壁纸 API</string>
 
     <string name="album_name">相册名</string>
     <string name="album_delete_tips">确定要删除该相册吗？</string>
@@ -97,6 +101,7 @@
     <string name="rule_current_rule">当前生效</string>
     <string name="rule_next_rule">即将生效</string>
     <string name="tips_please_stop_first">请先停止运行</string>
+    <string name="tips_wallpaper_changing">壁纸更换或下载中，请稍候</string>
 
     <string name="style_form_item_name">名称</string>
     <string name="style_form_item_blur_radius">模糊半径</string>
@@ -135,6 +140,7 @@
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
     <string name="settings_item_enable_log">保存日志</string>
     <string name="settings_item_repo_mirror">仓库镜像</string>
+    <string name="settings_item_download_only_on_wifi">仅在 Wi-Fi 下下载壁纸</string>
 
     <string name="gesture_event_none">无操作</string>
     <string name="gesture_event_lock_screen">锁屏</string>

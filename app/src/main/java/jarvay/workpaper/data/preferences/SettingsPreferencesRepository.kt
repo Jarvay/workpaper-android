@@ -48,6 +48,8 @@ class SettingsPreferencesRepository @Inject constructor(
                     ?: DEFAULT_SETTINGS.imageTransition,
                 repoMirror = preferences[SettingsPreferencesKeys.REPO_MIRROR]
                     ?: DEFAULT_SETTINGS.repoMirror,
+                downloadOnlyOnWifi = preferences[SettingsPreferencesKeys.DOWNLOAD_ONLY_ON_WIFI]
+                    ?: DEFAULT_SETTINGS.downloadOnlyOnWifi,
             )
         }.distinctUntilChanged { old, new ->
             old == new

@@ -13,21 +13,27 @@ import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.WallpaperSource
 import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
+import jarvay.workpaper.data.webWallpaperApi.WebWallpaperApi
 import jarvay.workpaper.others.blur
+import jarvay.workpaper.others.downloadImage
 import jarvay.workpaper.others.effect
+import jarvay.workpaper.others.getScreenSize
 import jarvay.workpaper.others.noise
 import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.receiver.UpdateActionWidgetReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.LiveWallpaperService
 import jarvay.workpaper.service.WorkpaperService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,7 +50,7 @@ data class NextWallpaper(
 
 @Singleton
 class Workpaper @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     @Inject
     lateinit var ruleRepository: RuleRepository
@@ -189,6 +195,19 @@ class Workpaper @Inject constructor(
     suspend fun generateNextWallpaper(
         startIndex: Int? = null, isManual: Boolean = false, ruleId: Long? = null
     ): NextWallpaper? {
+        val ruleWithRelation = currentRuleWithRelation.first() ?: return null
+        val rule = ruleWithRelation.rule
+
+        if (rule.wallpaperSource == WallpaperSource.WEB_API) {
+            return generateNextWebWallpaper(isManual, rule.webWallpaperApi)
+        }
+
+        return generateNextAlbumWallpaper(startIndex, isManual, ruleId)
+    }
+
+    private suspend fun generateNextAlbumWallpaper(
+        startIndex: Int?, isManual: Boolean, ruleId: Long?
+    ): NextWallpaper? {
         val index = startIndex ?: nextWallpaper.value?.index ?: -1
         val tmpRuleId = ruleId ?: this.currentRuleId.value
 
@@ -211,6 +230,40 @@ class Workpaper @Inject constructor(
             wallpaper = wallpapers[nextIndex],
             isManual = isManual,
         )
+    }
+
+    private suspend fun generateNextWebWallpaper(
+        isManual: Boolean, webWallpaperApi: WebWallpaperApi
+    ): NextWallpaper? = withContext(Dispatchers.IO) {
+        val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
+        if (settings.downloadOnlyOnWifi && !isWifiConnected()) {
+            return@withContext nextWallpaper.value
+        }
+
+        val size = getScreenSize()
+        val imageUrl = webWallpaperApi.getApi().getImageUrl(size.width, size.height)
+
+        val uri = downloadImage(context = context, url = imageUrl) ?: return@withContext null
+
+        val wallpaper = Wallpaper(
+            contentUri = uri.toString(),
+            type = WallpaperType.IMAGE,
+            ratio = null,
+        )
+
+        NextWallpaper(
+            index = -1,
+            wallpaper = wallpaper,
+            isManual = isManual,
+        )
+    }
+
+    private fun isWifiConnected(): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)
     }
 
     suspend fun handleBitmapStyle(bitmap: Bitmap): Bitmap {

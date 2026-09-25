@@ -26,6 +26,7 @@
     <string name="tips_no_new_version">No new version</string>
     <string name="tips_start_downloading">Start downloading</string>
     <string name="tips_please_stop_first">Please stop running first</string>
+    <string name="tips_wallpaper_changing">Wallpaper is changing or downloading, please wait</string>
 
     <string name="tab_title_days">Days</string>
     <string name="tab_title_rules">Plans</string>
@@ -59,6 +60,10 @@
     <string name="rule_blur_radius">Wallpaper blur radius</string>
     <string name="rule_conflicts_tips">Plans time conflicts</string>
     <string name="rule_style_none">None</string>
+    <string name="rule_wallpaper_source">Wallpaper source</string>
+    <string name="rule_wallpaper_source_album">Album</string>
+    <string name="rule_wallpaper_source_web_api">Web wallpaper</string>
+    <string name="rule_web_wallpaper_api">Web wallpaper API</string>
 
     <string name="album_name">Album name</string>
     <string name="album_delete_tips">Are you sure to delete this album?</string>
@@ -135,6 +140,7 @@
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>
     <string name="settings_item_enable_log">Save log</string>
     <string name="settings_item_repo_mirror">Mirror of repo</string>
+    <string name="settings_item_download_only_on_wifi">Download wallpaper only on Wi-Fi</string>
 
     <string name="gesture_event_none">None</string>
     <string name="gesture_event_lock_screen">Lock screen</string>

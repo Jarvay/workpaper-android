@@ -22,7 +22,9 @@ import jarvay.workpaper.others.bitmapFromContentUri
 import jarvay.workpaper.others.getWallpaperSize
 import jarvay.workpaper.others.scaleFixedRatio
 import jarvay.workpaper.receiver.NotificationReceiver
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -109,20 +111,14 @@ class WallpaperWorker @AssistedInject constructor(
 
         val ruleWithRelation = workpaper.currentRuleWithRelation.first()
         if (ruleWithRelation == null) {
-            LogUtils.w("Current rule in null")
+            LogUtils.w("Current rule is null")
             return Result.failure()
         }
 
         val nextWallpaper = workpaper.getNextWallpaper()
         if (nextWallpaper == null) {
-            LogUtils.w("Next wallpaper in null")
+            LogUtils.w("Next wallpaper is null")
             return Result.failure()
-        }
-
-        workpaper.apply {
-            generateNextWallpaper()?.let {
-                setNextWallpaper(it)
-            }
         }
 
         val success: Boolean
@@ -143,6 +139,14 @@ class WallpaperWorker @AssistedInject constructor(
                     setVideoWallpaper(wallpaper = nextWallpaper.wallpaper)
                     true
                 } else false
+            }
+        }
+
+        workpaper.apply {
+            withContext(Dispatchers.IO) {
+                generateNextWallpaper()?.let {
+                    setNextWallpaper(it)
+                }
             }
         }
 

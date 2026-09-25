@@ -21,6 +21,8 @@ jobs:
         with:
           gradle-version: current
       - run: ./gradlew assembleRelease
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
 
       - name: Setup build tool version variable
         shell: bash

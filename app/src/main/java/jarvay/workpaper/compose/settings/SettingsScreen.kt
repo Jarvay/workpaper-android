@@ -84,6 +84,13 @@ fun SettingsScreen(
                 })
 
             SwitchPreference(
+                title = stringResource(id = R.string.settings_item_download_only_on_wifi),
+                checked = settings.downloadOnlyOnWifi,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.DOWNLOAD_ONLY_ON_WIFI, c)
+                })
+
+            SwitchPreference(
                 title = stringResource(id = R.string.settings_item_disabled_when_playing_audio),
                 checked = settings.disableWhenPlayingAudio,
                 onCheckedChange = { c ->

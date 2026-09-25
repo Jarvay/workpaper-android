@@ -47,3 +47,10 @@ val Migration_8_9 = object : Migration(8, 9) {
         db.execSQL("ALTER TABLE albums ADD COLUMN hideCover INTEGER NOT NULL DEFAULT 0")
     }
 }
+
+val Migration_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE rules ADD COLUMN wallpaperSource TEXT NOT NULL DEFAULT 'ALBUM'")
+        db.execSQL("ALTER TABLE rules ADD COLUMN webWallpaperApi TEXT NOT NULL DEFAULT 'BING'")
+    }
+}

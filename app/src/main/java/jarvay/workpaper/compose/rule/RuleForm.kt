@@ -44,6 +44,8 @@ import jarvay.workpaper.compose.components.NumberField
 import jarvay.workpaper.compose.components.TimePickerDialog
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.WallpaperSource
+import jarvay.workpaper.data.webWallpaperApi.WebWallpaperApi
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
 import jarvay.workpaper.ui.theme.FORM_ITEM_SPACE
@@ -129,7 +131,10 @@ fun RuleForm(
         SmallTopAppBar(title = "", navigationIcon = {
             CustomIconButton(imageVector = MiuixIcons.Back, onClick = { onNavigate(Route.Home) })
         }, actions = {
-            val saveEnable = selectedAlbums.isNotEmpty() && rule.days.isNotEmpty()
+            val albumSourceOk = rule.wallpaperSource == WallpaperSource.ALBUM
+                    && selectedAlbums.isNotEmpty()
+            val webSourceOk = rule.wallpaperSource == WallpaperSource.WEB_API
+            val saveEnable = rule.days.isNotEmpty() && (albumSourceOk || webSourceOk)
 
             CustomIconButton(onClick = {
                 if (runningPreferences?.running == true) {
@@ -247,46 +252,78 @@ fun RuleForm(
             }
 
             Card(modifier = Modifier.padding(horizontal = 16.dp)) {
-                FlowRow(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(32.dp, Alignment.Bottom),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    maxItemsInEachRow = 3
-                ) {
-                    val itemModifier =
-                        Modifier
-                            .width(88.dp)
-                            .height(88.dp)
-                            .weight(0.3f)
-                            .aspectRatio(1f)
-                            .fillMaxSize()
-                            .fillMaxRowHeight(1f)
+                val wallpaperSourceOptions = listOf(
+                    stringResource(R.string.rule_wallpaper_source_album),
+                    stringResource(R.string.rule_wallpaper_source_web_api),
+                )
+                OverlayDropdownPreference(
+                    items = wallpaperSourceOptions,
+                    selectedIndex = WallpaperSource.entries.indexOf(rule.wallpaperSource)
+                        .coerceAtLeast(0),
+                    title = stringResource(id = R.string.rule_wallpaper_source),
+                    onSelectedIndexChange = { index ->
+                        rule = rule.copy(wallpaperSource = WallpaperSource.entries[index])
+                    })
 
-                    selectedAlbums.forEach {
-                        AlbumItem(
-                            album = it.album, wallpapers = it.wallpapers, modifier = itemModifier
+                when (rule.wallpaperSource) {
+                    WallpaperSource.WEB_API -> {
+                        val webApiOptions = WebWallpaperApi.entries.map { it.apiName }
+                        OverlayDropdownPreference(
+                            items = webApiOptions,
+                            selectedIndex = WebWallpaperApi.entries.toTypedArray()
+                                .indexOfFirst { it == rule.webWallpaperApi }.coerceAtLeast(0),
+                            title = stringResource(id = R.string.rule_web_wallpaper_api),
+                            onSelectedIndexChange = { index ->
+                                rule =
+                                    rule.copy(webWallpaperApi = WebWallpaperApi.entries[index])
+                            })
+                    }
+
+                    WallpaperSource.ALBUM -> {
+                        FlowRow(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(32.dp, Alignment.Bottom),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            maxItemsInEachRow = 3
                         ) {
-                            onNavigate(Route.AlbumDetail(it.album.albumId))
+                            val itemModifier =
+                                Modifier
+                                    .width(88.dp)
+                                    .height(88.dp)
+                                    .weight(0.3f)
+                                    .aspectRatio(1f)
+                                    .fillMaxSize()
+                                    .fillMaxRowHeight(1f)
+
+                            selectedAlbums.forEach {
+                                AlbumItem(
+                                    album = it.album,
+                                    wallpapers = it.wallpapers,
+                                    modifier = itemModifier
+                                ) {
+                                    onNavigate(Route.AlbumDetail(it.album.albumId))
+                                }
+                            }
+
+                            Card(
+                                modifier = itemModifier, onClick = {
+                                    albumModalSheetShow = true
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Default.AddPhotoAlternate,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxSize(),
+                                    tint = Color.White
+                                )
+                            }
+
+                            val placeholderCount = 3 - (selectedAlbums.size % 3)
+                            repeat(placeholderCount - 1) {
+                                Column(modifier = itemModifier) {}
+                            }
                         }
-                    }
-
-                    Card(
-                        modifier = itemModifier, onClick = {
-                            albumModalSheetShow = true
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxSize(),
-                            tint = Color.White
-                        )
-                    }
-
-                    val placeholderCount = 3 - (selectedAlbums.size % 3)
-                    repeat(placeholderCount - 1) {
-                        Column(modifier = itemModifier) {}
                     }
                 }
             }
@@ -322,11 +359,13 @@ fun RuleForm(
                         })
                 }
 
-                CheckboxPreference(
-                    title = stringResource(id = R.string.rule_random),
-                    checked = rule.random,
-                    checkboxLocation = CheckboxLocation.End,
-                    onCheckedChange = { rule = rule.copy(random = it) })
+                if (rule.wallpaperSource == WallpaperSource.ALBUM) {
+                    CheckboxPreference(
+                        title = stringResource(id = R.string.rule_random),
+                        checked = rule.random,
+                        checkboxLocation = CheckboxLocation.End,
+                        onCheckedChange = { rule = rule.copy(random = it) })
+                }
 
                 CheckboxPreference(
                     title = stringResource(id = R.string.rule_change_by_timing),

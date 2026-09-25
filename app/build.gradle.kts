@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
@@ -21,6 +23,20 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val pexelsApiKey = run {
+            val localProps = Properties().apply {
+                val localFile = rootProject.file("local.properties")
+                if (localFile.exists()) {
+                    localFile.inputStream().use { load(it) }
+                }
+            }
+            localProps.getProperty("PEXELS_API_KEY")
+                ?: (project.findProperty("PEXELS_API_KEY") as? String)
+                ?: System.getenv("PEXELS_API_KEY")
+                ?: ""
+        }
+        buildConfigField("String", "PEXELS_API_KEY", "\"$pexelsApiKey\"")
     }
 
     buildTypes {
