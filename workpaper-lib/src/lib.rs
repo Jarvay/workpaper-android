@@ -179,10 +179,10 @@ impl Bitmap {
                 temp[c] = sum / count as f32;
                 
                 for x in 1..width {
-                    let left = x - radius - 1;
                     let right = x + radius;
-                    
-                    if left >= 0 {
+
+                    if x >= radius + 1 {
+                        let left = x - radius - 1;
                         sum -= pixels[row_start + left * channels + c] as f32;
                         count -= 1;
                     }
@@ -190,7 +190,7 @@ impl Bitmap {
                         sum += pixels[row_start + right * channels + c] as f32;
                         count += 1;
                     }
-                    
+
                     temp[x * channels + c] = sum / count as f32;
                 }
             }
@@ -223,10 +223,10 @@ impl Bitmap {
                 temp[c] = sum / count as f32;
                 
                 for y in 1..height {
-                    let top = y - radius - 1;
                     let bottom = y + radius;
-                    
-                    if top >= 0 {
+
+                    if y >= radius + 1 {
+                        let top = y - radius - 1;
                         sum -= pixels[top * width * channels + x * channels + c] as f32;
                         count -= 1;
                     }
@@ -234,7 +234,7 @@ impl Bitmap {
                         sum += pixels[bottom * width * channels + x * channels + c] as f32;
                         count += 1;
                     }
-                    
+
                     temp[y * channels + c] = sum / count as f32;
                 }
             }
