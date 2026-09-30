@@ -13,21 +13,35 @@ import jarvay.workpaper.data.preferences.RunningPreferencesRepository
 import jarvay.workpaper.data.preferences.SettingsPreferencesRepository
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.RuleWithRelationToSort
+import jarvay.workpaper.data.rule.WallpaperSource
 import jarvay.workpaper.data.style.StyleRepository
 import jarvay.workpaper.data.wallpaper.Wallpaper
 import jarvay.workpaper.data.wallpaper.WallpaperType
+import jarvay.workpaper.data.webWallpaperApi.WebWallpaperApi
 import jarvay.workpaper.others.blur
+import jarvay.workpaper.others.downloadImage
 import jarvay.workpaper.others.effect
+import jarvay.workpaper.others.getScreenSize
 import jarvay.workpaper.others.noise
+import jarvay.workpaper.others.nextRule
+import jarvay.workpaper.others.prevRule
 import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.receiver.UpdateActionWidgetReceiver
 import jarvay.workpaper.receiver.WallpaperReceiver
 import jarvay.workpaper.service.LiveWallpaperService
 import jarvay.workpaper.service.WorkpaperService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,7 +58,7 @@ data class NextWallpaper(
 
 @Singleton
 class Workpaper @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     @Inject
     lateinit var ruleRepository: RuleRepository
@@ -58,9 +72,21 @@ class Workpaper @Inject constructor(
     @Inject
     lateinit var styleRepository: StyleRepository
 
+    private val scope = MainScope()
+
     val currentRuleId = MutableStateFlow<Long>(-1)
     val nextRuleId = MutableStateFlow<Long>(-1)
-    val currentRuleWithRelation = MutableStateFlow<RuleWithRelation?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentRuleWithRelation: StateFlow<RuleWithRelation?> = currentRuleId
+        .flatMapLatest { ruleId ->
+            if (ruleId >= 0) ruleRepository.findRuleByIdFlow(ruleId) else flowOf(null)
+        }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
 
     var nextWallpaper: MutableStateFlow<NextWallpaper?> = MutableStateFlow(null)
     var nextWallpaperTime: Long = 0
@@ -74,14 +100,6 @@ class Workpaper @Inject constructor(
     val videoUri = MutableStateFlow<String?>(null)
 
     val loadingAlbumIdSet = MutableStateFlow<MutableSet<Long>>(mutableSetOf())
-
-    init {
-        MainScope().launch {
-            currentRuleId.collect {
-                currentRuleWithRelation.value = ruleRepository.findRuleById(ruleId = it)
-            }
-        }
-    }
 
     suspend fun restart() {
         stop()
@@ -189,6 +207,19 @@ class Workpaper @Inject constructor(
     suspend fun generateNextWallpaper(
         startIndex: Int? = null, isManual: Boolean = false, ruleId: Long? = null
     ): NextWallpaper? {
+        val ruleWithRelation = currentRuleWithRelation.first() ?: return null
+        val rule = ruleWithRelation.rule
+
+        if (rule.wallpaperSource == WallpaperSource.WEB_API) {
+            return generateNextWebWallpaper(isManual, rule.webWallpaperApi)
+        }
+
+        return generateNextAlbumWallpaper(startIndex, isManual, ruleId)
+    }
+
+    private suspend fun generateNextAlbumWallpaper(
+        startIndex: Int?, isManual: Boolean, ruleId: Long?
+    ): NextWallpaper? {
         val index = startIndex ?: nextWallpaper.value?.index ?: -1
         val tmpRuleId = ruleId ?: this.currentRuleId.value
 
@@ -211,6 +242,73 @@ class Workpaper @Inject constructor(
             wallpaper = wallpapers[nextIndex],
             isManual = isManual,
         )
+    }
+
+    private suspend fun generateNextWebWallpaper(
+        isManual: Boolean, webWallpaperApi: WebWallpaperApi
+    ): NextWallpaper? = withContext(Dispatchers.IO) {
+        val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
+        if (settings.downloadOnlyOnWifi && !isWifiConnected()) {
+            return@withContext nextWallpaper.value
+        }
+
+        val size = getScreenSize()
+        val imageUrl = webWallpaperApi.getApi().getImageUrl(size.width, size.height)
+
+        val uri = downloadImage(context = context, url = imageUrl) ?: return@withContext null
+
+        val wallpaper = Wallpaper(
+            contentUri = uri.toString(),
+            type = WallpaperType.IMAGE,
+            ratio = null,
+        )
+
+        NextWallpaper(
+            index = -1,
+            wallpaper = wallpaper,
+            isManual = isManual,
+        )
+    }
+
+    fun isWifiConnected(): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+    }
+
+    suspend fun getRuleToApply(): RuleWithRelation? {
+        val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
+        val forcedRule = ruleRepository.findRuleById(settings.forcedUsedRuleId)
+
+        val list = ruleRepository.allRules.first()
+
+        val prevRule = if (forcedRule != null) {
+            RuleWithRelationToSort(
+                ruleWithRelation = forcedRule,
+                sortValue = 0,
+                day = 0
+            )
+        } else {
+            prevRule(list)
+        }
+
+        return if (prevRule != null && settings.startWithPrevRule) {
+            prevRule.ruleWithRelation
+        } else {
+            nextRule(list)?.ruleWithRelation
+        }
+    }
+
+    suspend fun shouldBlockStartForWifi(): Boolean {
+        val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
+        if (!settings.downloadOnlyOnWifi) return false
+
+        val ruleToApply = getRuleToApply() ?: return false
+        if (ruleToApply.rule.wallpaperSource != WallpaperSource.WEB_API) return false
+
+        return !isWifiConnected()
     }
 
     suspend fun handleBitmapStyle(bitmap: Bitmap): Bitmap {

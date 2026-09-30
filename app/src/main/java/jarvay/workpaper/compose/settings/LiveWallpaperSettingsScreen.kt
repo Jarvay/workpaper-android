@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Route
 import jarvay.workpaper.compose.components.CustomIconButton
+import jarvay.workpaper.compose.components.DropdownPreference
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
@@ -32,7 +33,6 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
@@ -112,15 +112,20 @@ fun LiveWallpaperSettingsScreen(
                         )
                     })
 
-                OverlayDropdownPreference(
+                DropdownPreference(
                     title = stringResource(id = R.string.settings_item_live_wallpaper_double_tap),
-                    items = GestureEvent.entries.map { stringResource(it.labelResId) },
-                    selectedIndex = GestureEvent.entries.indexOfFirst { it.name == settings.doubleTapEvent }
+                    items = GestureEvent.entries.map { item -> stringResource(item.labelResId) },
+                    selectedIndex = GestureEvent.entries.indexOfFirst { item -> item.name == settings.doubleTapEvent }
                         .coerceAtLeast(0),
                     onSelectedIndexChange = { index ->
                         val event = GestureEvent.entries.getOrNull(index)
-                            ?: return@OverlayDropdownPreference
+                            ?: return@DropdownPreference
                         if (event == GestureEvent.LOCK_SCREEN) {
+                            if (android.os.Build.VERSION.SDK_INT < 28) {
+                                simpleSnackbar.show(R.string.settings_accessibility_lock_screen_requires_android_9)
+                                return@DropdownPreference
+                            }
+
                             val accessibilityManager =
                                 context.getSystemService(Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
                             val enabledServices =
@@ -133,7 +138,7 @@ fun LiveWallpaperSettingsScreen(
 
                             if (!isAccessibilityEnabled) {
                                 accessibilityDialogShow = true
-                                return@OverlayDropdownPreference
+                                return@DropdownPreference
                             }
                         }
 

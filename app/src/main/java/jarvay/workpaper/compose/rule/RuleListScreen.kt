@@ -45,9 +45,12 @@ import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.DEFAULT_SETTINGS
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.WallpaperSource
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
 import jarvay.workpaper.receiver.RuleReceiver
+import jarvay.workpaper.ui.theme.COLOR_BADGE_GREEN
+import jarvay.workpaper.ui.theme.COLOR_BADGE_ORANGE
 import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_PADDING_BOTTOM
 import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
@@ -225,10 +228,17 @@ private fun RuleItem(
                             }.joinToString(separator = ",")
                         )
 
-                        RuleParamTag(
-                            label = stringResource(id = R.string.rule_list_item_album),
-                            value = albums.joinToString(separator = ", ") { item -> item.album.name }
-                        )
+                        when (rule.wallpaperSource) {
+                            WallpaperSource.ALBUM -> RuleParamTag(
+                                label = stringResource(id = R.string.rule_list_item_album),
+                                value = albums.joinToString(separator = ", ") { item -> item.album.name }
+                            )
+
+                            WallpaperSource.WEB_API -> RuleParamTag(
+                                label = stringResource(id = R.string.rule_wallpaper_source_web_api),
+                                value = rule.webWallpaperApi.apiName
+                            )
+                        }
 
                         if (ruleWithRelation.style != null) {
                             RuleParamTag(
@@ -381,7 +391,7 @@ private fun RuleItemBadgesInline(
         if (isCurrent) {
             Box(
                 modifier = Modifier
-                    .background(Color(0xFF4CAF50), CircleShape)
+                    .background(COLOR_BADGE_GREEN, CircleShape)
                     .padding(horizontal = 10.dp, vertical = 3.dp)
             ) {
                 Text(
@@ -396,7 +406,7 @@ private fun RuleItemBadgesInline(
         if (isNext) {
             Box(
                 modifier = Modifier
-                    .background(Color(0xFFFF9800), CircleShape)
+                    .background(COLOR_BADGE_ORANGE, CircleShape)
                     .padding(horizontal = 10.dp, vertical = 3.dp)
             ) {
                 Text(

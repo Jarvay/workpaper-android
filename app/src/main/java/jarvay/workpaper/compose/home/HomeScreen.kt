@@ -91,6 +91,10 @@ fun HomeScreen(
         mutableStateOf(false)
     }
 
+    var wifiWarningDialogShow by remember {
+        mutableStateOf(false)
+    }
+
     val runningPreferences by homeScreenViewModel.runningPreferences.collectAsStateWithLifecycle()
     val running = runningPreferences?.running ?: false
 
@@ -131,7 +135,13 @@ fun HomeScreen(
                                 if (!running && checkPermissions(context, onRequestPermission = {
                                         alarmPermissionDialogShow = true
                                     })) {
+
                                     MainScope().launch {
+                                        if (homeScreenViewModel.shouldBlockStartForWifi()) {
+                                            wifiWarningDialogShow = true
+                                            return@launch
+                                        }
+
                                         homeScreenViewModel.start()
                                     }
 
@@ -173,6 +183,12 @@ fun HomeScreen(
                 title = stringResource(id = R.string.permission_request_alarm),
                 onDismissRequest = { alarmPermissionDialogShow = false }) {
                 requestAlarmPermission(context = context)
+            }
+
+            SimpleDialog(
+                text = stringResource(id = R.string.tips_download_only_on_wifi),
+                show = wifiWarningDialogShow,
+                onDismissRequest = { wifiWarningDialogShow = false }) {
             }
         }
     }

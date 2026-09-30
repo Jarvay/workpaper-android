@@ -64,7 +64,7 @@ fun WorkpaperApp(mainActivityViewModel: MainActivityViewModel) {
     val onNavigate: (Route) -> Unit = { route ->
         if (route is Route.Home) {
             navController.pop()
-        } else {
+        } else if (navController.backStack.lastOrNull() != route) {
             navController.push(route)
         }
     }

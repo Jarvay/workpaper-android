@@ -6,6 +6,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleRepository
 import jarvay.workpaper.data.style.StyleRepository
@@ -18,6 +19,7 @@ class RuleFormViewModel @AssistedInject constructor(
     private val repository: RuleRepository,
     styleRepository: StyleRepository,
     @Assisted private val ruleId: Long?,
+    val workpaper: Workpaper,
 ) : ViewModel() {
     val ruleWithRelation = if (ruleId != null) repository.findRuleById(ruleId) else null
 

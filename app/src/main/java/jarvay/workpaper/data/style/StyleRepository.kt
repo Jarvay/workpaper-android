@@ -1,7 +1,6 @@
 package jarvay.workpaper.data.style
 
 import androidx.annotation.WorkerThread
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -10,10 +9,6 @@ class StyleRepository @Inject constructor(
     private val styleDao: StyleDao,
 ) {
     val allStyles = styleDao.findAllFlow()
-
-    fun findFlowById(id: Long): Flow<Style>? {
-        return styleDao.findFlowById(id)
-    }
 
     fun findById(id: Long): Style? {
         return styleDao.findById(id)

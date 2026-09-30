@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         viewModel.settings.observe(this) {
-            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
             activityManager.let { manager ->
                 manager.appTasks.forEach { task ->
                     task?.setExcludeFromRecents(it.hideInRecentTask)

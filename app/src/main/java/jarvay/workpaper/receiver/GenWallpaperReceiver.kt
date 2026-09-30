@@ -40,7 +40,7 @@ class GenWallpaperReceiver : BroadcastReceiver() {
             val settings = settingsPreferencesRepository.settingsPreferencesFlow.first()
             if (settings.enableNotification) {
                 val notificationIntent = Intent(context, NotificationReceiver::class.java)
-                notificationIntent.setAction(NotificationReceiver.ACTION_NOTIFICATION_UPDATE)
+                notificationIntent.action = NotificationReceiver.ACTION_NOTIFICATION_UPDATE
                 context.sendBroadcast(notificationIntent)
             }
         }

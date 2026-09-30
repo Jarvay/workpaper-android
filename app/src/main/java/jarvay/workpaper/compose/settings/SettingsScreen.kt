@@ -22,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Route
+import jarvay.workpaper.compose.components.DropdownPreference
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.preferences.SettingsPreferencesKeys
 import jarvay.workpaper.others.requestNotificationPermission
@@ -32,7 +33,6 @@ import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
 import jarvay.workpaper.viewModel.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 
@@ -81,6 +81,13 @@ fun SettingsScreen(
                 checked = settings.startWithPrevRule,
                 onCheckedChange = { c ->
                     viewModel.update(SettingsPreferencesKeys.START_WITH_PREV_RULE, c)
+                })
+
+            SwitchPreference(
+                title = stringResource(id = R.string.settings_item_download_only_on_wifi),
+                checked = settings.downloadOnlyOnWifi,
+                onCheckedChange = { c ->
+                    viewModel.update(SettingsPreferencesKeys.DOWNLOAD_ONLY_ON_WIFI, c)
                 })
 
             SwitchPreference(
@@ -144,14 +151,14 @@ fun SettingsScreen(
                     viewModel.update(SettingsPreferencesKeys.AUTO_CHECK_UPDATE, c)
                 })
 
-            OverlayDropdownPreference(
+            DropdownPreference(
                 title = stringResource(id = R.string.settings_item_repo_mirror),
                 items = REPO_MIRRORS_MAP.keys.toList(),
                 selectedIndex = REPO_MIRRORS_MAP.keys.indexOf(settings.repoMirror)
                     .coerceAtLeast(0),
                 onSelectedIndexChange = { index ->
                     val key = REPO_MIRRORS_MAP.keys.elementAtOrNull(index)
-                        ?: return@OverlayDropdownPreference
+                        ?: return@DropdownPreference
                     viewModel.update(SettingsPreferencesKeys.REPO_MIRROR, key)
                 })
         }

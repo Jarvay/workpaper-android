@@ -58,6 +58,10 @@
     <string name="rule_blur_radius">壁纸模糊半径</string>
     <string name="rule_conflicts_tips">时间和已有计划冲突</string>
     <string name="rule_style_none">无</string>
+    <string name="rule_wallpaper_source">壁纸来源</string>
+    <string name="rule_wallpaper_source_album">相册</string>
+    <string name="rule_wallpaper_source_web_api">网络壁纸</string>
+    <string name="rule_web_wallpaper_api">网络壁纸 API</string>
 
     <string name="album_name">相册名</string>
     <string name="album_delete_tips">确定要删除该相册吗？</string>
@@ -76,6 +80,7 @@
     <string name="album_add_wallpaper_folder_tips">如果选择的文件数量过多可能需要等待一段时间</string>
     <string name="settings_live_wallpaper_tips">在一些设备上你可能需要手动打开动态壁纸的权限</string>
     <string name="settings_opengles2_not_supported">你的设备不支持opengles2</string>
+    <string name="settings_accessibility_lock_screen_requires_android_9">无障碍锁屏需要Android 9或以上</string>
     <string name="album_empty_tips">确定要清空该相册吗？</string>
 
     <string name="rule_list_item_time">时间</string>
@@ -97,6 +102,8 @@
     <string name="rule_current_rule">当前生效</string>
     <string name="rule_next_rule">即将生效</string>
     <string name="tips_please_stop_first">请先停止运行</string>
+    <string name="tips_wallpaper_changing">壁纸更换或下载中，请稍候</string>
+    <string name="tips_download_only_on_wifi">你设置了【仅在 Wi-Fi 下下载壁纸】，请先连接 Wi-Fi 后再启动</string>
 
     <string name="style_form_item_name">名称</string>
     <string name="style_form_item_blur_radius">模糊半径</string>
@@ -135,6 +142,7 @@
     <string name="settings_item_blur_radius">壁纸模糊半径</string>
     <string name="settings_item_enable_log">保存日志</string>
     <string name="settings_item_repo_mirror">仓库镜像</string>
+    <string name="settings_item_download_only_on_wifi">仅在 Wi-Fi 下下载壁纸</string>
 
     <string name="gesture_event_none">无操作</string>
     <string name="gesture_event_lock_screen">锁屏</string>

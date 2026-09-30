@@ -1,6 +1,7 @@
 package jarvay.workpaper.compose.rule
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,26 +30,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.blankj.utilcode.util.LogUtils
+import jarvay.workpaper.BuildConfig
 import jarvay.workpaper.R
 import jarvay.workpaper.compose.Route
 import jarvay.workpaper.compose.components.AlbumItem
 import jarvay.workpaper.compose.components.AlbumModalSheet
 import jarvay.workpaper.compose.components.CustomIconButton
+import jarvay.workpaper.compose.components.DropdownPreference
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.NumberField
 import jarvay.workpaper.compose.components.TimePickerDialog
 import jarvay.workpaper.data.rule.Rule
 import jarvay.workpaper.data.rule.RuleWithRelation
+import jarvay.workpaper.data.rule.WallpaperSource
+import jarvay.workpaper.data.webWallpaperApi.WebWallpaperApi
 import jarvay.workpaper.others.dayOptions
 import jarvay.workpaper.others.formatTime
+import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.ui.theme.FORM_ITEM_SPACE
 import jarvay.workpaper.viewModel.RuleFormViewModel
 import jarvay.workpaper.viewModel.WorkpaperViewModel
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Icon
@@ -61,7 +71,6 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Ok
 import top.yukonga.miuix.kmp.preference.CheckboxLocation
 import top.yukonga.miuix.kmp.preference.CheckboxPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
@@ -75,7 +84,7 @@ fun RuleForm(
     workpaperViewModel: WorkpaperViewModel = hiltViewModel(),
     onSave: (Rule) -> Unit,
 ) {
-    val simpleSnackbar = LocalSimpleSnackbar.current
+    val context = LocalContext.current
 
     val scrollState = rememberScrollState()
 
@@ -129,17 +138,20 @@ fun RuleForm(
         SmallTopAppBar(title = "", navigationIcon = {
             CustomIconButton(imageVector = MiuixIcons.Back, onClick = { onNavigate(Route.Home) })
         }, actions = {
-            val saveEnable = selectedAlbums.isNotEmpty() && rule.days.isNotEmpty()
+            val albumSourceOk = rule.wallpaperSource == WallpaperSource.ALBUM
+                    && selectedAlbums.isNotEmpty()
+            val webSourceOk = rule.wallpaperSource == WallpaperSource.WEB_API
+            val saveEnable = rule.days.isNotEmpty() && (albumSourceOk || webSourceOk)
 
             CustomIconButton(onClick = {
-                if (runningPreferences?.running == true) {
-                    simpleSnackbar.show(R.string.tips_please_stop_first)
-                    return@CustomIconButton
-                }
-
                 onSave(
                     rule.copy()
                 )
+                val currentRuleId = viewModel.workpaper.currentRuleId.value
+                if (runningPreferences?.running == true && currentRuleId == rule.ruleId) {
+                    MainScope().launch { viewModel.workpaper.restart() }
+                    return@CustomIconButton
+                }
             }, enabled = saveEnable, imageVector = MiuixIcons.Ok)
         })
     }) { padding ->
@@ -247,46 +259,82 @@ fun RuleForm(
             }
 
             Card(modifier = Modifier.padding(horizontal = 16.dp)) {
-                FlowRow(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(32.dp, Alignment.Bottom),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    maxItemsInEachRow = 3
-                ) {
-                    val itemModifier =
-                        Modifier
-                            .width(88.dp)
-                            .height(88.dp)
-                            .weight(0.3f)
-                            .aspectRatio(1f)
-                            .fillMaxSize()
-                            .fillMaxRowHeight(1f)
+                val wallpaperSourceOptions = listOf(
+                    stringResource(R.string.rule_wallpaper_source_album),
+                    stringResource(R.string.rule_wallpaper_source_web_api),
+                )
+                DropdownPreference(
+                    items = wallpaperSourceOptions,
+                    selectedIndex = WallpaperSource.entries.indexOf(rule.wallpaperSource)
+                        .coerceAtLeast(0),
+                    title = stringResource(id = R.string.rule_wallpaper_source),
+                    onSelectedIndexChange = { index ->
+                        rule = rule.copy(wallpaperSource = WallpaperSource.entries[index])
+                    })
 
-                    selectedAlbums.forEach {
-                        AlbumItem(
-                            album = it.album, wallpapers = it.wallpapers, modifier = itemModifier
+                when (rule.wallpaperSource) {
+                    WallpaperSource.WEB_API -> {
+                        val webApiOptions = WebWallpaperApi.entries.toMutableList().apply {
+                            if (BuildConfig.PEXELS_API_KEY.isEmpty()) {
+                                remove(WebWallpaperApi.PEXELS)
+                            }
+                        }.map { it.apiName }
+                        DropdownPreference(
+                            items = webApiOptions,
+                            selectedIndex = WebWallpaperApi.entries.toTypedArray()
+                                .indexOfFirst { it == rule.webWallpaperApi }.coerceAtLeast(0),
+                            title = stringResource(id = R.string.rule_web_wallpaper_api),
+                            onSelectedIndexChange = { index ->
+                                rule =
+                                    rule.copy(webWallpaperApi = WebWallpaperApi.entries[index])
+                            })
+                    }
+
+                    WallpaperSource.ALBUM -> {
+                        FlowRow(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(32.dp, Alignment.Bottom),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            maxItemsInEachRow = 3
                         ) {
-                            onNavigate(Route.AlbumDetail(it.album.albumId))
+                            val itemModifier =
+                                Modifier
+                                    .width(88.dp)
+                                    .height(88.dp)
+                                    .weight(0.3f)
+                                    .aspectRatio(1f)
+                                    .fillMaxSize()
+                                    .fillMaxRowHeight(1f)
+
+                            selectedAlbums.forEach {
+                                AlbumItem(
+                                    album = it.album,
+                                    wallpapers = it.wallpapers,
+                                    modifier = itemModifier
+                                ) {
+                                    onNavigate(Route.AlbumDetail(it.album.albumId))
+                                }
+                            }
+
+                            Card(
+                                modifier = itemModifier, onClick = {
+                                    albumModalSheetShow = true
+                                }) {
+                                Icon(
+                                    imageVector = Icons.Default.AddPhotoAlternate,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxSize(),
+                                    tint = Color.White
+                                )
+                            }
+
+                            val placeholderCount = 3 - (selectedAlbums.size % 3)
+                            repeat(placeholderCount - 1) {
+                                Column(modifier = itemModifier) {}
+                            }
                         }
-                    }
-
-                    Card(
-                        modifier = itemModifier, onClick = {
-                            albumModalSheetShow = true
-                        }) {
-                        Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxSize(),
-                            tint = Color.White
-                        )
-                    }
-
-                    val placeholderCount = 3 - (selectedAlbums.size % 3)
-                    repeat(placeholderCount - 1) {
-                        Column(modifier = itemModifier) {}
                     }
                 }
             }
@@ -310,7 +358,7 @@ fun RuleForm(
                     if (styleNames.isNotEmpty()) {
                         styleNames.add(0, stringResource(id = R.string.rule_style_none))
                     }
-                    OverlayDropdownPreference(
+                    DropdownPreference(
                         items = styleOptions.map { it.second },
                         selectedIndex = styleOptions.indexOfFirst { it.first == selectedStyle?.styleId },
                         title = stringResource(id = R.string.rule_style),
@@ -322,11 +370,13 @@ fun RuleForm(
                         })
                 }
 
-                CheckboxPreference(
-                    title = stringResource(id = R.string.rule_random),
-                    checked = rule.random,
-                    checkboxLocation = CheckboxLocation.End,
-                    onCheckedChange = { rule = rule.copy(random = it) })
+                if (rule.wallpaperSource == WallpaperSource.ALBUM) {
+                    CheckboxPreference(
+                        title = stringResource(id = R.string.rule_random),
+                        checked = rule.random,
+                        checkboxLocation = CheckboxLocation.End,
+                        onCheckedChange = { rule = rule.copy(random = it) })
+                }
 
                 CheckboxPreference(
                     title = stringResource(id = R.string.rule_change_by_timing),

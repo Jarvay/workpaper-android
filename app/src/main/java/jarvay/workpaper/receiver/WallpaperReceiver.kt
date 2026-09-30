@@ -8,13 +8,14 @@ import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import com.blankj.utilcode.util.LogUtils
 import dagger.hilt.android.AndroidEntryPoint
+import jarvay.workpaper.R
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.others.LOG_TAG
+import jarvay.workpaper.others.showToast
 import jarvay.workpaper.worker.WallpaperWorker
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -38,10 +39,10 @@ class WallpaperReceiver : BroadcastReceiver() {
 
             val workManager = WorkManager.getInstance(context)
             if (workpaper.lastWallpaperWorkerId != null) {
-                val lastWorkInfo = runBlocking {
+                val lastWorkInfo =
                     workManager.getWorkInfoByIdFlow(workpaper.lastWallpaperWorkerId!!).first()
-                }
                 if (!lastWorkInfo.state.isFinished) {
+                    showToast(context, R.string.tips_wallpaper_changing)
                     LogUtils.i(LOG_TAG, "Last work not finished, skip")
                     return@launch
                 }

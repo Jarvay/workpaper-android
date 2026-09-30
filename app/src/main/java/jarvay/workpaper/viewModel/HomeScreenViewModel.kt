@@ -24,4 +24,6 @@ class HomeScreenViewModel @Inject constructor(
     suspend fun start() = workpaper.start()
 
     suspend fun stop() = workpaper.stop()
+
+    suspend fun shouldBlockStartForWifi() = workpaper.shouldBlockStartForWifi()
 }

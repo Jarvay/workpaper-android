@@ -31,4 +31,3 @@ val SUPPORTED_WALLPAPER_TYPES_PREFIX = listOf("image/", "video/mp4", "video/quic
 
 const val LOG_TAG = "WORKPAPER"
 
-const val PARALLAX_QUAD_SCALE = 1.0f

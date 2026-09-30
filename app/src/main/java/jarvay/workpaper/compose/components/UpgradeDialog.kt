@@ -55,7 +55,7 @@ fun UpgradeDialog(
             simpleSnackbar.show(R.string.tips_start_downloading)
             val id = download(url = it.apkUrl, context = context)
             val intent = Intent()
-            intent.setAction(MainActivity.ACTION_APK_DOWNLOAD_ID)
+            intent.action = MainActivity.ACTION_APK_DOWNLOAD_ID
             intent.putExtra(MainActivity.APK_DOWNLOAD_ID_KEY, id)
             context.sendBroadcast(intent)
         }

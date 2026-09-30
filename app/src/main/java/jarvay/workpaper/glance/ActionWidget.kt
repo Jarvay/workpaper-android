@@ -98,7 +98,7 @@ class ActionWidget @Inject constructor() : GlanceAppWidget() {
                 }
             ) {
                 val i = Intent(context, GenWallpaperReceiver::class.java)
-                i.setAction(GenWallpaperReceiver.ACTION_NEXT_WALLPAPER)
+                i.action = GenWallpaperReceiver.ACTION_NEXT_WALLPAPER
                 context.sendBroadcast(i)
             }
 

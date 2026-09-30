@@ -3,11 +3,9 @@ package jarvay.workpaper.others
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.HardwareRenderer
 import android.graphics.ImageDecoder
 import android.graphics.Matrix
-import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.RenderEffect
 import android.graphics.RenderNode
@@ -19,7 +17,6 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
-import androidx.core.graphics.createBitmap
 import com.blankj.utilcode.util.LogUtils
 import jarvay.workpaper.JNIWrapper
 import kotlin.math.max
@@ -56,10 +53,6 @@ fun Bitmap.centerCrop(targetWidth: Int, targetHeight: Int): Bitmap {
     return Bitmap.createBitmap(this, dx, dy, targetWidth, targetHeight)
 }
 
-fun Bitmap.info(): String {
-    return "width: $width, height: $height"
-}
-
 fun coverBitmapFromContentUri(contentUri: Uri, context: Context): Bitmap? {
     val retriever = MediaMetadataRetriever()
     retriever.setDataSource(context, contentUri)
@@ -93,7 +86,7 @@ fun bitmapFromContentUri(
             ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
                 decoder.isMutableRequired = true
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             fromStream()
         }
     } else {
@@ -182,11 +175,3 @@ fun Bitmap.effect(
     return JNIWrapper.effect(this, b, c, s)
 }
 
-fun Bitmap.setAlpha(alpha: Int): Bitmap {
-    val bm = createBitmap(width, height)
-    val canvas = Canvas(bm)
-    val paint = Paint()
-    paint.alpha = alpha
-    canvas.drawBitmap(this, 0f, 0f, paint)
-    return bm
-}

@@ -1,5 +1,6 @@
 package jarvay.workpaper.compose.album
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import jarvay.workpaper.compose.components.LocalMainActivityModel
 import jarvay.workpaper.compose.components.LocalSimpleSnackbar
 import jarvay.workpaper.compose.components.SimpleDialog
 import jarvay.workpaper.data.album.AlbumWithWallpapers
+import jarvay.workpaper.receiver.RuleReceiver
 import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_PADDING_BOTTOM
 import jarvay.workpaper.ui.theme.HOME_SCREEN_PAGER_VERTICAL_PADDING
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
@@ -126,11 +128,6 @@ fun AlbumListScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        if (runningPreferences?.running == true) {
-                                            simpleSnackbar.show(R.string.tips_please_stop_first)
-                                            return@clickable
-                                        }
-
                                         if (viewModel.isUsing(it.album.albumId)) {
                                             simpleSnackbar.show(R.string.album_is_using_tips)
                                         } else {
@@ -154,6 +151,16 @@ fun AlbumListScreen(
             viewModel.delete(currentAlbumWithWallpapers!!, context)
             currentAlbumWithWallpapers = null
             simpleSnackbar.show(R.string.tips_operation_success)
+            val currentRule = viewModel.workpaper.currentRuleWithRelation
+            val inUse =
+                currentRule.value?.albums?.any { rule -> rule.album.albumId == it.album.albumId }
+            if (runningPreferences?.running == true && inUse == true && currentRule.value != null) {
+                val ruleIntent = Intent(context, RuleReceiver::class.java)
+                ruleIntent.putExtra(
+                    RuleReceiver.RULE_ID_KEY, currentRule.value!!.rule.ruleId
+                )
+                context.sendBroadcast(ruleIntent)
+            }
         }
     }
 
