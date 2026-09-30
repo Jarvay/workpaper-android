@@ -16,7 +16,7 @@ android {
         applicationId = "jarvay.workpaper"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 30
+        versionCode = 31
         versionName = "3.0.0-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
