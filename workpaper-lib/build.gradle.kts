@@ -56,7 +56,9 @@ val cargoNdkBuild = tasks.register<Exec>("cargoNdkBuild") {
     outputs.dir(file("src/main/jniLibs"))
 }
 
-tasks.matching { it.name.startsWith("assemble") }.configureEach {
+tasks.matching {
+    it.name.startsWith("assemble") || it.name.endsWith("JniLibFolders")
+}.configureEach {
     dependsOn(cargoNdkBuild)
 }
 
