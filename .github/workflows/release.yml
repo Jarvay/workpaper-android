@@ -17,6 +17,20 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --version 4.1.2
+
+      - name: Setup NDK environment variable
+        run: |
+          NDK_VERSION=$(ls /usr/local/lib/android/sdk/ndk/ | head -n 1)
+          echo "ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/$NDK_VERSION" >> $GITHUB_ENV
+          echo "Using NDK at $NDK_VERSION"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: current
