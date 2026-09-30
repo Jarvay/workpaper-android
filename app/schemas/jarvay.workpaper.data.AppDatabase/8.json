@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 8,
-    "identityHash": "61cd69c42a87fb72b269bf558c51adca",
+    "identityHash": "8e450d74e916996a5df7d1376e5c6825",
     "entities": [
       {
         "tableName": "rules",
@@ -82,13 +82,11 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       },
       {
         "tableName": "albums",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `coverUri` TEXT, `dirs` TEXT DEFAULT null)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `coverUri` TEXT, `dirs` TEXT DEFAULT null, `hideCover` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "albumId",
@@ -105,15 +103,20 @@
           {
             "fieldPath": "coverUri",
             "columnName": "coverUri",
-            "affinity": "TEXT",
-            "notNull": false
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "dirs",
             "columnName": "dirs",
             "affinity": "TEXT",
-            "notNull": false,
             "defaultValue": "null"
+          },
+          {
+            "fieldPath": "hideCover",
+            "columnName": "hideCover",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -121,9 +124,7 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       },
       {
         "tableName": "rule_album_relations",
@@ -173,8 +174,7 @@
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_rule_album_relations_albumId` ON `${TABLE_NAME}` (`albumId`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       },
       {
         "tableName": "wallpapers",
@@ -209,7 +209,6 @@
             "fieldPath": "ratio",
             "columnName": "ratio",
             "affinity": "REAL",
-            "notNull": false,
             "defaultValue": "NULL"
           }
         ],
@@ -218,9 +217,7 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       },
       {
         "tableName": "styles",
@@ -274,15 +271,12 @@
           "columnNames": [
             "id"
           ]
-        },
-        "indices": [],
-        "foreignKeys": []
+        }
       }
     ],
-    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '61cd69c42a87fb72b269bf558c51adca')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8e450d74e916996a5df7d1376e5c6825')"
     ]
   }
 }

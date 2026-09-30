@@ -5,6 +5,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.album.Album
 import jarvay.workpaper.data.album.AlbumRepository
 import jarvay.workpaper.data.album.AlbumWithWallpapers
@@ -20,7 +21,8 @@ import javax.inject.Inject
 class AlbumListViewModel @Inject constructor(
     private val repository: AlbumRepository,
     private val ruleRepository: RuleRepository,
-    private val wallpaperRepository: WallpaperRepository
+    private val wallpaperRepository: WallpaperRepository,
+    val workpaper: Workpaper,
 ) : ViewModel() {
     val allAlbums = repository.allAlbums.stateIn(
         viewModelScope,

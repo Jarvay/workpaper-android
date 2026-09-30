@@ -103,8 +103,4 @@ class WorkpaperService @Inject constructor() : LifecycleService() {
             sendBroadcast(intent)
         }
     }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-    }
 }

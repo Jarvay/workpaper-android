@@ -13,7 +13,6 @@ import jarvay.workpaper.receiver.UnlockReceiver
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 
@@ -41,9 +40,7 @@ class MainApplication : Application(), Configuration.Provider {
         LogUtils.getConfig().apply {
             saveDays = 7
             setConsoleSwitch(true)
-            isLog2FileSwitch = runBlocking {
-                settingsPreferencesRepository.settingsPreferencesFlow.first().enableLog
-            }
+            isLog2FileSwitch = false
         }
     }
 

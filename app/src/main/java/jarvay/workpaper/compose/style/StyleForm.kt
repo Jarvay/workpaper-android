@@ -8,18 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.HorizontalRule
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,17 +19,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import jarvay.workpaper.R
+import jarvay.workpaper.compose.Route
 import jarvay.workpaper.compose.components.CustomIconButton
 import jarvay.workpaper.data.style.Style
 import jarvay.workpaper.ui.theme.COLOR_FORM_LABEL
 import jarvay.workpaper.ui.theme.SCREEN_HORIZONTAL_PADDING
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Slider
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Ok
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StyleForm(
-    navController: NavController,
+    onNavigate: (Route) -> Unit,
     values: Style? = null,
     onSave: (Style) -> Unit
 ) {
@@ -48,26 +47,23 @@ fun StyleForm(
     }
 
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-                Text("")
-            },
+        SmallTopAppBar(
+            title = "",
             navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "")
-                }
+                CustomIconButton(
+                    imageVector = MiuixIcons.Back,
+                    onClick = { onNavigate(Route.Home) })
             },
             actions = {
                 val enable = style.name.isNotBlank() && style.name.isNotEmpty()
 
-                IconButton(
+                CustomIconButton(
                     onClick = {
                         onSave(style.copy())
                     },
                     enabled = enable,
-                ) {
-                    Icon(Icons.Default.Save, "")
-                }
+                    imageVector = MiuixIcons.Ok
+                )
             }
         )
     }) { paddingValues ->
@@ -78,16 +74,11 @@ fun StyleForm(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StyleFormItem(label = stringResource(id = R.string.style_form_item_name)) {
-                OutlinedTextField(
+                TextField(
                     modifier = Modifier.fillMaxWidth(),
-                    label = {
-                        Text(text = stringResource(id = R.string.style_form_item_name))
-                    },
+                    label = stringResource(id = R.string.style_form_item_name),
                     value = style.name, onValueChange = {
                         style = style.copy(name = it)
-                    },
-                    placeholder = {
-                        Text(text = stringResource(id = R.string.style_form_item_name))
                     }
                 )
             }
@@ -185,10 +176,11 @@ private fun StyleFormItemSlider(
                     .weight(1f),
                 value = value.toFloat(),
                 onValueChange = {
-                    onValueChange(Math.round(it))
+                    onValueChange(it.roundToInt())
                 },
                 steps = steps,
-                valueRange = valueRange
+                valueRange = valueRange,
+                height = 24.dp
             )
 
             CustomIconButton(onClick = {
@@ -200,7 +192,7 @@ private fun StyleFormItemSlider(
             Text(
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .widthIn(32.dp),
+                    .widthIn(36.dp),
                 text = value.toString()
             )
         }

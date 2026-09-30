@@ -3,8 +3,14 @@ package jarvay.workpaper.data.rule
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import jarvay.workpaper.data.webWallpaperApi.WebWallpaperApi
 import jarvay.workpaper.others.DEFAULT_WALLPAPER_CHANGE_INTERVAL
 import jarvay.workpaper.others.dayOptions
+
+enum class WallpaperSource {
+    ALBUM,
+    WEB_API,
+}
 
 @Entity(tableName = "rules")
 data class Rule(
@@ -23,4 +29,8 @@ data class Rule(
     var styleId: Long = -1,
     @ColumnInfo(defaultValue = "0")
     var noStyle: Boolean = false,
+    @ColumnInfo(defaultValue = "ALBUM")
+    var wallpaperSource: WallpaperSource = WallpaperSource.ALBUM,
+    @ColumnInfo(defaultValue = "BING")
+    var webWallpaperApi: WebWallpaperApi = WebWallpaperApi.BING,
 )

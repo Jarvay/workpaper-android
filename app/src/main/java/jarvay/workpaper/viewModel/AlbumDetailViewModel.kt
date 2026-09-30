@@ -7,7 +7,6 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.ImageLoader
@@ -15,6 +14,9 @@ import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.size.Size
 import com.blankj.utilcode.util.LogUtils
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jarvay.workpaper.Workpaper
 import jarvay.workpaper.data.album.Album
@@ -30,35 +32,33 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
-@HiltViewModel
-class AlbumDetailViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = AlbumDetailViewModel.Factory::class)
+class AlbumDetailViewModel @AssistedInject constructor(
     private val repository: AlbumRepository,
     private val wallpaperRepository: WallpaperRepository,
     private val workpaper: Workpaper,
-    savedStateHandle: SavedStateHandle,
+    @Assisted private val albumId: Long,
 ) : ViewModel() {
-    private val albumId: String = savedStateHandle.get<String>(ALBUM_ID_SAVED_STATE_KEY)!!
 
     private val imageRatioCache = mutableMapOf<String, Float>()
 
-    val albumWithWallpapers = repository.getAlbumWithWallpapers(albumId = albumId.toLong()).stateIn(
+    val albumWithWallpapers = repository.getAlbumWithWallpapers(albumId = albumId).stateIn(
         viewModelScope, STATE_IN_STATED, null
     )
-    val album = repository.getAlbum(albumId = albumId.toLong()).stateIn(
+    val album = repository.getAlbum(albumId = albumId).stateIn(
         viewModelScope, STATE_IN_STATED, null
     )
 
     val loading = MutableStateFlow(false)
 
     init {
-        if (workpaper.loadingAlbumIdSet.value.contains(albumId.toLong())) {
+        if (workpaper.loadingAlbumIdSet.value.contains(albumId)) {
             loading.value = true
         }
         viewModelScope.launch {
             workpaper.loadingAlbumIdSet.collect {
-                loading.value = it.contains(albumId.toLong())
+                loading.value = it.contains(albumId)
             }
         }
     }
@@ -73,7 +73,7 @@ class AlbumDetailViewModel @Inject constructor(
 
     fun emptyAlbum() {
         MainScope().launch {
-            wallpaperRepository.deleteByAlbumId(albumId = albumId.toLong())
+            wallpaperRepository.deleteByAlbumId(albumId = albumId)
         }
     }
 
@@ -85,9 +85,9 @@ class AlbumDetailViewModel @Inject constructor(
         loading.value = flag
         val newSet = workpaper.loadingAlbumIdSet.value.toMutableSet()
         if (flag) {
-            newSet.add(albumId.toLong())
+            newSet.add(albumId)
         } else {
-            newSet.remove(albumId.toLong())
+            newSet.remove(albumId)
         }
         workpaper.loadingAlbumIdSet.value = newSet
     }
@@ -113,7 +113,7 @@ class AlbumDetailViewModel @Inject constructor(
                                 Wallpaper(
                                     contentUri = uri.toString(),
                                     type = wallpaperType(it.type ?: ""),
-                                    albumId = albumId.toLong(),
+                                    albumId = albumId,
                                     ratio = ratio
                                 )
                             )
@@ -136,7 +136,7 @@ class AlbumDetailViewModel @Inject constructor(
                 chunk.forEach { wallpaper ->
                     wallpapers.add(
                         wallpaper.copy(
-                            albumId = albumId.toLong(),
+                            albumId = albumId,
                             ratio = getImageRatio(context = context, wallpaper.contentUri.toUri())
                         )
                     )
@@ -192,7 +192,7 @@ class AlbumDetailViewModel @Inject constructor(
                     chunk.forEach { wallpaper ->
                         wallpapers.add(
                             wallpaper.copy(
-                                albumId = albumId.toLong(), ratio = getImageRatio(
+                                albumId = albumId, ratio = getImageRatio(
                                     context = context, wallpaper.contentUri.toUri()
                                 )
                             )
@@ -333,8 +333,6 @@ class AlbumDetailViewModel @Inject constructor(
         }
 
     companion object {
-        private const val ALBUM_ID_SAVED_STATE_KEY = "albumId"
-
         private const val WALLPAPER_INSERT_CHUNK_SIZE = 5
 
         fun releasePermissions(context: Context, contentUri: Uri) {
@@ -343,5 +341,10 @@ class AlbumDetailViewModel @Inject constructor(
             val contentResolver = context.contentResolver
             contentResolver.releasePersistableUriPermission(contentUri, flags)
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(albumId: Long): AlbumDetailViewModel
     }
 }

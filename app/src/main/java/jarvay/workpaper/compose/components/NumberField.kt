@@ -7,8 +7,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +19,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun NumberField(
@@ -29,7 +30,7 @@ fun NumberField(
     step: Int = 1,
     min: Int? = null,
     max: Int? = null,
-    label: @Composable (() -> Unit)? = null
+    label: String? = null
 ) {
     var lastValidValue by remember {
         mutableStateOf(value.toString())
@@ -65,10 +66,14 @@ fun NumberField(
         val buttonModifier: Modifier = Modifier.weight(0.2F)
 
         CustomIconButton(onClick = { onChange(value - step) }, modifier = buttonModifier) {
-            Icon(imageVector = Icons.Default.Remove, contentDescription = "")
+            Icon(
+                imageVector = Icons.Default.Remove,
+                contentDescription = "",
+                tint = MiuixTheme.colorScheme.primary
+            )
         }
 
-        OutlinedTextField(
+        TextField(
             modifier = Modifier
                 .weight(0.6F, true)
                 .onFocusChanged { focusState ->
@@ -82,7 +87,7 @@ fun NumberField(
                     }
                 }
                 .focusable(true),
-            label = label,
+            label = label ?: "",
             value = content,
             onValueChange = {
                 content = it
@@ -100,7 +105,11 @@ fun NumberField(
         )
 
         CustomIconButton(onClick = { onChange(value + step) }, modifier = buttonModifier) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "")
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "",
+                tint = MiuixTheme.colorScheme.primary
+            )
         }
     }
 }

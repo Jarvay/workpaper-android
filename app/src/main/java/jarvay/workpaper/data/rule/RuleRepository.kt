@@ -20,15 +20,11 @@ class RuleRepository @Inject constructor(
 
     val allRules = ruleDao.findAllFlow()
 
-    fun getRuleFlow(ruleId: Long) = ruleDao.findByIdFlow(ruleId)
-
-    fun getRule(ruleId: Long) = ruleDao.findById(ruleId)
-
     fun findRuleById(ruleId: Long): RuleWithRelation? {
         return ruleDao.findById(ruleId)
     }
 
-    fun findRuleFlowById(ruleId: Long): Flow<RuleWithRelation>? {
+    fun findRuleByIdFlow(ruleId: Long): Flow<RuleWithRelation?> {
         return ruleDao.findFlowById(ruleId)
     }
 
@@ -83,9 +79,5 @@ class RuleRepository @Inject constructor(
                     && it.rule.startMinute == startMinute
                     && (ruleId == null || (it.rule.ruleId != ruleId))
         } != null
-    }
-
-    fun test(): List<RuleWithRelation> {
-        return ruleDao.test()
     }
 }

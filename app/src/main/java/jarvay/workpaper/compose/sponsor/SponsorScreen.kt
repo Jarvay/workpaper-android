@@ -1,18 +1,9 @@
 package jarvay.workpaper.compose.sponsor
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,17 +14,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.blankj.utilcode.util.LogUtils
+import jarvay.workpaper.compose.Route
 import jarvay.workpaper.request.REPO_MIRRORS_MAP
 import jarvay.workpaper.request.RepoHost
 import jarvay.workpaper.viewModel.SettingsViewModel
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
 
-@OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+
 @Composable
-fun SponsorScreen(navController: NavController, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SponsorScreen(onNavigate: (Route) -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     var loading by remember {
         mutableStateOf(true)
     }
@@ -47,11 +44,11 @@ fun SponsorScreen(navController: NavController, viewModel: SettingsViewModel = h
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {},
+            SmallTopAppBar(
+                title = "",
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "")
+                    IconButton(onClick = { onNavigate(Route.Home) }) {
+                        Icon(MiuixIcons.Back, "")
                     }
                 }
             )

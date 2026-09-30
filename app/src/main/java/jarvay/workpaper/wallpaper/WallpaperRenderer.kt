@@ -7,15 +7,13 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import jarvay.workpaper.data.wallpaper.WallpaperType
 import jarvay.workpaper.service.LiveWallpaperService
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class WallpaperRenderer @OptIn(UnstableApi::class) constructor
     (
-    private val surfaceView: LiveWallpaperService.LiveWallpaperEngine.GLWallpaperSurfaceView,
-    private val scope: CoroutineScope
+    private val surfaceView: LiveWallpaperService.LiveWallpaperEngine.GLWallpaperSurfaceView
 ) : GLSurfaceView.Renderer {
     val imageRenderer = GLImageWallpaperRenderer()
     var videoRenderer = GLVideoWallpaperRenderer()
@@ -65,5 +63,6 @@ class WallpaperRenderer @OptIn(UnstableApi::class) constructor
 
     fun destroy() {
         imageRenderer.onDestroy()
+        videoRenderer.onDestroy()
     }
 }

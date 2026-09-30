@@ -26,6 +26,8 @@
     <string name="tips_no_new_version">No new version</string>
     <string name="tips_start_downloading">Start downloading</string>
     <string name="tips_please_stop_first">Please stop running first</string>
+    <string name="tips_wallpaper_changing">Wallpaper is changing or downloading, please wait</string>
+    <string name="tips_download_only_on_wifi">You have enabled [Download wallpaper only on Wi-Fi], please connect to Wi-Fi before starting</string>
 
     <string name="tab_title_days">Days</string>
     <string name="tab_title_rules">Plans</string>
@@ -35,6 +37,7 @@
     <string name="drawer_menu_settings">Settings</string>
     <string name="drawer_menu_check_update">Check update</string>
     <string name="drawer_menu_sponsor">Sponsor</string>
+    <string name="sponsor_text">Thank you for your support!</string>
 
     <string name="monday">Mon</string>
     <string name="tuesday">Tue</string>
@@ -57,6 +60,11 @@
     <string name="rule_replace_global_blur">Cover global blur in settings</string>
     <string name="rule_blur_radius">Wallpaper blur radius</string>
     <string name="rule_conflicts_tips">Plans time conflicts</string>
+    <string name="rule_style_none">None</string>
+    <string name="rule_wallpaper_source">Wallpaper source</string>
+    <string name="rule_wallpaper_source_album">Album</string>
+    <string name="rule_wallpaper_source_web_api">Web wallpaper</string>
+    <string name="rule_web_wallpaper_api">Web wallpaper API</string>
 
     <string name="album_name">Album name</string>
     <string name="album_delete_tips">Are you sure to delete this album?</string>
@@ -65,6 +73,8 @@
     <string name="album_wallpaper_delete_tips">Are you sure to delete selected wallpaper?</string>
     <string name="album_no_cover">No Cover</string>
     <string name="album_set_as_cover">Set as cover</string>
+    <string name="hide_cover">Hide cover</string>
+    <string name="show_cover">Show cover</string>
     <string name="album_add_images">Add wallpapers</string>
     <string name="album_add_folder">Add folder</string>
     <string name="album_relate_folders">Add related folder</string>
@@ -80,6 +90,10 @@
     <string name="rule_list_item_days">Days</string>
     <string name="rule_list_item_random">Random</string>
     <string name="rule_list_item_delete_tips">Are you sure to delete deleted this rule?</string>
+    <string name="rule_list_item_start">Start</string>
+    <string name="rule_list_item_edit">Edit</string>
+    <string name="rule_list_item_delete">Delete</string>
+    <string name="rule_list_item_copy">Copy</string>
     <string name="rule_list_item_forced_used">Use it by force</string>
     <string name="rule_list_item_cancel_forced_used">Cancel using it by force</string>
     <string name="rule_list_item_apply_now">Apply now</string>
@@ -106,6 +120,7 @@
     <string name="style_list_item_default">Default</string>
 
     <string name="settings_item_interval">Wallpaper Change Interval</string>
+    <string name="settings_item_timer">Timer</string>
     <string name="settings_item_start_with_prev_rule">Use prev plan after start</string>
     <string name="settings_item_enable_notification">Enable notification</string>
     <string name="settings_item_notification_ongoing">Notification ongoing</string>
@@ -115,6 +130,7 @@
     <string name="settings_item_auto_check_update">Auto check update</string>
     <string name="settings_item_disabled_when_playing_audio">Do not change wallpaper when playing audio</string>
     <string name="settings_item_use_live_wallpaper">Use live wallpaper</string>
+    <string name="settings_item_live_wallpaper_mode">Live wallpaper mode</string>
     <string name="settings_item_settings_of_live_wallpaper">Settings of live wallpaper</string>
     <string name="settings_item_video_wallpaper_reset_on_screen_off">Reset video progress on Scree</string>
     <string name="settings_item_live_wallpaper_double_tap">On Double Tap</string>
@@ -123,8 +139,10 @@
     <string name="settings_item_blur_radius">Wallpaper blur radius</string>
     <string name="settings_live_wallpaper_tips">Maybe you should permit live wallpaper yourself on some devices</string>
     <string name="settings_opengles2_not_supported">Your device does not support opengles2</string>
+    <string name="settings_accessibility_lock_screen_requires_android_9">Accessibility lock screen requires Android 9 or higher</string>
     <string name="settings_item_enable_log">Save log</string>
     <string name="settings_item_repo_mirror">Mirror of repo</string>
+    <string name="settings_item_download_only_on_wifi">Download wallpaper only on Wi-Fi</string>
 
     <string name="gesture_event_none">None</string>
     <string name="gesture_event_lock_screen">Lock screen</string>

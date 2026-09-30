@@ -2,18 +2,20 @@ package jarvay.workpaper.compose.style
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
+import jarvay.workpaper.compose.Route
 import jarvay.workpaper.viewModel.StyleFormViewModel
 
 @Composable
 fun StyleCreateScreen(
-    navController: NavController,
-    viewModel: StyleFormViewModel = hiltViewModel(),
+    onNavigate: (Route) -> Unit,
+    viewModel: StyleFormViewModel = hiltViewModel { factory: StyleFormViewModel.Factory ->
+        factory.create(null)
+    },
 ) {
     StyleForm(
-        navController = navController,
+        onNavigate = onNavigate,
     ) { style ->
         viewModel.insert(style.copy())
-        navController.navigateUp()
+        onNavigate(Route.Home)
     }
 }

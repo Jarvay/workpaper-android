@@ -13,7 +13,7 @@ class Converters {
     fun stringToStrList(data: String?): List<String> {
         return try {
             gson.fromJson(data, Array<String>::class.java).toList()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }

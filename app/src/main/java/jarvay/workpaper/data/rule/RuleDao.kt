@@ -28,7 +28,7 @@ interface RuleDao {
 
     @Transaction
     @Query("SELECT * FROM rules WHERE id= :id ")
-    fun findFlowById(id: Long): Flow<RuleWithRelation>?
+    fun findFlowById(id: Long): Flow<RuleWithRelation?>
 
     @Insert
     suspend fun insert(item: Rule): Long
